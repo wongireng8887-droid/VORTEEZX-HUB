@@ -232,32 +232,19 @@ local function createToggle(name, description, key, order)
         settings[key] = not settings[key]
 
         if settings[key] then
-            tween(btn, 0.2, {
-                BackgroundColor3 = PURPLE
-            })
+            tween(btn, 0.2, { BackgroundColor3 = PURPLE })
             btn.Text = "ON"
         else
-            tween(btn, 0.2, {
-                BackgroundColor3 = Color3.fromRGB(65, 60, 72)
-            })
+            tween(btn, 0.2, { BackgroundColor3 = Color3.fromRGB(65, 60, 72) })
             btn.Text = "OFF"
         end
-
-        print("[VORTEEZX]", key, settings[key])
     end)
 end
 
-createToggle("⚔️ Auto Farm",
-    "Farm automation toggle", "AutoFarm", 1)
-
-createToggle("🥊 Auto Melee & Attack",
-    "Combat setting toggle", "AutoMelee", 2)
-
-createToggle("💰 Auto Farm Chest",
-    "Chest tracking toggle", "AutoChest", 3)
-
-createToggle("🍈 Auto Find Fruit",
-    "Fruit tracking toggle", "AutoFruit", 4)
+createToggle("⚔️ Auto Farm", "Farm automation toggle", "AutoFarm", 1)
+createToggle("🥊 Auto Melee & Attack", "Combat setting toggle", "AutoMelee", 2)
+createToggle("💰 Auto Farm Chest", "Chest tracking toggle", "AutoChest", 3)
+createToggle("🍈 Auto Find Fruit", "Fruit tracking toggle", "AutoFruit", 4)
 
 -- Speed control
 local speedRow = Instance.new("Frame")
@@ -320,46 +307,35 @@ local function updateSpeed(x)
     local width = bar.AbsoluteSize.X
     if width <= 0 then return end
 
-    local relative = math.clamp(
-        (x - bar.AbsolutePosition.X) / width, 0, 1
-    )
-
-    settings.Speed = math.floor(8 + relative * 92)
+    local relative = math.clamp((x - bar.AbsolutePosition.X) / width, 0, 1)
+    settings.Speed = math.floor(16 + relative * 134)
     speedValue.Text = tostring(settings.Speed)
 
     fill.Size = UDim2.new(relative, 0, 1, 0)
     knob.Position = UDim2.new(relative, 0, 0.5, 0)
-
-    print("[VORTEEZX] Selected speed:", settings.Speed)
 end
 
 bar.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1
-        or input.UserInputType == Enum.UserInputType.Touch then
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
         dragging = true
         updateSpeed(input.Position.X)
     end
 end)
 
 knob.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1
-        or input.UserInputType == Enum.UserInputType.Touch then
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
         dragging = true
     end
 end)
 
 UserInputService.InputChanged:Connect(function(input)
-    if dragging and (
-        input.UserInputType == Enum.UserInputType.MouseMovement
-        or input.UserInputType == Enum.UserInputType.Touch
-    ) then
+    if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
         updateSpeed(input.Position.X)
     end
 end)
 
 UserInputService.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1
-        or input.UserInputType == Enum.UserInputType.Touch then
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
         dragging = false
     end
 end)
@@ -376,20 +352,12 @@ local function openMenu()
 end
 
 local function closeMenu()
-    local anim = tween(main, 0.18, {
-        Size = UDim2.fromOffset(280, 350)
-    })
-    anim.Completed:Once(function()
-        main.Visible = false
-    end)
+    local anim = tween(main, 0.18, { Size = UDim2.fromOffset(280, 350) })
+    anim.Completed:Once(function() main.Visible = false end)
 end
 
 float.Activated:Connect(function()
-    if main.Visible then
-        closeMenu()
-    else
-        openMenu()
-    end
+    if main.Visible then closeMenu() else openMenu() end
 end)
 
 close.Activated:Connect(closeMenu)
@@ -402,8 +370,7 @@ local function makeDraggable(object)
     local inputObject
 
     object.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1
-            or input.UserInputType == Enum.UserInputType.Touch then
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             draggingObject = true
             startPosition = input.Position
             originalPosition = object.Position
@@ -412,42 +379,35 @@ local function makeDraggable(object)
     end)
 
     UserInputService.InputChanged:Connect(function(input)
-        if draggingObject and (
-            input.UserInputType == Enum.UserInputType.MouseMovement
-            or input.UserInputType == Enum.UserInputType.Touch
-        ) then
+        if draggingObject and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
             local delta = input.Position - startPosition
-            object.Position = UDim2.new(
-                originalPosition.X.Scale,
-                originalPosition.X.Offset + delta.X,
-                originalPosition.Y.Scale,
-                originalPosition.Y.Offset + delta.Y
-            )
+            object.Position = UDim2.new(originalPosition.X.Scale, originalPosition.X.Offset + delta.X, originalPosition.Y.Scale, originalPosition.Y.Offset + delta.Y)
         end
     end)
 
     UserInputService.InputEnded:Connect(function(input)
-        if input == inputObject then
-            draggingObject = false
-        end
+        if input == inputObject then draggingObject = false end
     end)
 end
 
 makeDraggable(float)
 
 --========================================--
--- LOGIKA SCRIPT BLOX FRUITS (DITAMBAHKAN)
+-- LOGIKA SCRIPT BLOX FRUITS (FIXED & WORKING)
 --========================================--
 
--- 1. SPEED HACK (Fix Anti-Reset)
-RunService.Heartbeat:Connect(function()
+-- 1. SPEED HACK (Anti-Reset Bypass)
+RunService.Stepped:Connect(function()
     if player.Character and player.Character:FindFirstChild("Humanoid") then
-        -- Paksa kecepatan sesuai slider
-        player.Character.Humanoid.WalkSpeed = settings.Speed
+        if settings.Speed > 16 then
+            player.Character.Humanoid.WalkSpeed = settings.Speed
+        else
+            player.Character.Humanoid.WalkSpeed = 16
+        end
     end
 end)
 
--- 2. AUTO FARM & MELEE
+-- 2. AUTO FARM & MELEE LOGIC
 local function getClosestEnemy()
     local closest = nil
     local dist = math.huge
@@ -462,10 +422,11 @@ local function getClosestEnemy()
     return closest
 end
 
+-- Fungsi Otomatis Pake Melee
 local function equipMelee()
     if player.Backpack then
         for _, v in pairs(player.Backpack:GetChildren()) do
-            if v:IsA("Tool") and (v.ToolTip:lower():find("melee") or v.Name:lower():find("sword") or v.Name:lower():find("blade")) then
+            if v:IsA("Tool") and (v.ToolTip:lower():find("melee") or v.Name:lower():find("sword") or v.Name:lower():find("blade") or v.Name:lower():find("trident")) then
                 player.Character.Humanoid:EquipTool(v)
                 return
             end
@@ -478,14 +439,19 @@ task.spawn(function()
         if settings.AutoFarm and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
             local enemy = getClosestEnemy()
             if enemy then
-                -- Teleport ke musuh
-                player.Character.HumanoidRootPart.CFrame = enemy.HumanoidRootPart.CFrame * CFrame.new(0, 0, 2.5)
+                -- Teleport ke musuh (Agak mundur dikit biar ga nabrak)
+                player.Character.HumanoidRootPart.CFrame = enemy.HumanoidRootPart.CFrame * CFrame.new(0, 0, 3)
                 
-                -- Auto Attack (Kalo fitur Melee nyala)
                 if settings.AutoMelee then
+                    -- Pake Melee
                     equipMelee()
+                    -- Auto Attack (Spam Activate)
                     local tool = player.Character:FindFirstChildOfClass("Tool")
-                    if tool then tool:Activate() end
+                    if tool then
+                        tool:Activate()
+                        task.wait(0.2) -- Jeda biar server ga nge-ban karena terlalu cepet
+                        tool:Activate()
+                    end
                 end
             end
         end
@@ -506,7 +472,7 @@ task.spawn(function()
     end
 end)
 
--- 4. AUTO FIND FRUIT (Auto Collect)
+-- 4. AUTO FIND FRUIT
 task.spawn(function()
     while task.wait(1) do
         if settings.AutoFruit and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
@@ -521,4 +487,4 @@ task.spawn(function()
     end
 end)
 
-print("💀 VORTEEZX HUB GUI loaded with REAL SCRIPT LOGIC!")
+print("💀 VORTEEZX HUB V9 - LOGIC INJECTED!")
