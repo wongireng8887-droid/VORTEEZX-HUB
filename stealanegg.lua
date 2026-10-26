@@ -1,5 +1,5 @@
 --[[
-    VORTEEZX HUB - SENA STYLE (LIQUID GLASS)
+    VORTEEZX HUB V8 - ULTIMATE STEAL AN EGG
 --]]
 
 local Player = game.Players.LocalPlayer
@@ -10,7 +10,7 @@ local UserInputService = game:GetService("UserInputService")
 
 -- UI Setup
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "VORTEEZX_HUB"
+ScreenGui.Name = "VORTEEZX_HUB_V8"
 ScreenGui.ResetOnSpawn = false
 pcall(function()
     if syn and syn.protect_gui then
@@ -23,11 +23,11 @@ pcall(function()
     end
 end)
 
--- ================= FLOATING BUTTON (LIQUID GLASS V) =================
+-- ================= FLOATING BUTTON =================
 local FloatBtn = Instance.new("TextButton")
 FloatBtn.Parent = ScreenGui
 FloatBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
-FloatBtn.BackgroundTransparency = 0.3 -- Efek Kaca
+FloatBtn.BackgroundTransparency = 0.3
 FloatBtn.Position = UDim2.new(0, 20, 0.5, -25)
 FloatBtn.Size = UDim2.new(0, 50, 0, 50)
 FloatBtn.Font = Enum.Font.GothamBlack
@@ -36,31 +36,27 @@ FloatBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 FloatBtn.TextSize = 28
 FloatBtn.BorderSizePixel = 0
 FloatBtn.Draggable = true
-
 local FloatCorner = Instance.new("UICorner", FloatBtn)
 FloatCorner.CornerRadius = UDim.new(1, 0)
-
 local FloatStroke = Instance.new("UIStroke", FloatBtn)
 FloatStroke.Color = Color3.fromRGB(200, 0, 50)
 FloatStroke.Thickness = 2
 FloatStroke.Transparency = 0.2
 
--- ================= MAIN FRAME (SENA STYLE) =================
+-- ================= MAIN FRAME =================
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "Main"
 MainFrame.Parent = ScreenGui
 MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
-MainFrame.BackgroundTransparency = 0.2 -- Liquid Glass Background
+MainFrame.BackgroundTransparency = 0.2
 MainFrame.Position = UDim2.new(0.5, -250, 0.5, -175)
 MainFrame.Size = UDim2.new(0, 500, 0, 350)
 MainFrame.Active = true
 MainFrame.Draggable = true
 MainFrame.BorderSizePixel = 0
 MainFrame.Visible = false
-
 local UICorner = Instance.new("UICorner", MainFrame)
 UICorner.CornerRadius = UDim.new(0, 12)
-
 local UIStroke = Instance.new("UIStroke", MainFrame)
 UIStroke.Color = Color3.fromRGB(100, 100, 100)
 UIStroke.Thickness = 1
@@ -72,7 +68,7 @@ FloatBtn.MouseButton1Click:Connect(function()
     MainFrame.Visible = isMenuOpen
 end)
 
--- ================= SIDEBAR (KIRI) =================
+-- ================= SIDEBAR =================
 local Sidebar = Instance.new("Frame")
 Sidebar.Parent = MainFrame
 Sidebar.BackgroundColor3 = Color3.fromRGB(10, 10, 12)
@@ -105,7 +101,6 @@ SubTitle.TextSize = 11
 SubTitle.TextXAlignment = Enum.TextXAlignment.Left
 SubTitle.Position = UDim2.new(0, 15, 0, 28)
 
--- Container Tombol Sidebar
 local NavContainer = Instance.new("Frame")
 NavContainer.Parent = Sidebar
 NavContainer.BackgroundTransparency = 1
@@ -132,7 +127,7 @@ end
 local HomeBtn = CreateNavBtn("Home", 0, "🏠")
 local FarmBtn = CreateNavBtn("Farm", 45, "🌾")
 
--- ================= CONTENT AREA (KANAN) =================
+-- ================= CONTENT AREA =================
 local ContentArea = Instance.new("Frame")
 ContentArea.Parent = MainFrame
 ContentArea.BackgroundTransparency = 1
@@ -162,7 +157,7 @@ HomeDesc.BackgroundTransparency = 1
 HomeDesc.Position = UDim2.new(0, 0, 0, 40)
 HomeDesc.Size = UDim2.new(1, 0, 0, 100)
 HomeDesc.Font = Enum.Font.Gotham
-HomeDesc.Text = "Selamat datang di VORTEEZX HUB.\nPilih menu 'Farm' di sebelah kiri untuk mulai mencuri Egg otomatis.\n\nPastikan fitur Auto Steal tidak digunakan secara berlebihan agar akun Anda aman."
+HomeDesc.Text = "Selamat datang di VORTEEZX HUB V8.\nSilakan atur lokasi dan mutasi di menu Farm.\n\nJika dikosongkan, script akan mengambil Egg secara acak."
 HomeDesc.TextColor3 = Color3.fromRGB(150, 150, 150)
 HomeDesc.TextSize = 12
 HomeDesc.TextXAlignment = Enum.TextXAlignment.Left
@@ -179,19 +174,51 @@ FarmPage.Visible = false
 local FarmTitle = Instance.new("TextLabel")
 FarmTitle.Parent = FarmPage
 FarmTitle.BackgroundTransparency = 1
-FarmTitle.Size = UDim2.new(1, 0, 0, 40)
+FarmTitle.Size = UDim2.new(1, 0, 0, 30)
 FarmTitle.Font = Enum.Font.GothamBold
-FarmTitle.Text = "Auto Steal Egg"
+FarmTitle.Text = "Auto Steal Settings"
 FarmTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
-FarmTitle.TextSize = 18
+FarmTitle.TextSize = 16
 FarmTitle.TextXAlignment = Enum.TextXAlignment.Left
 
+-- Input Lokasi & Mutasi
+local LocationBox = Instance.new("TextBox")
+LocationBox.Parent = FarmPage
+LocationBox.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+LocationBox.BackgroundTransparency = 0.5
+LocationBox.Position = UDim2.new(0, 0, 0, 35)
+LocationBox.Size = UDim2.new(0.48, 0, 0, 30)
+LocationBox.Font = Enum.Font.Gotham
+LocationBox.PlaceholderText = "Lokasi (Kosong = Random)"
+LocationBox.Text = ""
+LocationBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+LocationBox.PlaceholderColor3 = Color3.fromRGB(150, 150, 150)
+LocationBox.TextSize = 11
+local LocCorner = Instance.new("UICorner", LocationBox)
+LocCorner.CornerRadius = UDim.new(0, 6)
+
+local MutationBox = Instance.new("TextBox")
+MutationBox.Parent = FarmPage
+MutationBox.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+MutationBox.BackgroundTransparency = 0.5
+MutationBox.Position = UDim2.new(0.52, 0, 0, 35)
+MutationBox.Size = UDim2.new(0.48, 0, 0, 30)
+MutationBox.Font = Enum.Font.Gotham
+MutationBox.PlaceholderText = "Mutasi (Kosong = Random)"
+MutationBox.Text = ""
+MutationBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+MutationBox.PlaceholderColor3 = Color3.fromRGB(150, 150, 150)
+MutationBox.TextSize = 11
+local MutCorner = Instance.new("UICorner", MutationBox)
+MutCorner.CornerRadius = UDim.new(0, 6)
+
+-- Tombol Toggle
 local ToggleAuto = Instance.new("TextButton")
 ToggleAuto.Parent = FarmPage
 ToggleAuto.BackgroundColor3 = Color3.fromRGB(200, 0, 50)
 ToggleAuto.BackgroundTransparency = 0.2
-ToggleAuto.Position = UDim2.new(0, 0, 0, 50)
-ToggleAuto.Size = UDim2.new(0, 150, 0, 35)
+ToggleAuto.Position = UDim2.new(0, 0, 0, 80)
+ToggleAuto.Size = UDim2.new(0.48, 0, 0, 35)
 ToggleAuto.Font = Enum.Font.GothamBold
 ToggleAuto.Text = "AUTO STEAL: OFF"
 ToggleAuto.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -199,11 +226,26 @@ ToggleAuto.TextSize = 12
 local TACorner = Instance.new("UICorner", ToggleAuto)
 TACorner.CornerRadius = UDim.new(0, 6)
 
+-- Tombol ESP
+local ToggleESP = Instance.new("TextButton")
+ToggleESP.Parent = FarmPage
+ToggleESP.BackgroundColor3 = Color3.fromRGB(200, 0, 50)
+ToggleESP.BackgroundTransparency = 0.2
+ToggleESP.Position = UDim2.new(0.52, 0, 0, 80)
+ToggleESP.Size = UDim2.new(0.48, 0, 0, 35)
+ToggleESP.Font = Enum.Font.GothamBold
+ToggleESP.Text = "ESP EGG: OFF"
+ToggleESP.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleESP.TextSize = 12
+local TECorner = Instance.new("UICorner", ToggleESP)
+TECorner.CornerRadius = UDim.new(0, 6)
+
+-- Status Text
 local StatusText = Instance.new("TextLabel")
 StatusText.Parent = FarmPage
 StatusText.BackgroundTransparency = 1
-StatusText.Position = UDim2.new(0, 160, 0, 50)
-StatusText.Size = UDim2.new(0, 150, 0, 35)
+StatusText.Position = UDim2.new(0, 0, 0, 120)
+StatusText.Size = UDim2.new(1, 0, 0, 30)
 StatusText.Font = Enum.Font.GothamMedium
 StatusText.Text = "Status: Idle"
 StatusText.TextColor3 = Color3.fromRGB(150, 150, 150)
@@ -212,47 +254,111 @@ StatusText.TextXAlignment = Enum.TextXAlignment.Left
 
 -- ================= NAVIGATION LOGIC =================
 HomeBtn.MouseButton1Click:Connect(function()
-    HomePage.Visible = true
-    FarmPage.Visible = false
+    HomePage.Visible = true; FarmPage.Visible = false
     HomeBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 55)
     FarmBtn.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
 end)
 
 FarmBtn.MouseButton1Click:Connect(function()
-    HomePage.Visible = false
-    FarmPage.Visible = true
+    HomePage.Visible = false; FarmPage.Visible = true
     HomeBtn.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
     FarmBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 55)
 end)
 
--- ================= FARM LOGIC =================
+-- ================= LOGIC =================
 local isAutoSteal = false
+local isESP = false
+local ESPFolder = Instance.new("Folder", game.CoreGui)
+ESPFolder.Name = "VortexEggESP"
 
+-- Filter Egg (Biar ga salah teleport ke NPC)
+local function isRealEgg(v)
+    return (v:IsA("Model") or v:IsA("MeshPart")) and string.find(v.Name, "Egg") and not string.find(v.Name, "NPC")
+end
+
+-- Teleport Tween
 local function TweenTeleport(targetCFrame)
     if Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
         local HRP = Player.Character.HumanoidRootPart
-        local tweenInfo = TweenInfo.new(0.5, Enum.EasingStyle.Linear)
-        local goal = {CFrame = targetCFrame}
-        local tween = TweenService:Create(HRP, tweenInfo, goal)
+        local tweenInfo = TweenInfo.new(0.6, Enum.EasingStyle.Sine) -- Lebih smooth
+        local tween = TweenService:Create(HRP, tweenInfo, {CFrame = targetCFrame})
         tween:Play()
     end
 end
 
-local function getClosestEgg()
-    local closest = nil
-    local dist = math.huge
-    if Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
+-- Cari Egg Sesuai Filter
+local function getTargetEgg()
+    local target = nil
+    local targetLoc = LocationBox.Text:lower()
+    local targetMut = MutationBox.Text:lower()
+    
+    -- Kumpulin semua egg dulu
+    local eggs = {}
+    for _, v in pairs(Workspace:GetDescendants()) do
+        if isRealEgg(v) then
+            table.insert(eggs, v)
+        end
+    end
+
+    if #eggs == 0 then return nil end
+
+    -- Kalo kosong, ambil random
+    if targetLoc == "" and targetMut == "" then
+        return eggs[math.random(1, #eggs)]
+    end
+
+    -- Kalo diisi, filter
+    for _, egg in pairs(eggs) do
+        local eggName = egg.Name:lower()
+        -- Cek apakah nama egg mengandung lokasi atau mutasi yang dicari
+        if (targetLoc ~= "" and string.find(eggName, targetLoc)) or (targetMut ~= "" and string.find(eggName, targetMut)) then
+            return egg
+        end
+    end
+
+    return nil -- Kalo ga nemu yang cocok
+end
+
+-- ESP Logic
+ToggleESP.MouseButton1Click:Connect(function()
+    isESP = not isESP
+    if isESP then
+        ToggleESP.Text = "ESP EGG: ON"
+        ToggleESP.BackgroundColor3 = Color3.fromRGB(0, 150, 50)
+    else
+        ToggleESP.Text = "ESP EGG: OFF"
+        ToggleESP.BackgroundColor3 = Color3.fromRGB(200, 0, 50)
+        ESPFolder:ClearAllChildren()
+    end
+end)
+
+RunService.RenderStepped:Connect(function()
+    if isESP then
         for _, v in pairs(Workspace:GetDescendants()) do
-            if (v:IsA("Model") or v:IsA("Part") or v:IsA("MeshPart")) and string.find(v.Name, "Egg") then
-                local pos = v:IsA("Model") and v:GetPivot().Position or v.Position
-                local mag = (Player.Character.HumanoidRootPart.Position - pos).Magnitude
-                if mag < dist then dist = mag; closest = v end
+            if isRealEgg(v) then
+                if not ESPFolder:FindFirstChild(v.Name) then
+                    local Billboard = Instance.new("BillboardGui")
+                    Billboard.Parent = ESPFolder
+                    Billboard.Name = v.Name
+                    Billboard.Adornee = v
+                    Billboard.Size = UDim2.new(0, 120, 0, 50)
+                    Billboard.AlwaysOnTop = true
+                    local Text = Instance.new("TextLabel")
+                    Text.Parent = Billboard
+                    Text.BackgroundTransparency = 1
+                    Text.Size = UDim2.new(1, 0, 1, 0)
+                    Text.Font = Enum.Font.GothamBold
+                    Text.Text = v.Name
+                    Text.TextColor3 = Color3.fromRGB(255, 255, 0) -- Warna Kuning
+                    Text.TextStrokeTransparency = 0.5
+                    Text.TextSize = 12
+                end
             end
         end
     end
-    return closest
-end
+end)
 
+-- Auto Steal Logic
 ToggleAuto.MouseButton1Click:Connect(function()
     isAutoSteal = not isAutoSteal
     if isAutoSteal then
@@ -263,14 +369,14 @@ ToggleAuto.MouseButton1Click:Connect(function()
         
         task.spawn(function()
             while isAutoSteal do
-                task.wait(1)
-                local egg = getClosestEgg()
+                task.wait(1.5)
+                local egg = getTargetEgg()
                 if egg then
-                    StatusText.Text = "Status: Stealing..."
+                    StatusText.Text = "Status: Stealing " .. egg.Name .. "..."
                     local pos = egg:IsA("Model") and egg:GetPivot() or egg.CFrame
                     TweenTeleport(pos)
                 else
-                    StatusText.Text = "Status: No Egg Found"
+                    StatusText.Text = "Status: Egg tidak ditemukan (Cek Mutasi/Lokasi)"
                 end
             end
         end)
@@ -282,4 +388,4 @@ ToggleAuto.MouseButton1Click:Connect(function()
     end
 end)
 
-print("[VORTEEZX] VORTEEZX HUB (Sena Style) Loaded!")
+print("[VORTEEZX] VORTEEZX HUB V8 Loaded!")
