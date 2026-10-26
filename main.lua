@@ -1,5 +1,5 @@
 --[[
-    VORTEEZX BLOX FRUITS HUB V4 (ULTIMATE)
+    VORTEEZX BLOX FRUITS HUB V6 (SEPARATED ESP)
 --]]
 
 local Player = game.Players.LocalPlayer
@@ -10,7 +10,7 @@ local TweenService = game:GetService("TweenService")
 
 -- UI Setup
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "VortexBF_Ultimate"
+ScreenGui.Name = "VortexBF_V6"
 ScreenGui.ResetOnSpawn = false
 pcall(function()
     if syn and syn.protect_gui then
@@ -24,24 +24,38 @@ pcall(function()
 end)
 if not ScreenGui.Parent then ScreenGui.Parent = Player:WaitForChild("PlayerGui") end
 
--- Main Frame
+-- ================= FLOATING BUTTON =================
+local FloatBtn = Instance.new("TextButton")
+FloatBtn.Parent = ScreenGui
+FloatBtn.BackgroundColor3 = Color3.fromRGB(200, 0, 50)
+FloatBtn.Position = UDim2.new(0, 20, 0.5, -25)
+FloatBtn.Size = UDim2.new(0, 50, 0, 50)
+FloatBtn.Font = Enum.Font.GothamBold
+FloatBtn.Text = "V"
+FloatBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+FloatBtn.TextSize = 24
+FloatBtn.BorderSizePixel = 0
+local FloatCorner = Instance.new("UICorner", FloatBtn)
+FloatCorner.CornerRadius = UDim.new(1, 0)
+FloatBtn.Draggable = true
+
+-- ================= MAIN MENU =================
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "Main"
 MainFrame.Parent = ScreenGui
 MainFrame.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
-MainFrame.Position = UDim2.new(0.5, -150, 0.5, -200)
-MainFrame.Size = UDim2.new(0, 300, 0, 420)
+MainFrame.Position = UDim2.new(0.5, -150, 0.5, -220)
+MainFrame.Size = UDim2.new(0, 300, 0, 460)
 MainFrame.Active = true
 MainFrame.Draggable = true
 MainFrame.BorderSizePixel = 0
+MainFrame.Visible = false
 
 local UICorner = Instance.new("UICorner", MainFrame)
 UICorner.CornerRadius = UDim.new(0, 10)
-
 local UIStroke = Instance.new("UIStroke", MainFrame)
 UIStroke.Color = Color3.fromRGB(255, 0, 50)
 UIStroke.Thickness = 1.5
-UIStroke.Transparency = 0.2
 
 -- Header
 local Header = Instance.new("Frame")
@@ -65,11 +79,17 @@ Title.BackgroundTransparency = 1
 Title.Size = UDim2.new(1, -20, 1, 0)
 Title.Position = UDim2.new(0, 20, 0, 0)
 Title.Font = Enum.Font.GothamBold
-Title.Text = "VORTEEZX HUB V4"
+Title.Text = "VORTEEZX HUB V6"
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
 Title.TextSize = 16
 Title.TextXAlignment = Enum.TextXAlignment.Left
 Title.ZIndex = 2
+
+local isMenuOpen = false
+FloatBtn.MouseButton1Click:Connect(function()
+    isMenuOpen = not isMenuOpen
+    MainFrame.Visible = isMenuOpen
+end)
 
 -- Container
 local Content = Instance.new("Frame")
@@ -78,7 +98,7 @@ Content.BackgroundTransparency = 1
 Content.Position = UDim2.new(0, 10, 0, 60)
 Content.Size = UDim2.new(1, -20, 1, -70)
 
--- Bikin Tombol & Switch Toggle
+-- ================= UI COMPONENTS =================
 local function CreateToggle(text, yPos, defaultState)
     local Frame = Instance.new("Frame")
     Frame.Parent = Content
@@ -100,7 +120,6 @@ local function CreateToggle(text, yPos, defaultState)
     Label.TextSize = 13
     Label.TextXAlignment = Enum.TextXAlignment.Left
     
-    -- Toggle Switch
     local Btn = Instance.new("TextButton")
     Btn.Parent = Frame
     Btn.BackgroundColor3 = Color3.fromRGB(50, 50, 60)
@@ -122,20 +141,76 @@ local function CreateToggle(text, yPos, defaultState)
     return {Frame = Frame, Label = Label, Btn = Btn, Circle = Circle, State = defaultState}
 end
 
-local SpeedToggle = CreateToggle("Speed Hack (150)", 0, false)
-local ESPToggle = CreateToggle("ESP Chest & Fruit", 50, false)
-local FarmToggle = CreateToggle("Auto Farm (Melee)", 100, false)
-local ChestToggle = CreateToggle("Auto Collect Chest", 150, false)
+local SpeedToggle = CreateToggle("Speed Hack", 0, false)
+local ESPChestToggle = CreateToggle("ESP Chest", 50, false)
+local ESPFruitToggle = CreateToggle("ESP Fruit", 100, false)
+local FarmToggle = CreateToggle("Auto Farm (Melee)", 150, false)
+local ChestToggle = CreateToggle("Auto Collect Chest", 200, false)
 
--- Tombol TP
+-- Speed Slider
+local SpeedSliderFrame = Instance.new("Frame")
+SpeedSliderFrame.Parent = Content
+SpeedSliderFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+SpeedSliderFrame.Position = UDim2.new(0, 0, 0, 245)
+SpeedSliderFrame.Size = UDim2.new(1, 0, 0, 45)
+SpeedSliderFrame.BorderSizePixel = 0
+local SSFCorner = Instance.new("UICorner", SpeedSliderFrame)
+SSFCorner.CornerRadius = UDim.new(0, 6)
+
+local SpeedLabel = Instance.new("TextLabel")
+SpeedLabel.Parent = SpeedSliderFrame
+SpeedLabel.BackgroundTransparency = 1
+SpeedLabel.Size = UDim2.new(1, 0, 0, 20)
+SpeedLabel.Font = Enum.Font.GothamBold
+SpeedLabel.Text = "Kecepatan: 16"
+SpeedLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+SpeedLabel.TextSize = 12
+
+local SpeedBar = Instance.new("TextButton")
+SpeedBar.Parent = SpeedSliderFrame
+SpeedBar.BackgroundColor3 = Color3.fromRGB(50, 50, 60)
+SpeedBar.Position = UDim2.new(0, 10, 0, 25)
+SpeedBar.Size = UDim2.new(1, -20, 0, 10)
+SpeedBar.AutoButtonColor = false
+SpeedBar.Text = ""
+local SBCorner = Instance.new("UICorner", SpeedBar)
+SBCorner.CornerRadius = UDim.new(1, 0)
+
+local SpeedFill = Instance.new("Frame")
+SpeedFill.Parent = SpeedBar
+SpeedFill.BackgroundColor3 = Color3.fromRGB(200, 0, 50)
+SpeedFill.Size = UDim2.new(0.2, 0, 1, 0)
+SpeedFill.BorderSizePixel = 0
+local SFCorner = Instance.new("UICorner", SpeedFill)
+SFCorner.CornerRadius = UDim.new(1, 0)
+
+local currentSpeed = 16
+
+local function UpdateSlider(input)
+    local pos = math.clamp((input.Position.X - SpeedBar.AbsolutePosition.X) / SpeedBar.AbsoluteSize.X, 0, 1)
+    currentSpeed = math.floor(16 + (pos * 284))
+    SpeedFill.Size = UDim2.new(pos, 0, 1, 0)
+    SpeedLabel.Text = "Kecepatan: " .. currentSpeed
+end
+
+SpeedBar.MouseButton1Down:Connect(function() UpdateSlider({Position = UserInputService:GetMouseLocation()}) end)
+UserInputService.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        if SpeedBar:IsHovered() or UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton1) then
+            UpdateSlider(input)
+        end
+    end
+end)
+
+-- Teleport Buttons
 local TPFrame = Instance.new("Frame")
 TPFrame.Parent = Content
 TPFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
-TPFrame.Position = UDim2.new(0, 0, 0, 200)
-TPFrame.Size = UDim2.new(1, 0, 0, 60)
+TPFrame.Position = UDim2.new(0, 0, 0, 300)
+TPFrame.Size = UDim2.new(1, 0, 0, 65)
 TPFrame.BorderSizePixel = 0
-local TPUICorner = Instance.new("UICorner", TPFrame)
-TPUICorner.CornerRadius = UDim.new(0, 6)
+local TPCorner = Instance.new("UICorner", TPFrame)
+TPCorner.CornerRadius = UDim.new(0, 6)
 
 local TPLabel = Instance.new("TextLabel")
 TPLabel.Parent = TPFrame
@@ -152,7 +227,7 @@ local function CreateTPBtn(text, xPos)
     local btn = Instance.new("TextButton")
     btn.Parent = TPFrame
     btn.BackgroundColor3 = Color3.fromRGB(200, 0, 50)
-    btn.Position = UDim2.new(0, xPos, 0, 30)
+    btn.Position = UDim2.new(0, xPos, 0, 35)
     btn.Size = UDim2.new(0.45, 0, 0, 22)
     btn.Font = Enum.Font.GothamBold
     btn.Text = text
@@ -166,7 +241,7 @@ end
 local TPIsland1 = CreateTPBtn("Pulau 1 (Bandit)", 5)
 local TPIsland2 = CreateTPBtn("Pulau 2 (Marine)", 135)
 
--- Update Visual Toggle
+-- ================= VISUAL LOGIC =================
 local function UpdateToggle(t, isOn)
     t.State = isOn
     if isOn then
@@ -180,9 +255,9 @@ local function UpdateToggle(t, isOn)
     end
 end
 
--- ================= LOGIC =================
+-- ================= FEATURE LOGIC =================
 
--- 1. SPEED
+-- 1. SPEED HACK
 SpeedToggle.Btn.MouseButton1Click:Connect(function()
     UpdateToggle(SpeedToggle, not SpeedToggle.State)
     if not SpeedToggle.State and Player.Character and Player.Character:FindFirstChild("Humanoid") then
@@ -192,38 +267,78 @@ end)
 
 RunService.Heartbeat:Connect(function()
     if SpeedToggle.State and Player.Character and Player.Character:FindFirstChild("Humanoid") then
-        Player.Character.Humanoid.WalkSpeed = 150
+        Player.Character.Humanoid.WalkSpeed = currentSpeed
     end
 end)
 
--- 2. ESP
+-- 2. ESP CHEST & FRUIT (DIPISAH)
 local ESPFolder = Instance.new("Folder", game.CoreGui)
 ESPFolder.Name = "VortexESP"
 
-ESPToggle.Btn.MouseButton1Click:Connect(function()
-    UpdateToggle(ESPToggle, not ESPToggle.State)
-    if not ESPToggle.State then ESPFolder:ClearAllChildren() end
+ESPChestToggle.Btn.MouseButton1Click:Connect(function()
+    UpdateToggle(ESPChestToggle, not ESPChestToggle.State)
+    if not ESPChestToggle.State then
+        for _, v in pairs(ESPFolder:GetChildren()) do
+            if string.find(v.Name, "Chest") then v:Destroy() end
+        end
+    end
+end)
+
+ESPFruitToggle.Btn.MouseButton1Click:Connect(function()
+    UpdateToggle(ESPFruitToggle, not ESPFruitToggle.State)
+    if not ESPFruitToggle.State then
+        for _, v in pairs(ESPFolder:GetChildren()) do
+            if string.find(v.Name, "Fruit") then v:Destroy() end
+        end
+    end
 end)
 
 RunService.RenderStepped:Connect(function()
-    if ESPToggle.State then
+    if ESPChestToggle.State or ESPFruitToggle.State then
         for _, v in pairs(Workspace:GetDescendants()) do
-            if v:IsA("MeshPart") and (v.Name == "Chest" or string.find(v.Name, "Fruit")) then
-                if not ESPFolder:FindFirstChild(v.Name) then
-                    local Billboard = Instance.new("BillboardGui")
-                    Billboard.Parent = ESPFolder
-                    Billboard.Adornee = v
-                    Billboard.Size = UDim2.new(0, 120, 0, 50)
-                    Billboard.AlwaysOnTop = true
-                    local Text = Instance.new("TextLabel")
-                    Text.Parent = Billboard
-                    Text.BackgroundTransparency = 1
-                    Text.Size = UDim2.new(1, 0, 1, 0)
-                    Text.Font = Enum.Font.GothamBold
-                    Text.Text = v.Name
-                    Text.TextColor3 = (v.Name == "Chest" and Color3.fromRGB(255, 200, 0) or Color3.fromRGB(0, 255, 150))
-                    Text.TextStrokeTransparency = 0.5
-                    Text.TextSize = 14
+            if v:IsA("MeshPart") or v:IsA("Tool") then
+                -- Cek ESP CHEST
+                if ESPChestToggle.State and v.Name == "Chest" then
+                    if not ESPFolder:FindFirstChild("Chest_"..v.Name) then
+                        local Billboard = Instance.new("BillboardGui")
+                        Billboard.Name = "Chest_"..v.Name
+                        Billboard.Parent = ESPFolder
+                        Billboard.Adornee = v
+                        Billboard.Size = UDim2.new(0, 120, 0, 50)
+                        Billboard.AlwaysOnTop = true
+                        
+                        local Text = Instance.new("TextLabel")
+                        Text.Parent = Billboard
+                        Text.BackgroundTransparency = 1
+                        Text.Size = UDim2.new(1, 0, 1, 0)
+                        Text.Font = Enum.Font.GothamBold
+                        Text.Text = "CHEST"
+                        Text.TextColor3 = Color3.fromRGB(255, 200, 0)
+                        Text.TextStrokeTransparency = 0.5
+                        Text.TextSize = 14
+                    end
+                end
+                
+                -- Cek ESP FRUIT
+                if ESPFruitToggle.State and string.find(v.Name, "Fruit") then
+                    if not ESPFolder:FindFirstChild("Fruit_"..v.Name) then
+                        local Billboard = Instance.new("BillboardGui")
+                        Billboard.Name = "Fruit_"..v.Name
+                        Billboard.Parent = ESPFolder
+                        Billboard.Adornee = v
+                        Billboard.Size = UDim2.new(0, 120, 0, 50)
+                        Billboard.AlwaysOnTop = true
+                        
+                        local Text = Instance.new("TextLabel")
+                        Text.Parent = Billboard
+                        Text.BackgroundTransparency = 1
+                        Text.Size = UDim2.new(1, 0, 1, 0)
+                        Text.Font = Enum.Font.GothamBold
+                        Text.Text = v.Name:gsub("Fruit", ""):gsub(" ", "")
+                        Text.TextColor3 = Color3.fromRGB(0, 255, 150)
+                        Text.TextStrokeTransparency = 0.5
+                        Text.TextSize = 14
+                    end
                 end
             end
         end
@@ -245,19 +360,30 @@ local function getClosestEnemy()
     return closest
 end
 
+local function equipMelee()
+    if Player.Backpack then
+        for _, v in pairs(Player.Backpack:GetChildren()) do
+            if v:IsA("Tool") and (v.ToolTip:lower():find("melee") or v.Name:lower():find("sword") or v.Name:lower():find("blade")) then
+                Player.Character.Humanoid:EquipTool(v)
+                break
+            end
+        end
+    end
+end
+
 FarmToggle.Btn.MouseButton1Click:Connect(function()
     UpdateToggle(FarmToggle, not FarmToggle.State)
     if FarmToggle.State then
+        equipMelee()
         task.spawn(function()
             while FarmToggle.State do
-                task.wait()
+                task.wait(0.1)
                 if Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
                     local enemy = getClosestEnemy()
                     if enemy then
                         Player.Character.HumanoidRootPart.CFrame = enemy.HumanoidRootPart.CFrame * CFrame.new(0, 0, 2.5)
-                        for _, tool in pairs(Player.Character:GetChildren()) do
-                            if tool:IsA("Tool") then tool:Activate() end
-                        end
+                        local tool = Player.Character:FindFirstChildOfClass("Tool")
+                        if tool then tool:Activate() end
                     end
                 end
             end
@@ -271,13 +397,12 @@ ChestToggle.Btn.MouseButton1Click:Connect(function()
     if ChestToggle.State then
         task.spawn(function()
             while ChestToggle.State do
-                task.wait(0.5)
+                task.wait(1)
                 if Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
                     for _, v in pairs(Workspace:GetDescendants()) do
                         if v:IsA("MeshPart") and v.Name == "Chest" then
-                            -- Teleport ke chest, tunggu bentar, balik lagi (opsional)
                             Player.Character.HumanoidRootPart.CFrame = v.CFrame
-                            task.wait(0.2) -- Delay buat ngambil
+                            task.wait(0.5)
                         end
                     end
                 end
@@ -289,14 +414,14 @@ end)
 -- 5. TELEPORT
 TPIsland1.MouseButton1Click:Connect(function()
     if Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
-        Player.Character.HumanoidRootPart.CFrame = CFrame.new(1050, 16, 1550) -- Koordinat Bandit (Contoh)
+        Player.Character.HumanoidRootPart.CFrame = CFrame.new(1050, 16, 1550)
     end
 end)
 
 TPIsland2.MouseButton1Click:Connect(function()
     if Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
-        Player.Character.HumanoidRootPart.CFrame = CFrame.new(-1150, 16, 3800) -- Koordinat Marine (Contoh)
+        Player.Character.HumanoidRootPart.CFrame = CFrame.new(-1150, 16, 3800)
     end
 end)
 
-print("[VORTEEZX HUB V4] Ultimate UI Loaded!")
+print("[VORTEEZX HUB V6] Executed with Separated ESP!")
