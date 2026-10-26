@@ -1,11 +1,13 @@
 --========================================--
 --       VORTEEZX HUB | MOBILE EDITION
---       BLOX FRUITS GUI FRAMEWORK
+--       BLOX FRUITS GUI FRAMEWORK (FIXED)
 --========================================--
 
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local Workspace = game:GetService("Workspace")
 
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
@@ -433,5 +435,90 @@ end
 
 makeDraggable(float)
 
-print("💀 VORTEEZX HUB GUI loaded!")
-print("Note: Toggles are UI settings only.")
+--========================================--
+-- LOGIKA SCRIPT BLOX FRUITS (DITAMBAHKAN)
+--========================================--
+
+-- 1. SPEED HACK (Fix Anti-Reset)
+RunService.Heartbeat:Connect(function()
+    if player.Character and player.Character:FindFirstChild("Humanoid") then
+        -- Paksa kecepatan sesuai slider
+        player.Character.Humanoid.WalkSpeed = settings.Speed
+    end
+end)
+
+-- 2. AUTO FARM & MELEE
+local function getClosestEnemy()
+    local closest = nil
+    local dist = math.huge
+    if Workspace:FindFirstChild("Enemies") then
+        for _, v in pairs(Workspace.Enemies:GetChildren()) do
+            if v:FindFirstChild("Humanoid") and v.Humanoid.Health > 0 and v:FindFirstChild("HumanoidRootPart") then
+                local mag = (player.Character.HumanoidRootPart.Position - v.HumanoidRootPart.Position).Magnitude
+                if mag < dist then dist = mag; closest = v end
+            end
+        end
+    end
+    return closest
+end
+
+local function equipMelee()
+    if player.Backpack then
+        for _, v in pairs(player.Backpack:GetChildren()) do
+            if v:IsA("Tool") and (v.ToolTip:lower():find("melee") or v.Name:lower():find("sword") or v.Name:lower():find("blade")) then
+                player.Character.Humanoid:EquipTool(v)
+                return
+            end
+        end
+    end
+end
+
+task.spawn(function()
+    while task.wait(0.1) do
+        if settings.AutoFarm and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            local enemy = getClosestEnemy()
+            if enemy then
+                -- Teleport ke musuh
+                player.Character.HumanoidRootPart.CFrame = enemy.HumanoidRootPart.CFrame * CFrame.new(0, 0, 2.5)
+                
+                -- Auto Attack (Kalo fitur Melee nyala)
+                if settings.AutoMelee then
+                    equipMelee()
+                    local tool = player.Character:FindFirstChildOfClass("Tool")
+                    if tool then tool:Activate() end
+                end
+            end
+        end
+    end
+end)
+
+-- 3. AUTO CHEST
+task.spawn(function()
+    while task.wait(1) do
+        if settings.AutoChest and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            for _, v in pairs(Workspace:GetDescendants()) do
+                if (v:IsA("MeshPart") or v:IsA("Part")) and v.Name == "Chest" then
+                    player.Character.HumanoidRootPart.CFrame = v.CFrame
+                    task.wait(0.5)
+                end
+            end
+        end
+    end
+end)
+
+-- 4. AUTO FIND FRUIT (Auto Collect)
+task.spawn(function()
+    while task.wait(1) do
+        if settings.AutoFruit and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            for _, v in pairs(Workspace:GetDescendants()) do
+                if string.find(v.Name, "Fruit") and (v:IsA("Tool") or v:IsA("Model")) then
+                    local targetPos = v:IsA("Tool") and v.Handle.CFrame or v:GetPivot()
+                    player.Character.HumanoidRootPart.CFrame = targetPos
+                    task.wait(0.5)
+                end
+            end
+        end
+    end
+end)
+
+print("💀 VORTEEZX HUB GUI loaded with REAL SCRIPT LOGIC!")
