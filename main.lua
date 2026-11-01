@@ -1,5 +1,5 @@
 --[[
-    VORTEEZX HUB - ZENOX STYLE UI
+    VORTEEZX HUB - ZENOX STYLE UI (FIXED FLY & RESIZABLE)
 --]]
 
 local Player = game.Players.LocalPlayer
@@ -9,7 +9,7 @@ local TweenService = game:GetService("TweenService")
 
 -- UI Setup
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "VORTEEZX_HUB_Zenox"
+ScreenGui.Name = "VORTEEZX_HUB_V6"
 ScreenGui.ResetOnSpawn = false
 pcall(function()
     if syn and syn.protect_gui then
@@ -27,13 +27,13 @@ local THEME = {
     BG = Color3.fromRGB(25, 25, 25),
     SIDEBAR = Color3.fromRGB(18, 18, 18),
     TOPBAR = Color3.fromRGB(15, 15, 15),
-    ACCENT = Color3.fromRGB(255, 120, 0), -- Orange
+    ACCENT = Color3.fromRGB(255, 120, 0),
     TEXT = Color3.fromRGB(255, 255, 255),
     TEXT_DIM = Color3.fromRGB(150, 150, 150),
     ITEM_BG = Color3.fromRGB(35, 35, 35)
 }
 
--- Floating Button "F"
+-- ================= TOMBOL FLOATING =================
 local FloatBtn = Instance.new("TextButton")
 FloatBtn.Parent = ScreenGui
 FloatBtn.BackgroundColor3 = THEME.ACCENT
@@ -52,7 +52,7 @@ FloatStroke.Color = Color3.fromRGB(255, 255, 255)
 FloatStroke.Thickness = 1.5
 FloatStroke.Transparency = 0.5
 
--- Main Frame
+-- ================= MAIN FRAME =================
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "Main"
 MainFrame.Parent = ScreenGui
@@ -123,7 +123,46 @@ ContentArea.BorderSizePixel = 0
 local ContentCorner = Instance.new("UICorner", ContentArea)
 ContentCorner.CornerRadius = UDim.new(0, 6)
 
--- Helper Bikin Tombol Sidebar
+-- ================= UI RESIZE HANDLE =================
+local ResizeHandle = Instance.new("TextButton")
+ResizeHandle.Parent = MainFrame
+ResizeHandle.BackgroundTransparency = 1
+ResizeHandle.Size = UDim2.new(0, 25, 0, 25)
+ResizeHandle.Position = UDim2.new(1, -25, 1, -25)
+ResizeHandle.Text = "◢"
+ResizeHandle.TextColor3 = THEME.TEXT_DIM
+ResizeHandle.TextSize = 18
+ResizeHandle.Font = Enum.Font.GothamBold
+ResizeHandle.ZIndex = 10
+
+local isResizing = false
+local startSize, startPos
+
+ResizeHandle.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        isResizing = true
+        startSize = MainFrame.AbsoluteSize
+        startPos = input.Position
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if isResizing and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+        local delta = input.Position - startPos
+        -- Minimal ukuran 300x200 biar ga kekecilan
+        local newWidth = math.max(300, startSize.X + delta.X)
+        local newHeight = math.max(200, startSize.Y + delta.Y)
+        MainFrame.Size = UDim2.fromOffset(newWidth, newHeight)
+    end
+end)
+
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        isResizing = false
+    end
+end)
+
+-- ================= HELPER =================
 local function CreateSidebarBtn(text, yPos, pageToOpen)
     local btn = Instance.new("TextButton")
     btn.Parent = Sidebar
@@ -147,7 +186,6 @@ local function CreateSidebarBtn(text, yPos, pageToOpen)
     indCorner.CornerRadius = UDim.new(0, 2)
     
     btn.MouseButton1Click:Connect(function()
-        -- Reset all
         for _, v in pairs(Sidebar:GetChildren()) do
             if v:IsA("TextButton") then
                 v.TextColor3 = THEME.TEXT_DIM
@@ -158,7 +196,6 @@ local function CreateSidebarBtn(text, yPos, pageToOpen)
             if v:IsA("Frame") then v.Visible = false end
         end
         
-        -- Set Active
         btn.TextColor3 = THEME.ACCENT
         indicator.Visible = true
         pageToOpen.Visible = true
@@ -166,7 +203,6 @@ local function CreateSidebarBtn(text, yPos, pageToOpen)
     return btn
 end
 
--- Helper Bikin Toggle Switch (Bulat)
 local function CreateToggle(parent, text, yPos, defaultState, callback)
     local row = Instance.new("Frame")
     row.Parent = parent
@@ -207,7 +243,6 @@ local function CreateToggle(parent, text, yPos, defaultState, callback)
     cCorner.CornerRadius = UDim.new(1, 0)
 
     local state = defaultState
-    -- Set visual awal
     if state then
         switchBg.BackgroundColor3 = THEME.ACCENT
         circle.Position = UDim2.new(1, -18, 0.5, -8)
@@ -226,9 +261,9 @@ local function CreateToggle(parent, text, yPos, defaultState, callback)
     end)
 end
 
--- ================= PAGES =================
+-- ================= HALAMAN (PAGES) =================
 
--- Page 1: MOVEMENT (Fly & Speed)
+-- Halaman 1: MOVEMENT
 local MovePage = Instance.new("Frame")
 MovePage.Parent = ContentArea
 MovePage.BackgroundTransparency = 1
@@ -246,12 +281,18 @@ MoveTitle.TextColor3 = THEME.ACCENT
 MoveTitle.TextSize = 12
 MoveTitle.TextXAlignment = Enum.TextXAlignment.Left
 
+-- Fly Toggle (DIPERBAIKI BIAR TOMBOL PANAH MUNCUL)
 local FlyEnabled = false
 CreateToggle(MovePage, "Enable Fly (Terbang)", 40, false, function(state)
     FlyEnabled = state
+    UpBtn.Visible = state
+    DownBtn.Visible = state
+    if not state and Player.Character and Player.Character:FindFirstChildOfClass("Humanoid") then
+        Player.Character.Humanoid.PlatformStand = false
+    end
 end)
 
--- Speed Slider Custom
+-- Slider Speed
 local SpeedFrame = Instance.new("Frame")
 SpeedFrame.Parent = MovePage
 SpeedFrame.BackgroundColor3 = THEME.ITEM_BG
@@ -304,7 +345,7 @@ Bar.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputT
 UserInputService.InputChanged:Connect(function(input) if draggingSlider and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then updateSpeed(input) end end)
 UserInputService.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then draggingSlider = false end end)
 
--- Page 2: VISUAL (ESP)
+-- Halaman 2: VISUAL
 local VisualPage = Instance.new("Frame")
 VisualPage.Parent = ContentArea
 VisualPage.BackgroundTransparency = 1
@@ -325,7 +366,6 @@ VisTitle.TextXAlignment = Enum.TextXAlignment.Left
 local ESPEnabled = false
 CreateToggle(VisualPage, "ESP Player (Wallhack)", 40, false, function(state)
     ESPEnabled = state
-    -- Logic destroy ESP kalo mati
     if not state then
         for _, v in pairs(game.CoreGui:GetChildren()) do
             if v.Name == "VortexPlayerESP" then v:Destroy() end
@@ -333,7 +373,7 @@ CreateToggle(VisualPage, "ESP Player (Wallhack)", 40, false, function(state)
     end
 end)
 
--- Page 3: TELEPORT
+-- Halaman 3: TELEPORT
 local TPPage = Instance.new("Frame")
 TPPage.Parent = ContentArea
 TPPage.BackgroundTransparency = 1
@@ -377,13 +417,49 @@ TPExecBtn.TextSize = 12
 local TPE_Corner = Instance.new("UICorner", TPExecBtn)
 TPE_Corner.CornerRadius = UDim.new(0, 6)
 
--- Bikin Nav Sidebar
+-- Nav Sidebar
 local NavMove = CreateSidebarBtn("MOVEMENT", 10, MovePage)
 local NavVis = CreateSidebarBtn("VISUAL", 50, VisualPage)
 local NavTP = CreateSidebarBtn("TELEPORT", 90, TPPage)
--- Set default active
 NavMove.TextColor3 = THEME.ACCENT
 NavMove:FindFirstChildOfClass("Frame").Visible = true
+
+-- ================= TOMBOL NAIK / TURUN =================
+local UpBtn = Instance.new("TextButton")
+UpBtn.Parent = ScreenGui
+UpBtn.Size = UDim2.new(0, 50, 0, 50)
+UpBtn.Position = UDim2.new(1, -80, 1, -200)
+UpBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+UpBtn.BackgroundTransparency = 0.3
+UpBtn.Text = "⬆"
+UpBtn.TextColor3 = THEME.ACCENT
+UpBtn.Font = Enum.Font.GothamBold
+UpBtn.TextSize = 24
+UpBtn.Visible = false
+local UpCorner = Instance.new("UICorner", UpBtn)
+UpCorner.CornerRadius = UDim.new(1, 0)
+
+local DownBtn = Instance.new("TextButton")
+DownBtn.Parent = ScreenGui
+DownBtn.Size = UDim2.new(0, 50, 0, 50)
+DownBtn.Position = UDim2.new(1, -140, 1, -200)
+DownBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+DownBtn.BackgroundTransparency = 0.3
+DownBtn.Text = "⬇"
+DownBtn.TextColor3 = THEME.ACCENT
+DownBtn.Font = Enum.Font.GothamBold
+DownBtn.TextSize = 24
+DownBtn.Visible = false
+local DownCorner = Instance.new("UICorner", DownBtn)
+DownCorner.CornerRadius = UDim.new(1, 0)
+
+local holdingUp = false
+local holdingDown = false
+
+UpBtn.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then holdingUp = true end end)
+UpBtn.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then holdingUp = false end end)
+DownBtn.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then holdingDown = true end end)
+DownBtn.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then holdingDown = false end end)
 
 -- ================= LOGIC =================
 local ESPFolder = Instance.new("Folder", game.CoreGui)
@@ -419,7 +495,6 @@ local function RefreshPlayerList()
     end
 end
 
--- Buka/Tutup Menu
 local isOpen = false
 FloatBtn.MouseButton1Click:Connect(function()
     isOpen = not isOpen
@@ -432,7 +507,6 @@ CloseBtn.MouseButton1Click:Connect(function()
     isOpen = false
 end)
 
--- Eksekusi TP
 TPExecBtn.MouseButton1Click:Connect(function()
     if SelectedTarget and SelectedTarget.Character and SelectedTarget.Character:FindFirstChild("HumanoidRootPart") then
         if Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
@@ -445,7 +519,7 @@ TPExecBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- Loop Fly & ESP
+-- Main Loop
 RunService.RenderStepped:Connect(function(dt)
     if FlyEnabled and Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
         local HRP = Player.Character.HumanoidRootPart
@@ -455,10 +529,11 @@ RunService.RenderStepped:Connect(function(dt)
         local speedMultiplier = FlySpeed * dt * 2 
         local velocity = moveDir * speedMultiplier
         
+        if holdingUp then velocity = velocity + Vector3.new(0, speedMultiplier, 0)
+        elseif holdingDown then velocity = velocity - Vector3.new(0, speedMultiplier, 0) end
+        
         HRP.CFrame = HRP.CFrame + velocity
         HRP.Velocity = Vector3.new(0, 0, 0) 
-    elseif not FlyEnabled and Player.Character and Player.Character:FindFirstChildOfClass("Humanoid") then
-        Player.Character:FindFirstChildOfClass("Humanoid").PlatformStand = false
     end
 
     if ESPEnabled then
@@ -503,4 +578,4 @@ RunService.RenderStepped:Connect(function(dt)
     end
 end)
 
-print("[VORTEEZX] Zenox Style UI Loaded!")
+print("[VORTEEZX] Fly V6 - Resizable & Fixed Buttons Loaded!")
