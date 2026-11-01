@@ -1,5 +1,5 @@
 --[[
-    VORTEEZX HUB - FINAL FULL EDITION (RED + RUN SPEED)
+    VORTEEZX HUB - FINAL FULL EDITION (MAX SPEED + NO SINKING)
 --]]
 
 local Player = game.Players.LocalPlayer
@@ -7,14 +7,12 @@ local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
 
--- UI Setup
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "VORTEEZX_HUB_FINAL"
 ScreenGui.ResetOnSpawn = false
 pcall(function()
     if syn and syn.protect_gui then
-        syn.protect_gui(ScreenGui)
-        ScreenGui.Parent = game.CoreGui
+        syn.protect_gui(ScreenGui); ScreenGui.Parent = game.CoreGui
     elseif gethui then
         ScreenGui.Parent = gethui()
     else
@@ -22,18 +20,17 @@ pcall(function()
     end
 end)
 
--- Warna Tema (Merah Darah)
 local THEME = {
     BG = Color3.fromRGB(25, 25, 25),
     SIDEBAR = Color3.fromRGB(18, 18, 18),
     TOPBAR = Color3.fromRGB(15, 15, 15),
-    ACCENT = Color3.fromRGB(200, 0, 50), -- MERAH
+    ACCENT = Color3.fromRGB(200, 0, 50),
     TEXT = Color3.fromRGB(255, 255, 255),
     TEXT_DIM = Color3.fromRGB(150, 150, 150),
     ITEM_BG = Color3.fromRGB(35, 35, 35)
 }
 
--- ================= TOMBOL NAIK / TURUN =================
+-- TOMBOL NAIK / TURUN
 local UpBtn = Instance.new("TextButton")
 UpBtn.Parent = ScreenGui
 UpBtn.Size = UDim2.new(0, 50, 0, 50)
@@ -45,8 +42,7 @@ UpBtn.TextColor3 = THEME.ACCENT
 UpBtn.Font = Enum.Font.GothamBold
 UpBtn.TextSize = 24
 UpBtn.Visible = false
-local UpCorner = Instance.new("UICorner", UpBtn)
-UpCorner.CornerRadius = UDim.new(1, 0)
+Instance.new("UICorner", UpBtn).CornerRadius = UDim.new(1, 0)
 
 local DownBtn = Instance.new("TextButton")
 DownBtn.Parent = ScreenGui
@@ -59,18 +55,16 @@ DownBtn.TextColor3 = THEME.ACCENT
 DownBtn.Font = Enum.Font.GothamBold
 DownBtn.TextSize = 24
 DownBtn.Visible = false
-local DownCorner = Instance.new("UICorner", DownBtn)
-DownCorner.CornerRadius = UDim.new(1, 0)
+Instance.new("UICorner", DownBtn).CornerRadius = UDim.new(1, 0)
 
 local holdingUp = false
 local holdingDown = false
-
 UpBtn.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then holdingUp = true end end)
 UpBtn.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then holdingUp = false end end)
 DownBtn.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then holdingDown = true end end)
 DownBtn.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then holdingDown = false end end)
 
--- ================= TOMBOL FLOATING (IMAGE) =================
+-- FLOATING BUTTON
 local FloatBtn = Instance.new("ImageButton")
 FloatBtn.Parent = ScreenGui
 FloatBtn.BackgroundColor3 = THEME.ACCENT
@@ -81,10 +75,9 @@ FloatBtn.BorderSizePixel = 0
 FloatBtn.Draggable = true
 FloatBtn.Image = "rbxassetid://124025278726144"
 FloatBtn.ImageColor3 = Color3.fromRGB(255, 255, 255)
-local FloatCorner = Instance.new("UICorner", FloatBtn)
-FloatCorner.CornerRadius = UDim.new(1, 0)
+Instance.new("UICorner", FloatBtn).CornerRadius = UDim.new(1, 0)
 
--- ================= MAIN FRAME =================
+-- MAIN FRAME
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "Main"
 MainFrame.Parent = ScreenGui
@@ -95,17 +88,14 @@ MainFrame.Active = true
 MainFrame.Draggable = true
 MainFrame.BorderSizePixel = 0
 MainFrame.Visible = false
-local MainCorner = Instance.new("UICorner", MainFrame)
-MainCorner.CornerRadius = UDim.new(0, 6)
+Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 6)
 
--- Top Bar
 local TopBar = Instance.new("Frame")
 TopBar.Parent = MainFrame
 TopBar.BackgroundColor3 = THEME.TOPBAR
 TopBar.Size = UDim2.new(1, 0, 0, 35)
 TopBar.BorderSizePixel = 0
-local TopBarCorner = Instance.new("UICorner", TopBar)
-TopBarCorner.CornerRadius = UDim.new(0, 6)
+Instance.new("UICorner", TopBar).CornerRadius = UDim.new(0, 6)
 
 local Title = Instance.new("TextLabel")
 Title.Parent = TopBar
@@ -128,28 +118,23 @@ CloseBtn.Text = "X"
 CloseBtn.TextColor3 = THEME.TEXT
 CloseBtn.TextSize = 12
 CloseBtn.BorderSizePixel = 0
-local CloseCorner = Instance.new("UICorner", CloseBtn)
-CloseCorner.CornerRadius = UDim.new(1, 0)
+Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(1, 0)
 
--- Sidebar
 local Sidebar = Instance.new("Frame")
 Sidebar.Parent = MainFrame
 Sidebar.BackgroundColor3 = THEME.SIDEBAR
 Sidebar.Position = UDim2.new(0, 0, 0, 35)
 Sidebar.Size = UDim2.new(0, 120, 1, -35)
 Sidebar.BorderSizePixel = 0
-local SidebarCorner = Instance.new("UICorner", Sidebar)
-SidebarCorner.CornerRadius = UDim.new(0, 6)
+Instance.new("UICorner", Sidebar).CornerRadius = UDim.new(0, 6)
 
--- Content Area
 local ContentArea = Instance.new("Frame")
 ContentArea.Parent = MainFrame
 ContentArea.BackgroundColor3 = THEME.BG
 ContentArea.Position = UDim2.new(0, 120, 0, 35)
 ContentArea.Size = UDim2.new(1, -120, 1, -35)
 ContentArea.BorderSizePixel = 0
-local ContentCorner = Instance.new("UICorner", ContentArea)
-ContentCorner.CornerRadius = UDim.new(0, 6)
+Instance.new("UICorner", ContentArea).CornerRadius = UDim.new(0, 6)
 
 -- Resize Handle
 local ResizeHandle = Instance.new("TextButton")
@@ -163,33 +148,19 @@ ResizeHandle.TextSize = 18
 ResizeHandle.Font = Enum.Font.GothamBold
 ResizeHandle.ZIndex = 10
 
-local isResizing = false
-local startSize, startPos
-
+local isResizing, startSize, startPos = false, nil, nil
 ResizeHandle.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        isResizing = true
-        startSize = MainFrame.AbsoluteSize
-        startPos = input.Position
-    end
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then isResizing = true; startSize = MainFrame.AbsoluteSize; startPos = input.Position end
 end)
-
 UserInputService.InputChanged:Connect(function(input)
     if isResizing and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
         local delta = input.Position - startPos
-        local newWidth = math.max(300, startSize.X + delta.X)
-        local newHeight = math.max(200, startSize.Y + delta.Y)
-        MainFrame.Size = UDim2.fromOffset(newWidth, newHeight)
+        MainFrame.Size = UDim2.fromOffset(math.max(300, startSize.X + delta.X), math.max(200, startSize.Y + delta.Y))
     end
 end)
+UserInputService.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then isResizing = false end end)
 
-UserInputService.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        isResizing = false
-    end
-end)
-
--- ================= HELPER =================
+-- HELPER
 local function CreateSidebarBtn(text, yPos, pageToOpen)
     local btn = Instance.new("TextButton")
     btn.Parent = Sidebar
@@ -209,8 +180,7 @@ local function CreateSidebarBtn(text, yPos, pageToOpen)
     indicator.Position = UDim2.new(0, 0, 0, 5)
     indicator.Size = UDim2.new(0, 3, 0, 25)
     indicator.Visible = false
-    local indCorner = Instance.new("UICorner", indicator)
-    indCorner.CornerRadius = UDim.new(0, 2)
+    Instance.new("UICorner", indicator).CornerRadius = UDim.new(0, 2)
     
     btn.MouseButton1Click:Connect(function()
         for _, v in pairs(Sidebar:GetChildren()) do
@@ -236,8 +206,7 @@ local function CreateToggle(parent, text, yPos, defaultState, callback)
     row.Position = UDim2.new(0, 10, 0, yPos)
     row.Size = UDim2.new(1, -20, 0, 35)
     row.BorderSizePixel = 0
-    local rCorner = Instance.new("UICorner", row)
-    rCorner.CornerRadius = UDim.new(0, 6)
+    Instance.new("UICorner", row).CornerRadius = UDim.new(0, 6)
 
     local label = Instance.new("TextLabel")
     label.Parent = row
@@ -257,16 +226,14 @@ local function CreateToggle(parent, text, yPos, defaultState, callback)
     switchBg.Size = UDim2.new(0, 35, 0, 20)
     switchBg.AutoButtonColor = false
     switchBg.Text = ""
-    local swCorner = Instance.new("UICorner", switchBg)
-    swCorner.CornerRadius = UDim.new(1, 0)
+    Instance.new("UICorner", switchBg).CornerRadius = UDim.new(1, 0)
 
     local circle = Instance.new("Frame")
     circle.Parent = switchBg
     circle.BackgroundColor3 = THEME.TEXT
     circle.Position = UDim2.new(0, 2, 0.5, -8)
     circle.Size = UDim2.new(0, 16, 0, 16)
-    local cCorner = Instance.new("UICorner", circle)
-    cCorner.CornerRadius = UDim.new(1, 0)
+    Instance.new("UICorner", circle).CornerRadius = UDim.new(1, 0)
 
     local state = defaultState
     if state then
@@ -287,9 +254,7 @@ local function CreateToggle(parent, text, yPos, defaultState, callback)
     end)
 end
 
--- ================= HALAMAN (PAGES) =================
-
--- Halaman 1: MOVEMENT
+-- HALAMAN 1: MOVEMENT
 local MovePage = Instance.new("Frame")
 MovePage.Parent = ContentArea
 MovePage.BackgroundTransparency = 1
@@ -307,7 +272,6 @@ MoveTitle.TextColor3 = THEME.ACCENT
 MoveTitle.TextSize = 12
 MoveTitle.TextXAlignment = Enum.TextXAlignment.Left
 
--- Fly Toggle
 local FlyEnabled = false
 CreateToggle(MovePage, "Enable Fly (Terbang)", 40, false, function(state)
     FlyEnabled = state
@@ -318,15 +282,14 @@ CreateToggle(MovePage, "Enable Fly (Terbang)", 40, false, function(state)
     end
 end)
 
--- Slider Fly Speed
+-- Slider Fly Speed (MAX 1000)
 local FlySpeedFrame = Instance.new("Frame")
 FlySpeedFrame.Parent = MovePage
 FlySpeedFrame.BackgroundColor3 = THEME.ITEM_BG
 FlySpeedFrame.Position = UDim2.new(0, 10, 0, 85)
 FlySpeedFrame.Size = UDim2.new(1, -20, 0, 50)
 FlySpeedFrame.BorderSizePixel = 0
-local FSF_Corner = Instance.new("UICorner", FlySpeedFrame)
-FSF_Corner.CornerRadius = UDim.new(0, 6)
+Instance.new("UICorner", FlySpeedFrame).CornerRadius = UDim.new(0, 6)
 
 local FlySpeedLabel = Instance.new("TextLabel")
 FlySpeedLabel.Parent = FlySpeedFrame
@@ -346,16 +309,14 @@ FlyBar.Position = UDim2.new(0, 10, 0, 30)
 FlyBar.Size = UDim2.new(1, -20, 0, 6)
 FlyBar.AutoButtonColor = false
 FlyBar.Text = ""
-local FBarCorner = Instance.new("UICorner", FlyBar)
-FBarCorner.CornerRadius = UDim.new(1, 0)
+Instance.new("UICorner", FlyBar).CornerRadius = UDim.new(1, 0)
 
 local FlyFill = Instance.new("Frame")
 FlyFill.Parent = FlyBar
 FlyFill.BackgroundColor3 = THEME.ACCENT
-FlyFill.Size = UDim2.new(0.3, 0, 1, 0)
+FlyFill.Size = UDim2.new(0.05, 0, 1, 0)
 FlyFill.BorderSizePixel = 0
-local FFillCorner = Instance.new("UICorner", FlyFill)
-FFillCorner.CornerRadius = UDim.new(1, 0)
+Instance.new("UICorner", FlyFill).CornerRadius = UDim.new(1, 0)
 
 local FlySpeed = 60
 local draggingFlySlider = false
@@ -363,7 +324,7 @@ local function updateFlySpeed(input)
     local width = FlyBar.AbsoluteSize.X
     if width <= 0 then return end
     local relative = math.clamp((input.Position.X - FlyBar.AbsolutePosition.X) / width, 0, 1)
-    FlySpeed = math.floor(10 + relative * 190)
+    FlySpeed = math.floor(10 + relative * 990) -- MAX 1000
     FlySpeedLabel.Text = "Fly Speed: " .. FlySpeed
     FlyFill.Size = UDim2.new(relative, 0, 1, 0)
 end
@@ -377,15 +338,14 @@ CreateToggle(MovePage, "Enable Run Speed", 150, false, function(state)
     RunEnabled = state
 end)
 
--- Slider Run Speed
+-- Slider Run Speed (MAX 1000)
 local RunSpeedFrame = Instance.new("Frame")
 RunSpeedFrame.Parent = MovePage
 RunSpeedFrame.BackgroundColor3 = THEME.ITEM_BG
 RunSpeedFrame.Position = UDim2.new(0, 10, 0, 195)
 RunSpeedFrame.Size = UDim2.new(1, -20, 0, 50)
 RunSpeedFrame.BorderSizePixel = 0
-local RSF_Corner = Instance.new("UICorner", RunSpeedFrame)
-RSF_Corner.CornerRadius = UDim.new(0, 6)
+Instance.new("UICorner", RunSpeedFrame).CornerRadius = UDim.new(0, 6)
 
 local RunSpeedLabel = Instance.new("TextLabel")
 RunSpeedLabel.Parent = RunSpeedFrame
@@ -405,16 +365,14 @@ RunBar.Position = UDim2.new(0, 10, 0, 30)
 RunBar.Size = UDim2.new(1, -20, 0, 6)
 RunBar.AutoButtonColor = false
 RunBar.Text = ""
-local RBarCorner = Instance.new("UICorner", RunBar)
-RBarCorner.CornerRadius = UDim.new(1, 0)
+Instance.new("UICorner", RunBar).CornerRadius = UDim.new(1, 0)
 
 local RunFill = Instance.new("Frame")
 RunFill.Parent = RunBar
 RunFill.BackgroundColor3 = THEME.ACCENT
 RunFill.Size = UDim2.new(0, 0, 1, 0)
 RunFill.BorderSizePixel = 0
-local RFillCorner = Instance.new("UICorner", RunFill)
-RFillCorner.CornerRadius = UDim.new(1, 0)
+Instance.new("UICorner", RunFill).CornerRadius = UDim.new(1, 0)
 
 local RunSpeed = 16
 local draggingRunSlider = false
@@ -422,7 +380,7 @@ local function updateRunSpeed(input)
     local width = RunBar.AbsoluteSize.X
     if width <= 0 then return end
     local relative = math.clamp((input.Position.X - RunBar.AbsolutePosition.X) / width, 0, 1)
-    RunSpeed = math.floor(16 + relative * 284)
+    RunSpeed = math.floor(16 + relative * 984) -- MAX 1000
     RunSpeedLabel.Text = "Run Speed: " .. RunSpeed
     RunFill.Size = UDim2.new(relative, 0, 1, 0)
 end
@@ -484,8 +442,7 @@ PlayerList.Size = UDim2.new(1, -20, 1, -90)
 PlayerList.BorderSizePixel = 0
 PlayerList.ScrollBarThickness = 3
 PlayerList.ScrollBarImageColor3 = THEME.ACCENT
-local PLCorner = Instance.new("UICorner", PlayerList)
-PLCorner.CornerRadius = UDim.new(0, 6)
+Instance.new("UICorner", PlayerList).CornerRadius = UDim.new(0, 6)
 local PLLayout = Instance.new("UIListLayout", PlayerList)
 PLLayout.SortOrder = Enum.SortOrder.Name
 PLLayout.Padding = UDim.new(0, 2)
@@ -499,8 +456,7 @@ TPExecBtn.Font = Enum.Font.GothamBold
 TPExecBtn.Text = "TELEPORT"
 TPExecBtn.TextColor3 = THEME.TEXT
 TPExecBtn.TextSize = 12
-local TPE_Corner = Instance.new("UICorner", TPExecBtn)
-TPE_Corner.CornerRadius = UDim.new(0, 6)
+Instance.new("UICorner", TPExecBtn).CornerRadius = UDim.new(0, 6)
 
 -- Nav Sidebar
 local NavMove = CreateSidebarBtn("MOVEMENT", 10, MovePage)
@@ -509,7 +465,7 @@ local NavTP = CreateSidebarBtn("TELEPORT", 90, TPPage)
 NavMove.TextColor3 = THEME.ACCENT
 NavMove:FindFirstChildOfClass("Frame").Visible = true
 
--- ================= LOGIC =================
+-- LOGIC
 local ESPFolder = Instance.new("Folder", game.CoreGui)
 ESPFolder.Name = "VortexPlayerESP"
 local SelectedTarget = nil
@@ -528,8 +484,7 @@ local function RefreshPlayerList()
             btn.Text = p.Name
             btn.TextColor3 = THEME.TEXT
             btn.TextSize = 11
-            local c = Instance.new("UICorner", btn)        
-            c.CornerRadius = UDim.new(0, 4)
+            Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 4)
             
             btn.MouseButton1Click:Connect(function()
                 SelectedTarget = p
@@ -567,9 +522,9 @@ TPExecBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- Main Loop
+-- Main Loop (FIX FLY ANTI-LOROT)
 RunService.RenderStepped:Connect(function(dt)
-    -- Logika Run Speed (Hanya aktif jika tidak sedang terbang)
+    -- Logika Run Speed
     if RunEnabled and Player.Character and Player.Character:FindFirstChild("Humanoid") and not FlyEnabled then
         Player.Character.Humanoid.WalkSpeed = RunSpeed
     elseif not RunEnabled and Player.Character and Player.Character:FindFirstChild("Humanoid") and not FlyEnabled then
@@ -581,15 +536,26 @@ RunService.RenderStepped:Connect(function(dt)
         local HRP = Player.Character.HumanoidRootPart
         local Humanoid = Player.Character:FindFirstChildOfClass("Humanoid")
         Humanoid.PlatformStand = true
+        
+        local bv = HRP:FindFirstChild("VortexFlyBV")
+        if not bv then
+            bv = Instance.new("BodyVelocity")
+            bv.Name = "VortexFlyBV"
+            bv.MaxForce = Vector3.new(1e5, 1e5, 1e5)
+            bv.Parent = HRP
+        end
+
         local moveDir = Humanoid.MoveDirection
-        local speedMultiplier = FlySpeed * dt * 2 
-        local velocity = moveDir * speedMultiplier
+        local velocity = moveDir * FlySpeed
         
-        if holdingUp then velocity = velocity + Vector3.new(0, speedMultiplier, 0)
-        elseif holdingDown then velocity = velocity - Vector3.new(0, speedMultiplier, 0) end
+        if holdingUp then velocity = velocity + Vector3.new(0, FlySpeed, 0)
+        elseif holdingDown then velocity = velocity - Vector3.new(0, FlySpeed, 0) end
         
-        HRP.CFrame = HRP.CFrame + velocity
-        HRP.Velocity = Vector3.new(0, 0, 0) 
+        bv.Velocity = velocity
+    elseif not FlyEnabled and Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
+        local HRP = Player.Character.HumanoidRootPart
+        local bv = HRP:FindFirstChild("VortexFlyBV")
+        if bv then bv:Destroy() end
     end
 
     -- Logika ESP
@@ -635,4 +601,4 @@ RunService.RenderStepped:Connect(function(dt)
     end
 end)
 
-print("[VORTEEZX] FINAL FULL EDITION Loaded - No Icon, With Run Speed!")
+print("[VORTEEZX] FINAL FULL EDITION Loaded - Max Speed 1000 & Anti-Sinking Fly!")
