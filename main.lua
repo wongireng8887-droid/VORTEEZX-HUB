@@ -1,5 +1,5 @@
 --[[
-    VORTEEZX FLY V2 (MOBILE GLASS UI)
+    VORTEEZX FLY V3 (CFRAME MOBILE BYPASS)
 --]]
 
 local Player = game.Players.LocalPlayer
@@ -9,7 +9,7 @@ local TweenService = game:GetService("TweenService")
 
 -- UI Setup
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "VortexFly_V2"
+ScreenGui.Name = "VortexFly_V3"
 ScreenGui.ResetOnSpawn = false
 pcall(function()
     if syn and syn.protect_gui then
@@ -135,7 +135,7 @@ Fill.BorderSizePixel = 0
 local FillCorner = Instance.new("UICorner", Fill)
 FillCorner.CornerRadius = UDim.new(1, 0)
 
--- Tombol Naik / Turun (Floating)
+-- Tombol Naik / Turun
 local UpBtn = Instance.new("TextButton")
 UpBtn.Parent = ScreenGui
 UpBtn.Size = UDim2.new(0, 50, 0, 50)
@@ -167,8 +167,9 @@ DownCorner.CornerRadius = UDim.new(1, 0)
 -- ================= LOGIC =================
 local FlyEnabled = false
 local FlySpeed = 60
-local BodyVelocity = nil
 local isMenuOpen = false
+local holdingUp = false
+local holdingDown = false
 
 -- Toggle Menu
 FloatBtn.MouseButton1Click:Connect(function()
@@ -206,7 +207,30 @@ UserInputService.InputEnded:Connect(function(input)
     end
 end)
 
--- Fly Toggle Logic
+-- Tombol Naik/Turun Listener (Mobile Touch Fix)
+UpBtn.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        holdingUp = true
+    end
+end)
+UpBtn.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        holdingUp = false
+    end
+end)
+
+DownBtn.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        holdingDown = true
+    end
+end)
+DownBtn.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        holdingDown = false
+    end
+end)
+
+-- Fly Logic (CFrame Bypass)
 local function ToggleFly()
     FlyEnabled = not FlyEnabled
     if FlyEnabled then
@@ -214,47 +238,50 @@ local function ToggleFly()
         ToggleBtn.BackgroundColor3 = Color3.fromRGB(0, 150, 50)
         UpBtn.Visible = true
         DownBtn.Visible = true
-        
-        if Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
-            BodyVelocity = Instance.new("BodyVelocity")
-            BodyVelocity.MaxForce = Vector3.new(9e9, 9e9, 9e9)
-            BodyVelocity.Velocity = Vector3.new(0, 0, 0)
-            BodyVelocity.Parent = Player.Character.HumanoidRootPart
-        end
     else
         ToggleBtn.Text = "FLY: OFF"
         ToggleBtn.BackgroundColor3 = Color3.fromRGB(200, 0, 50)
         UpBtn.Visible = false
         DownBtn.Visible = false
+        holdingUp = false
+        holdingDown = false
         
-        if BodyVelocity then
-            BodyVelocity:Destroy()
-            BodyVelocity = nil
+        -- Balikin kondisi karakter
+        if Player.Character and Player.Character:FindFirstChildOfClass("Humanoid") then
+            Player.Character:FindFirstChildOfClass("Humanoid").PlatformStand = false
         end
     end
 end
 
 ToggleBtn.MouseButton1Click:Connect(ToggleFly)
 
--- Loop Fly Movement
-RunService.RenderStepped:Connect(function()
-    if FlyEnabled and BodyVelocity and Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
+-- Loop Movement
+RunService.RenderStepped:Connect(function(dt)
+    if FlyEnabled and Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
+        local HRP = Player.Character.HumanoidRootPart
         local Humanoid = Player.Character:FindFirstChildOfClass("Humanoid")
-        local moveVel = Humanoid.MoveDirection * FlySpeed
         
-        if UpBtn.MouseButton1Down then
-            moveVel = moveVel + Vector3.new(0, FlySpeed, 0)
+        -- Maksa karakter biar ga gravitasi
+        Humanoid.PlatformStand = true
+        
+        -- Ambil arah dari joystick (mobile)
+        local moveDir = Humanoid.MoveDirection
+        
+        -- Hitung pergerakan
+        local speedMultiplier = FlySpeed * dt * 2 -- Dikali dt biar smooth
+        local velocity = moveDir * speedMultiplier
+        
+        -- Naik / Turun
+        if holdingUp then
+            velocity = velocity + Vector3.new(0, speedMultiplier, 0)
+        elseif holdingDown then
+            velocity = velocity - Vector3.new(0, speedMultiplier, 0)
         end
-        if DownBtn.MouseButton1Down then
-            moveVel = moveVel + Vector3.new(0, -FlySpeed, 0)
-        end
-
-        if moveVel.Magnitude > 0 then
-            BodyVelocity.Velocity = moveVel
-        else
-            BodyVelocity.Velocity = Vector3.new(0, 0, 0)
-        end
+        
+        -- Aplikasiin ke CFrame langsung (bypass server velocity check)
+        HRP.CFrame = HRP.CFrame + velocity
+        HRP.Velocity = Vector3.new(0, 0, 0) -- Reset velocity biar ga melayang sendiri
     end
 end)
 
-print("[VORTEEZX] Fly V2 Mobile Loaded!")
+print("[VORTEEZX] Fly V3 (CFrame Bypass) Loaded!")
