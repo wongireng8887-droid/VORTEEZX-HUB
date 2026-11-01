@@ -1,14 +1,15 @@
 --[[
-    VORTEEZX HUB - FINAL FULL EDITION (MAX SPEED + NO SINKING)
+    VORTEEZX HUB - ULTIMATE EDITION
 --]]
 
 local Player = game.Players.LocalPlayer
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
+local Workspace = game:GetService("Workspace")
 
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "VORTEEZX_HUB_FINAL"
+ScreenGui.Name = "VORTEEZX_HUB_ULTIMATE"
 ScreenGui.ResetOnSpawn = false
 pcall(function()
     if syn and syn.protect_gui then
@@ -24,45 +25,11 @@ local THEME = {
     BG = Color3.fromRGB(25, 25, 25),
     SIDEBAR = Color3.fromRGB(18, 18, 18),
     TOPBAR = Color3.fromRGB(15, 15, 15),
-    ACCENT = Color3.fromRGB(200, 0, 50),
+    ACCENT = Color3.fromRGB(200, 0, 50), -- MERAH
     TEXT = Color3.fromRGB(255, 255, 255),
     TEXT_DIM = Color3.fromRGB(150, 150, 150),
     ITEM_BG = Color3.fromRGB(35, 35, 35)
 }
-
--- TOMBOL NAIK / TURUN
-local UpBtn = Instance.new("TextButton")
-UpBtn.Parent = ScreenGui
-UpBtn.Size = UDim2.new(0, 50, 0, 50)
-UpBtn.Position = UDim2.new(1, -80, 1, -200)
-UpBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
-UpBtn.BackgroundTransparency = 0.3
-UpBtn.Text = "⬆"
-UpBtn.TextColor3 = THEME.ACCENT
-UpBtn.Font = Enum.Font.GothamBold
-UpBtn.TextSize = 24
-UpBtn.Visible = false
-Instance.new("UICorner", UpBtn).CornerRadius = UDim.new(1, 0)
-
-local DownBtn = Instance.new("TextButton")
-DownBtn.Parent = ScreenGui
-DownBtn.Size = UDim2.new(0, 50, 0, 50)
-DownBtn.Position = UDim2.new(1, -140, 1, -200)
-DownBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
-DownBtn.BackgroundTransparency = 0.3
-DownBtn.Text = "⬇"
-DownBtn.TextColor3 = THEME.ACCENT
-DownBtn.Font = Enum.Font.GothamBold
-DownBtn.TextSize = 24
-DownBtn.Visible = false
-Instance.new("UICorner", DownBtn).CornerRadius = UDim.new(1, 0)
-
-local holdingUp = false
-local holdingDown = false
-UpBtn.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then holdingUp = true end end)
-UpBtn.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then holdingUp = false end end)
-DownBtn.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then holdingDown = true end end)
-DownBtn.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then holdingDown = false end end)
 
 -- FLOATING BUTTON
 local FloatBtn = Instance.new("ImageButton")
@@ -103,7 +70,7 @@ Title.BackgroundTransparency = 1
 Title.Position = UDim2.new(0, 10, 0, 0)
 Title.Size = UDim2.new(1, -50, 1, 0)
 Title.Font = Enum.Font.GothamBlack
-Title.Text = "VORTEEZX HUB"
+Title.Text = "VORTEEZX ULTIMATE"
 Title.TextColor3 = THEME.ACCENT
 Title.TextSize = 14
 Title.TextXAlignment = Enum.TextXAlignment.Left
@@ -135,30 +102,6 @@ ContentArea.Position = UDim2.new(0, 120, 0, 35)
 ContentArea.Size = UDim2.new(1, -120, 1, -35)
 ContentArea.BorderSizePixel = 0
 Instance.new("UICorner", ContentArea).CornerRadius = UDim.new(0, 6)
-
--- Resize Handle
-local ResizeHandle = Instance.new("TextButton")
-ResizeHandle.Parent = MainFrame
-ResizeHandle.BackgroundTransparency = 1
-ResizeHandle.Size = UDim2.new(0, 25, 0, 25)
-ResizeHandle.Position = UDim2.new(1, -25, 1, -25)
-ResizeHandle.Text = "◢"
-ResizeHandle.TextColor3 = THEME.TEXT_DIM
-ResizeHandle.TextSize = 18
-ResizeHandle.Font = Enum.Font.GothamBold
-ResizeHandle.ZIndex = 10
-
-local isResizing, startSize, startPos = false, nil, nil
-ResizeHandle.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then isResizing = true; startSize = MainFrame.AbsoluteSize; startPos = input.Position end
-end)
-UserInputService.InputChanged:Connect(function(input)
-    if isResizing and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-        local delta = input.Position - startPos
-        MainFrame.Size = UDim2.fromOffset(math.max(300, startSize.X + delta.X), math.max(200, startSize.Y + delta.Y))
-    end
-end)
-UserInputService.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then isResizing = false end end)
 
 -- HELPER
 local function CreateSidebarBtn(text, yPos, pageToOpen)
@@ -272,21 +215,17 @@ MoveTitle.TextColor3 = THEME.ACCENT
 MoveTitle.TextSize = 12
 MoveTitle.TextXAlignment = Enum.TextXAlignment.Left
 
-local FlyEnabled = false
-CreateToggle(MovePage, "Enable Fly (Terbang)", 40, false, function(state)
-    FlyEnabled = state
-    UpBtn.Visible = state
-    DownBtn.Visible = state
-    if not state and Player.Character and Player.Character:FindFirstChildOfClass("Humanoid") then
-        Player.Character.Humanoid.PlatformStand = false
-    end
-end)
+local FlyEnabled, RunEnabled, WaterEnabled, InfJumpEnabled = false, false, false, false
 
--- Slider Fly Speed (MAX 1000)
+CreateToggle(MovePage, "Enable Fly (Terbang)", 40, false, function(state) FlyEnabled = state; UpBtn.Visible = state; DownBtn.Visible = state end)
+CreateToggle(MovePage, "Walk on Water", 85, false, function(state) WaterEnabled = state end)
+CreateToggle(MovePage, "Infinite Jump", 130, false, function(state) InfJumpEnabled = state end)
+
+-- Slider Fly Speed
 local FlySpeedFrame = Instance.new("Frame")
 FlySpeedFrame.Parent = MovePage
 FlySpeedFrame.BackgroundColor3 = THEME.ITEM_BG
-FlySpeedFrame.Position = UDim2.new(0, 10, 0, 85)
+FlySpeedFrame.Position = UDim2.new(0, 10, 0, 175)
 FlySpeedFrame.Size = UDim2.new(1, -20, 0, 50)
 FlySpeedFrame.BorderSizePixel = 0
 Instance.new("UICorner", FlySpeedFrame).CornerRadius = UDim.new(0, 6)
@@ -324,7 +263,7 @@ local function updateFlySpeed(input)
     local width = FlyBar.AbsoluteSize.X
     if width <= 0 then return end
     local relative = math.clamp((input.Position.X - FlyBar.AbsolutePosition.X) / width, 0, 1)
-    FlySpeed = math.floor(10 + relative * 990) -- MAX 1000
+    FlySpeed = math.floor(10 + relative * 990) 
     FlySpeedLabel.Text = "Fly Speed: " .. FlySpeed
     FlyFill.Size = UDim2.new(relative, 0, 1, 0)
 end
@@ -332,17 +271,11 @@ FlyBar.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInp
 UserInputService.InputChanged:Connect(function(input) if draggingFlySlider and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then updateFlySpeed(input) end end)
 UserInputService.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then draggingFlySlider = false end end)
 
--- Run Toggle
-local RunEnabled = false
-CreateToggle(MovePage, "Enable Run Speed", 150, false, function(state)
-    RunEnabled = state
-end)
-
--- Slider Run Speed (MAX 1000)
+-- Slider Run Speed
 local RunSpeedFrame = Instance.new("Frame")
 RunSpeedFrame.Parent = MovePage
 RunSpeedFrame.BackgroundColor3 = THEME.ITEM_BG
-RunSpeedFrame.Position = UDim2.new(0, 10, 0, 195)
+RunSpeedFrame.Position = UDim2.new(0, 10, 0, 235)
 RunSpeedFrame.Size = UDim2.new(1, -20, 0, 50)
 RunSpeedFrame.BorderSizePixel = 0
 Instance.new("UICorner", RunSpeedFrame).CornerRadius = UDim.new(0, 6)
@@ -380,7 +313,7 @@ local function updateRunSpeed(input)
     local width = RunBar.AbsoluteSize.X
     if width <= 0 then return end
     local relative = math.clamp((input.Position.X - RunBar.AbsolutePosition.X) / width, 0, 1)
-    RunSpeed = math.floor(16 + relative * 984) -- MAX 1000
+    RunSpeed = math.floor(16 + relative * 984) 
     RunSpeedLabel.Text = "Run Speed: " .. RunSpeed
     RunFill.Size = UDim2.new(relative, 0, 1, 0)
 end
@@ -388,7 +321,28 @@ RunBar.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInp
 UserInputService.InputChanged:Connect(function(input) if draggingRunSlider and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then updateRunSpeed(input) end end)
 UserInputService.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then draggingRunSlider = false end end)
 
--- Halaman 2: VISUAL
+-- HALAMAN 2: COMBAT (KILL AURA)
+local CombatPage = Instance.new("Frame")
+CombatPage.Parent = ContentArea
+CombatPage.BackgroundTransparency = 1
+CombatPage.Size = UDim2.new(1, 0, 1, 0)
+CombatPage.Visible = false
+
+local CombatTitle = Instance.new("TextLabel")
+CombatTitle.Parent = CombatPage
+CombatTitle.BackgroundTransparency = 1
+CombatTitle.Position = UDim2.new(0, 10, 0, 10)
+CombatTitle.Size = UDim2.new(1, 0, 0, 20)
+CombatTitle.Font = Enum.Font.GothamBold
+CombatTitle.Text = "COMBAT SETTINGS"
+CombatTitle.TextColor3 = THEME.ACCENT
+CombatTitle.TextSize = 12
+CombatTitle.TextXAlignment = Enum.TextXAlignment.Left
+
+local KillAuraEnabled = false
+CreateToggle(CombatPage, "Kill Aura (Blox Fruits)", 40, false, function(state) KillAuraEnabled = state end)
+
+-- HALAMAN 3: VISUAL (ESP)
 local VisualPage = Instance.new("Frame")
 VisualPage.Parent = ContentArea
 VisualPage.BackgroundTransparency = 1
@@ -416,7 +370,7 @@ CreateToggle(VisualPage, "ESP Player (Wallhack)", 40, false, function(state)
     end
 end)
 
--- Halaman 3: TELEPORT
+-- HALAMAN 4: TELEPORT
 local TPPage = Instance.new("Frame")
 TPPage.Parent = ContentArea
 TPPage.BackgroundTransparency = 1
@@ -460,12 +414,53 @@ Instance.new("UICorner", TPExecBtn).CornerRadius = UDim.new(0, 6)
 
 -- Nav Sidebar
 local NavMove = CreateSidebarBtn("MOVEMENT", 10, MovePage)
-local NavVis = CreateSidebarBtn("VISUAL", 50, VisualPage)
-local NavTP = CreateSidebarBtn("TELEPORT", 90, TPPage)
+local NavCombat = CreateSidebarBtn("COMBAT", 50, CombatPage)
+local NavVis = CreateSidebarBtn("VISUAL", 90, VisualPage)
+local NavTP = CreateSidebarBtn("TELEPORT", 130, TPPage)
 NavMove.TextColor3 = THEME.ACCENT
 NavMove:FindFirstChildOfClass("Frame").Visible = true
 
--- LOGIC
+-- TOMBOL NAIK / TURUN
+local UpBtn = Instance.new("TextButton")
+UpBtn.Parent = ScreenGui
+UpBtn.Size = UDim2.new(0, 50, 0, 50)
+UpBtn.Position = UDim2.new(1, -80, 1, -200)
+UpBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+UpBtn.BackgroundTransparency = 0.3
+UpBtn.Text = "⬆"
+UpBtn.TextColor3 = THEME.ACCENT
+UpBtn.Font = Enum.Font.GothamBold
+UpBtn.TextSize = 24
+UpBtn.Visible = false
+Instance.new("UICorner", UpBtn).CornerRadius = UDim.new(1, 0)
+
+local DownBtn = Instance.new("TextButton")
+DownBtn.Parent = ScreenGui
+DownBtn.Size = UDim2.new(0, 50, 0, 50)
+DownBtn.Position = UDim2.new(1, -140, 1, -200)
+DownBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+DownBtn.BackgroundTransparency = 0.3
+DownBtn.Text = "⬇"
+DownBtn.TextColor3 = THEME.ACCENT
+DownBtn.Font = Enum.Font.GothamBold
+DownBtn.TextSize = 24
+DownBtn.Visible = false
+Instance.new("UICorner", DownBtn).CornerRadius = UDim.new(1, 0)
+
+local holdingUp, holdingDown = false, false
+UpBtn.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then holdingUp = true end end)
+UpBtn.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then holdingUp = false end end)
+DownBtn.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then holdingDown = true end end)
+DownBtn.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then holdingDown = false end end)
+
+-- INFINITE JUMP LOGIC
+UserInputService.JumpRequest:Connect(function()
+    if InfJumpEnabled and Player.Character and Player.Character:FindFirstChildOfClass("Humanoid") then
+        Player.Character:FindFirstChildOfClass("Humanoid"):ChangeState("Jumping")
+    end
+end)
+
+-- LOGIC LAINNYA
 local ESPFolder = Instance.new("Folder", game.CoreGui)
 ESPFolder.Name = "VortexPlayerESP"
 local SelectedTarget = nil
@@ -485,7 +480,6 @@ local function RefreshPlayerList()
             btn.TextColor3 = THEME.TEXT
             btn.TextSize = 11
             Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 4)
-            
             btn.MouseButton1Click:Connect(function()
                 SelectedTarget = p
                 for _, otherBtn in pairs(PlayerList:GetChildren()) do
@@ -522,43 +516,67 @@ TPExecBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- Main Loop (FIX FLY ANTI-LOROT)
-RunService.RenderStepped:Connect(function(dt)
-    -- Logika Run Speed
-    if RunEnabled and Player.Character and Player.Character:FindFirstChild("Humanoid") and not FlyEnabled then
-        Player.Character.Humanoid.WalkSpeed = RunSpeed
-    elseif not RunEnabled and Player.Character and Player.Character:FindFirstChild("Humanoid") and not FlyEnabled then
-        Player.Character.Humanoid.WalkSpeed = 16
+-- KILL AURA LOOP (BLOX FRUITS)
+task.spawn(function()
+    while task.wait(0.1) do
+        if KillAuraEnabled and Player.Character and Player.Character:FindFirstChildOfClass("Humanoid") then
+            local tool = Player.Character:FindFirstChildOfClass("Tool")
+            if tool then
+                local enemiesFolder = Workspace:FindFirstChild("Enemies")
+                if enemiesFolder then
+                    for _, mob in pairs(enemiesFolder:GetChildren()) do
+                        if mob:FindFirstChild("HumanoidRootPart") and mob:FindFirstChild("Humanoid") and mob.Humanoid.Health > 0 then
+                            local dist = (Player.Character.HumanoidRootPart.Position - mob.HumanoidRootPart.Position).Magnitude
+                            if dist <= 25 then -- Jarak jangkauan hit
+                                tool:Activate()
+                                break
+                            end
+                        end
+                    end
+                end
+            end
+        end
     end
+end)
 
-    -- Logika Fly
-    if FlyEnabled and Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
+-- MAIN LOOP
+RunService.RenderStepped:Connect(function(dt)
+    if Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
         local HRP = Player.Character.HumanoidRootPart
         local Humanoid = Player.Character:FindFirstChildOfClass("Humanoid")
-        Humanoid.PlatformStand = true
         
-        local bv = HRP:FindFirstChild("VortexFlyBV")
-        if not bv then
-            bv = Instance.new("BodyVelocity")
-            bv.Name = "VortexFlyBV"
-            bv.MaxForce = Vector3.new(1e5, 1e5, 1e5)
-            bv.Parent = HRP
+        -- Run Speed
+        if RunEnabled and not FlyEnabled then Humanoid.WalkSpeed = RunSpeed
+        elseif not RunEnabled and not FlyEnabled then Humanoid.WalkSpeed = 16 end
+        
+        -- Walk on Water
+        if WaterEnabled then
+            if Humanoid.FloorMaterial == Enum.Material.Water then
+                HRP.Velocity = Vector3.new(HRP.Velocity.X, 5, HRP.Velocity.Z)
+            end
         end
-
-        local moveDir = Humanoid.MoveDirection
-        local velocity = moveDir * FlySpeed
         
-        if holdingUp then velocity = velocity + Vector3.new(0, FlySpeed, 0)
-        elseif holdingDown then velocity = velocity - Vector3.new(0, FlySpeed, 0) end
-        
-        bv.Velocity = velocity
-    elseif not FlyEnabled and Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
-        local HRP = Player.Character.HumanoidRootPart
-        local bv = HRP:FindFirstChild("VortexFlyBV")
-        if bv then bv:Destroy() end
+        -- Fly
+        if FlyEnabled then
+            Humanoid.PlatformStand = true
+            local bv = HRP:FindFirstChild("VortexFlyBV")
+            if not bv then
+                bv = Instance.new("BodyVelocity")
+                bv.Name = "VortexFlyBV"
+                bv.MaxForce = Vector3.new(1e5, 1e5, 1e5)
+                bv.Parent = HRP
+            end
+            local velocity = Humanoid.MoveDirection * FlySpeed
+            if holdingUp then velocity = velocity + Vector3.new(0, FlySpeed, 0)
+            elseif holdingDown then velocity = velocity - Vector3.new(0, FlySpeed, 0) end
+            bv.Velocity = velocity
+        else
+            local bv = HRP:FindFirstChild("VortexFlyBV")
+            if bv then bv:Destroy() end
+        end
     end
 
-    -- Logika ESP
+    -- ESP
     if ESPEnabled then
         for _, p in pairs(game.Players:GetPlayers()) do
             if p ~= Player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") and p.Character:FindFirstChild("Humanoid") then
@@ -581,7 +599,6 @@ RunService.RenderStepped:Connect(function(dt)
                         billboard.Size = UDim2.new(0, 100, 0, 50)
                         billboard.AlwaysOnTop = true
                         billboard.Parent = ESPFolder
-                        
                         local text = Instance.new("TextLabel")
                         text.Parent = billboard
                         text.BackgroundTransparency = 1
@@ -601,4 +618,4 @@ RunService.RenderStepped:Connect(function(dt)
     end
 end)
 
-print("[VORTEEZX] FINAL FULL EDITION Loaded - Max Speed 1000 & Anti-Sinking Fly!")
+print("[VORTEEZX] ULTIMATE EDITION Loaded - Kill Aura, Inf Jump, Walk Water!")
