@@ -1,5 +1,5 @@
 --[[
-    VORTEEZX HUB - FINAL RED EDITION
+    VORTEEZX HUB - FINAL FULL EDITION (RED + RUN SPEED)
 --]]
 
 local Player = game.Players.LocalPlayer
@@ -79,7 +79,6 @@ FloatBtn.Position = UDim2.new(0, 20, 0.5, -25)
 FloatBtn.Size = UDim2.new(0, 50, 0, 50)
 FloatBtn.BorderSizePixel = 0
 FloatBtn.Draggable = true
--- ID GAMBAR DARI LO:
 FloatBtn.Image = "rbxassetid://124025278726144"
 FloatBtn.ImageColor3 = Color3.fromRGB(255, 255, 255)
 local FloatCorner = Instance.new("UICorner", FloatBtn)
@@ -90,8 +89,8 @@ local MainFrame = Instance.new("Frame")
 MainFrame.Name = "Main"
 MainFrame.Parent = ScreenGui
 MainFrame.BackgroundColor3 = THEME.BG
-MainFrame.Position = UDim2.new(0.5, -250, 0.5, -175)
-MainFrame.Size = UDim2.new(0, 500, 0, 350)
+MainFrame.Position = UDim2.new(0.5, -250, 0.5, -200)
+MainFrame.Size = UDim2.new(0, 500, 0, 400)
 MainFrame.Active = true
 MainFrame.Draggable = true
 MainFrame.BorderSizePixel = 0
@@ -308,6 +307,7 @@ MoveTitle.TextColor3 = THEME.ACCENT
 MoveTitle.TextSize = 12
 MoveTitle.TextXAlignment = Enum.TextXAlignment.Left
 
+-- Fly Toggle
 local FlyEnabled = false
 CreateToggle(MovePage, "Enable Fly (Terbang)", 40, false, function(state)
     FlyEnabled = state
@@ -318,58 +318,117 @@ CreateToggle(MovePage, "Enable Fly (Terbang)", 40, false, function(state)
     end
 end)
 
--- Slider Speed
-local SpeedFrame = Instance.new("Frame")
-SpeedFrame.Parent = MovePage
-SpeedFrame.BackgroundColor3 = THEME.ITEM_BG
-SpeedFrame.Position = UDim2.new(0, 10, 0, 85)
-SpeedFrame.Size = UDim2.new(1, -20, 0, 50)
-SpeedFrame.BorderSizePixel = 0
-local SF_Corner = Instance.new("UICorner", SpeedFrame)
-SF_Corner.CornerRadius = UDim.new(0, 6)
+-- Slider Fly Speed
+local FlySpeedFrame = Instance.new("Frame")
+FlySpeedFrame.Parent = MovePage
+FlySpeedFrame.BackgroundColor3 = THEME.ITEM_BG
+FlySpeedFrame.Position = UDim2.new(0, 10, 0, 85)
+FlySpeedFrame.Size = UDim2.new(1, -20, 0, 50)
+FlySpeedFrame.BorderSizePixel = 0
+local FSF_Corner = Instance.new("UICorner", FlySpeedFrame)
+FSF_Corner.CornerRadius = UDim.new(0, 6)
 
-local SpeedLabel = Instance.new("TextLabel")
-SpeedLabel.Parent = SpeedFrame
-SpeedLabel.BackgroundTransparency = 1
-SpeedLabel.Position = UDim2.new(0, 10, 0, 5)
-SpeedLabel.Size = UDim2.new(1, 0, 0, 20)
-SpeedLabel.Font = Enum.Font.GothamMedium
-SpeedLabel.Text = "Fly Speed: 60"
-SpeedLabel.TextColor3 = THEME.TEXT
-SpeedLabel.TextSize = 11
-SpeedLabel.TextXAlignment = Enum.TextXAlignment.Left
+local FlySpeedLabel = Instance.new("TextLabel")
+FlySpeedLabel.Parent = FlySpeedFrame
+FlySpeedLabel.BackgroundTransparency = 1
+FlySpeedLabel.Position = UDim2.new(0, 10, 0, 5)
+FlySpeedLabel.Size = UDim2.new(1, 0, 0, 20)
+FlySpeedLabel.Font = Enum.Font.GothamMedium
+FlySpeedLabel.Text = "Fly Speed: 60"
+FlySpeedLabel.TextColor3 = THEME.TEXT
+FlySpeedLabel.TextSize = 11
+FlySpeedLabel.TextXAlignment = Enum.TextXAlignment.Left
 
-local Bar = Instance.new("TextButton")
-Bar.Parent = SpeedFrame
-Bar.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-Bar.Position = UDim2.new(0, 10, 0, 30)
-Bar.Size = UDim2.new(1, -20, 0, 6)
-Bar.AutoButtonColor = false
-Bar.Text = ""
-local BarCorner = Instance.new("UICorner", Bar)
-BarCorner.CornerRadius = UDim.new(1, 0)
+local FlyBar = Instance.new("TextButton")
+FlyBar.Parent = FlySpeedFrame
+FlyBar.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+FlyBar.Position = UDim2.new(0, 10, 0, 30)
+FlyBar.Size = UDim2.new(1, -20, 0, 6)
+FlyBar.AutoButtonColor = false
+FlyBar.Text = ""
+local FBarCorner = Instance.new("UICorner", FlyBar)
+FBarCorner.CornerRadius = UDim.new(1, 0)
 
-local Fill = Instance.new("Frame")
-Fill.Parent = Bar
-Fill.BackgroundColor3 = THEME.ACCENT
-Fill.Size = UDim2.new(0.3, 0, 1, 0)
-Fill.BorderSizePixel = 0
-local FillCorner = Instance.new("UICorner", Fill)
-FillCorner.CornerRadius = UDim.new(1, 0)
+local FlyFill = Instance.new("Frame")
+FlyFill.Parent = FlyBar
+FlyFill.BackgroundColor3 = THEME.ACCENT
+FlyFill.Size = UDim2.new(0.3, 0, 1, 0)
+FlyFill.BorderSizePixel = 0
+local FFillCorner = Instance.new("UICorner", FlyFill)
+FFillCorner.CornerRadius = UDim.new(1, 0)
 
 local FlySpeed = 60
-local draggingSlider = false
-local function updateSpeed(input)
-    local width = Bar.AbsoluteSize.X
+local draggingFlySlider = false
+local function updateFlySpeed(input)
+    local width = FlyBar.AbsoluteSize.X
     if width <= 0 then return end
-    local relative = math.clamp((input.Position.X - Bar.AbsolutePosition.X) / width, 0, 1)
+    local relative = math.clamp((input.Position.X - FlyBar.AbsolutePosition.X) / width, 0, 1)
     FlySpeed = math.floor(10 + relative * 190)
-    SpeedLabel.Text = "Fly Speed: " .. FlySpeed
-    Fill.Size = UDim2.new(relative, 0, 1, 0)
+    FlySpeedLabel.Text = "Fly Speed: " .. FlySpeed
+    FlyFill.Size = UDim2.new(relative, 0, 1, 0)
 end
-Bar.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then draggingSlider = true; updateSpeed(input) end end)
-UserInputService.InputChanged:Connect(function(input) if draggingSlider and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then updateSpeed(input) end end)
-UserInputService.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then draggingSlider = false end end)
+FlyBar.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then draggingFlySlider = true; updateFlySpeed(input) end end)
+UserInputService.InputChanged:Connect(function(input) if draggingFlySlider and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then updateFlySpeed(input) end end)
+UserInputService.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then draggingFlySlider = false end end)
+
+-- Run Toggle
+local RunEnabled = false
+CreateToggle(MovePage, "Enable Run Speed", 150, false, function(state)
+    RunEnabled = state
+end)
+
+-- Slider Run Speed
+local RunSpeedFrame = Instance.new("Frame")
+RunSpeedFrame.Parent = MovePage
+RunSpeedFrame.BackgroundColor3 = THEME.ITEM_BG
+RunSpeedFrame.Position = UDim2.new(0, 10, 0, 195)
+RunSpeedFrame.Size = UDim2.new(1, -20, 0, 50)
+RunSpeedFrame.BorderSizePixel = 0
+local RSF_Corner = Instance.new("UICorner", RunSpeedFrame)
+RSF_Corner.CornerRadius = UDim.new(0, 6)
+
+local RunSpeedLabel = Instance.new("TextLabel")
+RunSpeedLabel.Parent = RunSpeedFrame
+RunSpeedLabel.BackgroundTransparency = 1
+RunSpeedLabel.Position = UDim2.new(0, 10, 0, 5)
+RunSpeedLabel.Size = UDim2.new(1, 0, 0, 20)
+RunSpeedLabel.Font = Enum.Font.GothamMedium
+RunSpeedLabel.Text = "Run Speed: 16"
+RunSpeedLabel.TextColor3 = THEME.TEXT
+RunSpeedLabel.TextSize = 11
+RunSpeedLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+local RunBar = Instance.new("TextButton")
+RunBar.Parent = RunSpeedFrame
+RunBar.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+RunBar.Position = UDim2.new(0, 10, 0, 30)
+RunBar.Size = UDim2.new(1, -20, 0, 6)
+RunBar.AutoButtonColor = false
+RunBar.Text = ""
+local RBarCorner = Instance.new("UICorner", RunBar)
+RBarCorner.CornerRadius = UDim.new(1, 0)
+
+local RunFill = Instance.new("Frame")
+RunFill.Parent = RunBar
+RunFill.BackgroundColor3 = THEME.ACCENT
+RunFill.Size = UDim2.new(0, 0, 1, 0)
+RunFill.BorderSizePixel = 0
+local RFillCorner = Instance.new("UICorner", RunFill)
+RFillCorner.CornerRadius = UDim.new(1, 0)
+
+local RunSpeed = 16
+local draggingRunSlider = false
+local function updateRunSpeed(input)
+    local width = RunBar.AbsoluteSize.X
+    if width <= 0 then return end
+    local relative = math.clamp((input.Position.X - RunBar.AbsolutePosition.X) / width, 0, 1)
+    RunSpeed = math.floor(16 + relative * 284)
+    RunSpeedLabel.Text = "Run Speed: " .. RunSpeed
+    RunFill.Size = UDim2.new(relative, 0, 1, 0)
+end
+RunBar.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then draggingRunSlider = true; updateRunSpeed(input) end end)
+UserInputService.InputChanged:Connect(function(input) if draggingRunSlider and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then updateRunSpeed(input) end end)
+UserInputService.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then draggingRunSlider = false end end)
 
 -- Halaman 2: VISUAL
 local VisualPage = Instance.new("Frame")
@@ -469,7 +528,7 @@ local function RefreshPlayerList()
             btn.Text = p.Name
             btn.TextColor3 = THEME.TEXT
             btn.TextSize = 11
-            local c = Instance.new("UICorner", btn)
+            local c = Instance.new("UICorner", btn)        
             c.CornerRadius = UDim.new(0, 4)
             
             btn.MouseButton1Click:Connect(function()
@@ -510,6 +569,14 @@ end)
 
 -- Main Loop
 RunService.RenderStepped:Connect(function(dt)
+    -- Logika Run Speed (Hanya aktif jika tidak sedang terbang)
+    if RunEnabled and Player.Character and Player.Character:FindFirstChild("Humanoid") and not FlyEnabled then
+        Player.Character.Humanoid.WalkSpeed = RunSpeed
+    elseif not RunEnabled and Player.Character and Player.Character:FindFirstChild("Humanoid") and not FlyEnabled then
+        Player.Character.Humanoid.WalkSpeed = 16
+    end
+
+    -- Logika Fly
     if FlyEnabled and Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
         local HRP = Player.Character.HumanoidRootPart
         local Humanoid = Player.Character:FindFirstChildOfClass("Humanoid")
@@ -525,6 +592,7 @@ RunService.RenderStepped:Connect(function(dt)
         HRP.Velocity = Vector3.new(0, 0, 0) 
     end
 
+    -- Logika ESP
     if ESPEnabled then
         for _, p in pairs(game.Players:GetPlayers()) do
             if p ~= Player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") and p.Character:FindFirstChild("Humanoid") then
@@ -535,11 +603,11 @@ RunService.RenderStepped:Connect(function(dt)
                         local highlight = Instance.new("Highlight")
                         highlight.Name = p.Name .. "_Highlight"
                         highlight.Adornee = char
-                        highlight.FillColor = Color3.fromRGB(255, 0, 0)                        highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+                        highlight.FillColor = Color3.fromRGB(255, 0, 0)
+                        highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
                         highlight.FillTransparency = 0.5
                         highlight.Parent = ESPFolder
                     end
-                    
                     if not ESPFolder:FindFirstChild(p.Name .. "_Text") then
                         local billboard = Instance.new("BillboardGui")
                         billboard.Name = p.Name .. "_Text"
@@ -558,7 +626,6 @@ RunService.RenderStepped:Connect(function(dt)
                         text.TextSize = 12
                         text.Name = "Text"
                     end
-                    
                     local distance = math.floor((Player.Character.HumanoidRootPart.Position - hrp.Position).Magnitude)
                     local textLabel = ESPFolder:FindFirstChild(p.Name .. "_Text"):FindFirstChild("Text")
                     textLabel.Text = p.Name .. "\n[" .. distance .. " studs]"
@@ -568,4 +635,4 @@ RunService.RenderStepped:Connect(function(dt)
     end
 end)
 
-print("[VORTEEZX] FINAL RED EDITION Loaded Successfully!")
+print("[VORTEEZX] FINAL FULL EDITION Loaded - No Icon, With Run Speed!")
