@@ -1,5 +1,5 @@
 --[[
-    VORTEEZX HUB - ZENOX STYLE UI (FIXED FLY & RESIZABLE)
+    VORTEEZX HUB - FINAL RED EDITION
 --]]
 
 local Player = game.Players.LocalPlayer
@@ -9,7 +9,7 @@ local TweenService = game:GetService("TweenService")
 
 -- UI Setup
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "VORTEEZX_HUB_V6"
+ScreenGui.Name = "VORTEEZX_HUB_FINAL"
 ScreenGui.ResetOnSpawn = false
 pcall(function()
     if syn and syn.protect_gui then
@@ -22,35 +22,68 @@ pcall(function()
     end
 end)
 
--- Warna Tema (Dark & Orange)
+-- Warna Tema (Merah Darah)
 local THEME = {
     BG = Color3.fromRGB(25, 25, 25),
     SIDEBAR = Color3.fromRGB(18, 18, 18),
     TOPBAR = Color3.fromRGB(15, 15, 15),
-    ACCENT = Color3.fromRGB(255, 120, 0),
+    ACCENT = Color3.fromRGB(200, 0, 50), -- MERAH
     TEXT = Color3.fromRGB(255, 255, 255),
     TEXT_DIM = Color3.fromRGB(150, 150, 150),
     ITEM_BG = Color3.fromRGB(35, 35, 35)
 }
 
--- ================= TOMBOL FLOATING =================
-local FloatBtn = Instance.new("TextButton")
+-- ================= TOMBOL NAIK / TURUN =================
+local UpBtn = Instance.new("TextButton")
+UpBtn.Parent = ScreenGui
+UpBtn.Size = UDim2.new(0, 50, 0, 50)
+UpBtn.Position = UDim2.new(1, -80, 1, -200)
+UpBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+UpBtn.BackgroundTransparency = 0.3
+UpBtn.Text = "⬆"
+UpBtn.TextColor3 = THEME.ACCENT
+UpBtn.Font = Enum.Font.GothamBold
+UpBtn.TextSize = 24
+UpBtn.Visible = false
+local UpCorner = Instance.new("UICorner", UpBtn)
+UpCorner.CornerRadius = UDim.new(1, 0)
+
+local DownBtn = Instance.new("TextButton")
+DownBtn.Parent = ScreenGui
+DownBtn.Size = UDim2.new(0, 50, 0, 50)
+DownBtn.Position = UDim2.new(1, -140, 1, -200)
+DownBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+DownBtn.BackgroundTransparency = 0.3
+DownBtn.Text = "⬇"
+DownBtn.TextColor3 = THEME.ACCENT
+DownBtn.Font = Enum.Font.GothamBold
+DownBtn.TextSize = 24
+DownBtn.Visible = false
+local DownCorner = Instance.new("UICorner", DownBtn)
+DownCorner.CornerRadius = UDim.new(1, 0)
+
+local holdingUp = false
+local holdingDown = false
+
+UpBtn.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then holdingUp = true end end)
+UpBtn.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then holdingUp = false end end)
+DownBtn.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then holdingDown = true end end)
+DownBtn.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then holdingDown = false end end)
+
+-- ================= TOMBOL FLOATING (IMAGE) =================
+local FloatBtn = Instance.new("ImageButton")
 FloatBtn.Parent = ScreenGui
 FloatBtn.BackgroundColor3 = THEME.ACCENT
+FloatBtn.BackgroundTransparency = 0.3
 FloatBtn.Position = UDim2.new(0, 20, 0.5, -25)
 FloatBtn.Size = UDim2.new(0, 50, 0, 50)
-FloatBtn.Font = Enum.Font.GothamBlack
-FloatBtn.Text = "F"
-FloatBtn.TextColor3 = THEME.TEXT
-FloatBtn.TextSize = 24
 FloatBtn.BorderSizePixel = 0
 FloatBtn.Draggable = true
+-- ID GAMBAR DARI LO:
+FloatBtn.Image = "rbxassetid://124025278726144"
+FloatBtn.ImageColor3 = Color3.fromRGB(255, 255, 255)
 local FloatCorner = Instance.new("UICorner", FloatBtn)
 FloatCorner.CornerRadius = UDim.new(1, 0)
-local FloatStroke = Instance.new("UIStroke", FloatBtn)
-FloatStroke.Color = Color3.fromRGB(255, 255, 255)
-FloatStroke.Thickness = 1.5
-FloatStroke.Transparency = 0.5
 
 -- ================= MAIN FRAME =================
 local MainFrame = Instance.new("Frame")
@@ -65,9 +98,6 @@ MainFrame.BorderSizePixel = 0
 MainFrame.Visible = false
 local MainCorner = Instance.new("UICorner", MainFrame)
 MainCorner.CornerRadius = UDim.new(0, 6)
-local MainStroke = Instance.new("UIStroke", MainFrame)
-MainStroke.Color = Color3.fromRGB(60, 60, 60)
-MainStroke.Thickness = 1.5
 
 -- Top Bar
 local TopBar = Instance.new("Frame")
@@ -89,7 +119,6 @@ Title.TextColor3 = THEME.ACCENT
 Title.TextSize = 14
 Title.TextXAlignment = Enum.TextXAlignment.Left
 
--- Tombol Close (X)
 local CloseBtn = Instance.new("TextButton")
 CloseBtn.Parent = TopBar
 CloseBtn.BackgroundColor3 = Color3.fromRGB(200, 0, 50)
@@ -103,7 +132,7 @@ CloseBtn.BorderSizePixel = 0
 local CloseCorner = Instance.new("UICorner", CloseBtn)
 CloseCorner.CornerRadius = UDim.new(1, 0)
 
--- Sidebar (Kiri)
+-- Sidebar
 local Sidebar = Instance.new("Frame")
 Sidebar.Parent = MainFrame
 Sidebar.BackgroundColor3 = THEME.SIDEBAR
@@ -113,7 +142,7 @@ Sidebar.BorderSizePixel = 0
 local SidebarCorner = Instance.new("UICorner", Sidebar)
 SidebarCorner.CornerRadius = UDim.new(0, 6)
 
--- Content Area (Kanan)
+-- Content Area
 local ContentArea = Instance.new("Frame")
 ContentArea.Parent = MainFrame
 ContentArea.BackgroundColor3 = THEME.BG
@@ -123,7 +152,7 @@ ContentArea.BorderSizePixel = 0
 local ContentCorner = Instance.new("UICorner", ContentArea)
 ContentCorner.CornerRadius = UDim.new(0, 6)
 
--- ================= UI RESIZE HANDLE =================
+-- Resize Handle
 local ResizeHandle = Instance.new("TextButton")
 ResizeHandle.Parent = MainFrame
 ResizeHandle.BackgroundTransparency = 1
@@ -149,7 +178,6 @@ end)
 UserInputService.InputChanged:Connect(function(input)
     if isResizing and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
         local delta = input.Position - startPos
-        -- Minimal ukuran 300x200 biar ga kekecilan
         local newWidth = math.max(300, startSize.X + delta.X)
         local newHeight = math.max(200, startSize.Y + delta.Y)
         MainFrame.Size = UDim2.fromOffset(newWidth, newHeight)
@@ -195,7 +223,6 @@ local function CreateSidebarBtn(text, yPos, pageToOpen)
         for _, v in pairs(ContentArea:GetChildren()) do
             if v:IsA("Frame") then v.Visible = false end
         end
-        
         btn.TextColor3 = THEME.ACCENT
         indicator.Visible = true
         pageToOpen.Visible = true
@@ -281,7 +308,6 @@ MoveTitle.TextColor3 = THEME.ACCENT
 MoveTitle.TextSize = 12
 MoveTitle.TextXAlignment = Enum.TextXAlignment.Left
 
--- Fly Toggle (DIPERBAIKI BIAR TOMBOL PANAH MUNCUL)
 local FlyEnabled = false
 CreateToggle(MovePage, "Enable Fly (Terbang)", 40, false, function(state)
     FlyEnabled = state
@@ -424,43 +450,6 @@ local NavTP = CreateSidebarBtn("TELEPORT", 90, TPPage)
 NavMove.TextColor3 = THEME.ACCENT
 NavMove:FindFirstChildOfClass("Frame").Visible = true
 
--- ================= TOMBOL NAIK / TURUN =================
-local UpBtn = Instance.new("TextButton")
-UpBtn.Parent = ScreenGui
-UpBtn.Size = UDim2.new(0, 50, 0, 50)
-UpBtn.Position = UDim2.new(1, -80, 1, -200)
-UpBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
-UpBtn.BackgroundTransparency = 0.3
-UpBtn.Text = "⬆"
-UpBtn.TextColor3 = THEME.ACCENT
-UpBtn.Font = Enum.Font.GothamBold
-UpBtn.TextSize = 24
-UpBtn.Visible = false
-local UpCorner = Instance.new("UICorner", UpBtn)
-UpCorner.CornerRadius = UDim.new(1, 0)
-
-local DownBtn = Instance.new("TextButton")
-DownBtn.Parent = ScreenGui
-DownBtn.Size = UDim2.new(0, 50, 0, 50)
-DownBtn.Position = UDim2.new(1, -140, 1, -200)
-DownBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
-DownBtn.BackgroundTransparency = 0.3
-DownBtn.Text = "⬇"
-DownBtn.TextColor3 = THEME.ACCENT
-DownBtn.Font = Enum.Font.GothamBold
-DownBtn.TextSize = 24
-DownBtn.Visible = false
-local DownCorner = Instance.new("UICorner", DownBtn)
-DownCorner.CornerRadius = UDim.new(1, 0)
-
-local holdingUp = false
-local holdingDown = false
-
-UpBtn.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then holdingUp = true end end)
-UpBtn.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then holdingUp = false end end)
-DownBtn.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then holdingDown = true end end)
-DownBtn.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then holdingDown = false end end)
-
 -- ================= LOGIC =================
 local ESPFolder = Instance.new("Folder", game.CoreGui)
 ESPFolder.Name = "VortexPlayerESP"
@@ -546,11 +535,11 @@ RunService.RenderStepped:Connect(function(dt)
                         local highlight = Instance.new("Highlight")
                         highlight.Name = p.Name .. "_Highlight"
                         highlight.Adornee = char
-                        highlight.FillColor = Color3.fromRGB(255, 0, 0)
-                        highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+                        highlight.FillColor = Color3.fromRGB(255, 0, 0)                        highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
                         highlight.FillTransparency = 0.5
                         highlight.Parent = ESPFolder
                     end
+                    
                     if not ESPFolder:FindFirstChild(p.Name .. "_Text") then
                         local billboard = Instance.new("BillboardGui")
                         billboard.Name = p.Name .. "_Text"
@@ -569,6 +558,7 @@ RunService.RenderStepped:Connect(function(dt)
                         text.TextSize = 12
                         text.Name = "Text"
                     end
+                    
                     local distance = math.floor((Player.Character.HumanoidRootPart.Position - hrp.Position).Magnitude)
                     local textLabel = ESPFolder:FindFirstChild(p.Name .. "_Text"):FindFirstChild("Text")
                     textLabel.Text = p.Name .. "\n[" .. distance .. " studs]"
@@ -578,4 +568,4 @@ RunService.RenderStepped:Connect(function(dt)
     end
 end)
 
-print("[VORTEEZX] Fly V6 - Resizable & Fixed Buttons Loaded!")
+print("[VORTEEZX] FINAL RED EDITION Loaded Successfully!")
