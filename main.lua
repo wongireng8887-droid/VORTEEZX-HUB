@@ -1,5 +1,5 @@
 --[[
-    VORTEEZX HUB - ULTIMATE EDITION
+    VORTEEZX HUB - ULTIMATE V2 (FIXED)
 --]]
 
 local Player = game.Players.LocalPlayer
@@ -25,24 +25,11 @@ local THEME = {
     BG = Color3.fromRGB(25, 25, 25),
     SIDEBAR = Color3.fromRGB(18, 18, 18),
     TOPBAR = Color3.fromRGB(15, 15, 15),
-    ACCENT = Color3.fromRGB(200, 0, 50), -- MERAH
+    ACCENT = Color3.fromRGB(200, 0, 50),
     TEXT = Color3.fromRGB(255, 255, 255),
     TEXT_DIM = Color3.fromRGB(150, 150, 150),
     ITEM_BG = Color3.fromRGB(35, 35, 35)
 }
-
--- FLOATING BUTTON
-local FloatBtn = Instance.new("ImageButton")
-FloatBtn.Parent = ScreenGui
-FloatBtn.BackgroundColor3 = THEME.ACCENT
-FloatBtn.BackgroundTransparency = 0.3
-FloatBtn.Position = UDim2.new(0, 20, 0.5, -25)
-FloatBtn.Size = UDim2.new(0, 50, 0, 50)
-FloatBtn.BorderSizePixel = 0
-FloatBtn.Draggable = true
-FloatBtn.Image = "rbxassetid://124025278726144"
-FloatBtn.ImageColor3 = Color3.fromRGB(255, 255, 255)
-Instance.new("UICorner", FloatBtn).CornerRadius = UDim.new(1, 0)
 
 -- MAIN FRAME
 local MainFrame = Instance.new("Frame")
@@ -57,6 +44,7 @@ MainFrame.BorderSizePixel = 0
 MainFrame.Visible = false
 Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 6)
 
+-- Top Bar
 local TopBar = Instance.new("Frame")
 TopBar.Parent = MainFrame
 TopBar.BackgroundColor3 = THEME.TOPBAR
@@ -70,7 +58,7 @@ Title.BackgroundTransparency = 1
 Title.Position = UDim2.new(0, 10, 0, 0)
 Title.Size = UDim2.new(1, -50, 1, 0)
 Title.Font = Enum.Font.GothamBlack
-Title.Text = "VORTEEZX ULTIMATE"
+Title.Text = "VORTEEZX ULTIMATE V2"
 Title.TextColor3 = THEME.ACCENT
 Title.TextSize = 14
 Title.TextXAlignment = Enum.TextXAlignment.Left
@@ -87,6 +75,7 @@ CloseBtn.TextSize = 12
 CloseBtn.BorderSizePixel = 0
 Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(1, 0)
 
+-- Sidebar & Content
 local Sidebar = Instance.new("Frame")
 Sidebar.Parent = MainFrame
 Sidebar.BackgroundColor3 = THEME.SIDEBAR
@@ -103,7 +92,20 @@ ContentArea.Size = UDim2.new(1, -120, 1, -35)
 ContentArea.BorderSizePixel = 0
 Instance.new("UICorner", ContentArea).CornerRadius = UDim.new(0, 6)
 
--- HELPER
+-- FLOATING BUTTON
+local FloatBtn = Instance.new("ImageButton")
+FloatBtn.Parent = ScreenGui
+FloatBtn.BackgroundColor3 = THEME.ACCENT
+FloatBtn.BackgroundTransparency = 0.3
+FloatBtn.Position = UDim2.new(0, 20, 0.5, -25)
+FloatBtn.Size = UDim2.new(0, 50, 0, 50)
+FloatBtn.BorderSizePixel = 0
+FloatBtn.Draggable = true
+FloatBtn.Image = "rbxassetid://124025278726144"
+FloatBtn.ImageColor3 = Color3.fromRGB(255, 255, 255)
+Instance.new("UICorner", FloatBtn).CornerRadius = UDim.new(1, 0)
+
+-- HELPER FUNCTIONS
 local function CreateSidebarBtn(text, yPos, pageToOpen)
     local btn = Instance.new("TextButton")
     btn.Parent = Sidebar
@@ -197,7 +199,7 @@ local function CreateToggle(parent, text, yPos, defaultState, callback)
     end)
 end
 
--- HALAMAN 1: MOVEMENT
+-- HALAMAN MOVEMENT
 local MovePage = Instance.new("Frame")
 MovePage.Parent = ContentArea
 MovePage.BackgroundTransparency = 1
@@ -220,12 +222,14 @@ local FlyEnabled, RunEnabled, WaterEnabled, InfJumpEnabled = false, false, false
 CreateToggle(MovePage, "Enable Fly (Terbang)", 40, false, function(state) FlyEnabled = state; UpBtn.Visible = state; DownBtn.Visible = state end)
 CreateToggle(MovePage, "Walk on Water", 85, false, function(state) WaterEnabled = state end)
 CreateToggle(MovePage, "Infinite Jump", 130, false, function(state) InfJumpEnabled = state end)
+-- TOMBOL RUN SPEED YANG TADI HILANG UDAH GUE MASUKIN LAGI
+CreateToggle(MovePage, "Enable Run Speed", 175, false, function(state) RunEnabled = state end)
 
 -- Slider Fly Speed
 local FlySpeedFrame = Instance.new("Frame")
 FlySpeedFrame.Parent = MovePage
 FlySpeedFrame.BackgroundColor3 = THEME.ITEM_BG
-FlySpeedFrame.Position = UDim2.new(0, 10, 0, 175)
+FlySpeedFrame.Position = UDim2.new(0, 10, 0, 225)
 FlySpeedFrame.Size = UDim2.new(1, -20, 0, 50)
 FlySpeedFrame.BorderSizePixel = 0
 Instance.new("UICorner", FlySpeedFrame).CornerRadius = UDim.new(0, 6)
@@ -275,7 +279,7 @@ UserInputService.InputEnded:Connect(function(input) if input.UserInputType == En
 local RunSpeedFrame = Instance.new("Frame")
 RunSpeedFrame.Parent = MovePage
 RunSpeedFrame.BackgroundColor3 = THEME.ITEM_BG
-RunSpeedFrame.Position = UDim2.new(0, 10, 0, 235)
+RunSpeedFrame.Position = UDim2.new(0, 10, 0, 285)
 RunSpeedFrame.Size = UDim2.new(1, -20, 0, 50)
 RunSpeedFrame.BorderSizePixel = 0
 Instance.new("UICorner", RunSpeedFrame).CornerRadius = UDim.new(0, 6)
@@ -321,7 +325,7 @@ RunBar.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInp
 UserInputService.InputChanged:Connect(function(input) if draggingRunSlider and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then updateRunSpeed(input) end end)
 UserInputService.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then draggingRunSlider = false end end)
 
--- HALAMAN 2: COMBAT (KILL AURA)
+-- HALAMAN COMBAT
 local CombatPage = Instance.new("Frame")
 CombatPage.Parent = ContentArea
 CombatPage.BackgroundTransparency = 1
@@ -342,7 +346,7 @@ CombatTitle.TextXAlignment = Enum.TextXAlignment.Left
 local KillAuraEnabled = false
 CreateToggle(CombatPage, "Kill Aura (Blox Fruits)", 40, false, function(state) KillAuraEnabled = state end)
 
--- HALAMAN 3: VISUAL (ESP)
+-- HALAMAN VISUAL
 local VisualPage = Instance.new("Frame")
 VisualPage.Parent = ContentArea
 VisualPage.BackgroundTransparency = 1
@@ -370,7 +374,7 @@ CreateToggle(VisualPage, "ESP Player (Wallhack)", 40, false, function(state)
     end
 end)
 
--- HALAMAN 4: TELEPORT
+-- HALAMAN TELEPORT
 local TPPage = Instance.new("Frame")
 TPPage.Parent = ContentArea
 TPPage.BackgroundTransparency = 1
@@ -412,7 +416,7 @@ TPExecBtn.TextColor3 = THEME.TEXT
 TPExecBtn.TextSize = 12
 Instance.new("UICorner", TPExecBtn).CornerRadius = UDim.new(0, 6)
 
--- Nav Sidebar
+-- NAV SIDEBAR
 local NavMove = CreateSidebarBtn("MOVEMENT", 10, MovePage)
 local NavCombat = CreateSidebarBtn("COMBAT", 50, CombatPage)
 local NavVis = CreateSidebarBtn("VISUAL", 90, VisualPage)
@@ -453,14 +457,14 @@ UpBtn.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInpu
 DownBtn.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then holdingDown = true end end)
 DownBtn.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then holdingDown = false end end)
 
--- INFINITE JUMP LOGIC
+-- INFINITE JUMP
 UserInputService.JumpRequest:Connect(function()
     if InfJumpEnabled and Player.Character and Player.Character:FindFirstChildOfClass("Humanoid") then
         Player.Character:FindFirstChildOfClass("Humanoid"):ChangeState("Jumping")
     end
 end)
 
--- LOGIC LAINNYA
+-- ESP & TELEPORT LOGIC
 local ESPFolder = Instance.new("Folder", game.CoreGui)
 ESPFolder.Name = "VortexPlayerESP"
 local SelectedTarget = nil
@@ -516,20 +520,22 @@ TPExecBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- KILL AURA LOOP (BLOX FRUITS)
+-- KILL AURA (FIX BLOX FRUITS)
 task.spawn(function()
     while task.wait(0.1) do
         if KillAuraEnabled and Player.Character and Player.Character:FindFirstChildOfClass("Humanoid") then
             local tool = Player.Character:FindFirstChildOfClass("Tool")
             if tool then
-                local enemiesFolder = Workspace:FindFirstChild("Enemies")
-                if enemiesFolder then
-                    for _, mob in pairs(enemiesFolder:GetChildren()) do
-                        if mob:FindFirstChild("HumanoidRootPart") and mob:FindFirstChild("Humanoid") and mob.Humanoid.Health > 0 then
+                for _, mob in pairs(Workspace:GetDescendants()) do
+                    -- Ngecek apakah objek itu NPC (punya Humanoid & bukan pemain)
+                    if mob:IsA("Model") and mob:FindFirstChild("Humanoid") and mob:FindFirstChild("HumanoidRootPart") and mob.Humanoid.Health > 0 then
+                        if not game.Players:GetPlayerFromCharacter(mob) then
                             local dist = (Player.Character.HumanoidRootPart.Position - mob.HumanoidRootPart.Position).Magnitude
-                            if dist <= 25 then -- Jarak jangkauan hit
+                            if dist <= 20 then -- Jarak serang 20 studs
+                                -- Ngadep ke musuh sebelum mukul
+                                Player.Character.HumanoidRootPart.CFrame = CFrame.new(Player.Character.HumanoidRootPart.Position, mob.HumanoidRootPart.Position)
                                 tool:Activate()
-                                break
+                                break 
                             end
                         end
                     end
@@ -549,14 +555,15 @@ RunService.RenderStepped:Connect(function(dt)
         if RunEnabled and not FlyEnabled then Humanoid.WalkSpeed = RunSpeed
         elseif not RunEnabled and not FlyEnabled then Humanoid.WalkSpeed = 16 end
         
-        -- Walk on Water
+        -- Walk on Water (FIX)
         if WaterEnabled then
-            if Humanoid.FloorMaterial == Enum.Material.Water then
-                HRP.Velocity = Vector3.new(HRP.Velocity.X, 5, HRP.Velocity.Z)
+            -- Cek kalo karakter lagi berenang, paksa naik ke atas air
+            if Humanoid:GetState() == Enum.HumanoidStateType.Swimming or Humanoid.FloorMaterial == Enum.Material.Water then
+                HRP.Velocity = Vector3.new(HRP.Velocity.X, 30, HRP.Velocity.Z) -- Paksa lompat ke atas air
             end
         end
         
-        -- Fly
+        -- Fly Logic
         if FlyEnabled then
             Humanoid.PlatformStand = true
             local bv = HRP:FindFirstChild("VortexFlyBV")
@@ -576,7 +583,7 @@ RunService.RenderStepped:Connect(function(dt)
         end
     end
 
-    -- ESP
+    -- ESP Logic
     if ESPEnabled then
         for _, p in pairs(game.Players:GetPlayers()) do
             if p ~= Player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") and p.Character:FindFirstChild("Humanoid") then
@@ -618,4 +625,4 @@ RunService.RenderStepped:Connect(function(dt)
     end
 end)
 
-print("[VORTEEZX] ULTIMATE EDITION Loaded - Kill Aura, Inf Jump, Walk Water!")
+print("[VORTEEZX] ULTIMATE V2 Loaded - Bug Fixed!")
