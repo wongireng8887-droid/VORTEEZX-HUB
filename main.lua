@@ -1,5 +1,5 @@
 --[[
-    VORTEEZX HUB - ULTIMATE V2 (FIXED)
+    VORTEEZX HUB - ULTIMATE V3 (AUTO ATTACK + WATER FIX)
 --]]
 
 local Player = game.Players.LocalPlayer
@@ -9,7 +9,7 @@ local TweenService = game:GetService("TweenService")
 local Workspace = game:GetService("Workspace")
 
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "VORTEEZX_HUB_ULTIMATE"
+ScreenGui.Name = "VORTEEZX_HUB_V3"
 ScreenGui.ResetOnSpawn = false
 pcall(function()
     if syn and syn.protect_gui then
@@ -31,6 +31,52 @@ local THEME = {
     ITEM_BG = Color3.fromRGB(35, 35, 35)
 }
 
+-- TOMBOL NAIK / TURUN FLY
+local UpBtn = Instance.new("TextButton")
+UpBtn.Parent = ScreenGui
+UpBtn.Size = UDim2.new(0, 50, 0, 50)
+UpBtn.Position = UDim2.new(1, -80, 1, -200)
+UpBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+UpBtn.BackgroundTransparency = 0.3
+UpBtn.Text = "⬆"
+UpBtn.TextColor3 = THEME.ACCENT
+UpBtn.Font = Enum.Font.GothamBold
+UpBtn.TextSize = 24
+UpBtn.Visible = false
+Instance.new("UICorner", UpBtn).CornerRadius = UDim.new(1, 0)
+
+local DownBtn = Instance.new("TextButton")
+DownBtn.Parent = ScreenGui
+DownBtn.Size = UDim2.new(0, 50, 0, 50)
+DownBtn.Position = UDim2.new(1, -140, 1, -200)
+DownBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+DownBtn.BackgroundTransparency = 0.3
+DownBtn.Text = "⬇"
+DownBtn.TextColor3 = THEME.ACCENT
+DownBtn.Font = Enum.Font.GothamBold
+DownBtn.TextSize = 24
+DownBtn.Visible = false
+Instance.new("UICorner", DownBtn).CornerRadius = UDim.new(1, 0)
+
+local holdingUp, holdingDown = false, false
+UpBtn.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then holdingUp = true end end)
+UpBtn.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then holdingUp = false end end)
+DownBtn.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then holdingDown = true end end)
+DownBtn.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then holdingDown = false end end)
+
+-- FLOATING BUTTON
+local FloatBtn = Instance.new("ImageButton")
+FloatBtn.Parent = ScreenGui
+FloatBtn.BackgroundColor3 = THEME.ACCENT
+FloatBtn.BackgroundTransparency = 0.3
+FloatBtn.Position = UDim2.new(0, 20, 0.5, -25)
+FloatBtn.Size = UDim2.new(0, 50, 0, 50)
+FloatBtn.BorderSizePixel = 0
+FloatBtn.Draggable = true
+FloatBtn.Image = "rbxassetid://124025278726144"
+FloatBtn.ImageColor3 = Color3.fromRGB(255, 255, 255)
+Instance.new("UICorner", FloatBtn).CornerRadius = UDim.new(1, 0)
+
 -- MAIN FRAME
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "Main"
@@ -44,7 +90,6 @@ MainFrame.BorderSizePixel = 0
 MainFrame.Visible = false
 Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 6)
 
--- Top Bar
 local TopBar = Instance.new("Frame")
 TopBar.Parent = MainFrame
 TopBar.BackgroundColor3 = THEME.TOPBAR
@@ -58,7 +103,7 @@ Title.BackgroundTransparency = 1
 Title.Position = UDim2.new(0, 10, 0, 0)
 Title.Size = UDim2.new(1, -50, 1, 0)
 Title.Font = Enum.Font.GothamBlack
-Title.Text = "VORTEEZX ULTIMATE V2"
+Title.Text = "VORTEEZX ULTIMATE V3"
 Title.TextColor3 = THEME.ACCENT
 Title.TextSize = 14
 Title.TextXAlignment = Enum.TextXAlignment.Left
@@ -75,7 +120,6 @@ CloseBtn.TextSize = 12
 CloseBtn.BorderSizePixel = 0
 Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(1, 0)
 
--- Sidebar & Content
 local Sidebar = Instance.new("Frame")
 Sidebar.Parent = MainFrame
 Sidebar.BackgroundColor3 = THEME.SIDEBAR
@@ -91,19 +135,6 @@ ContentArea.Position = UDim2.new(0, 120, 0, 35)
 ContentArea.Size = UDim2.new(1, -120, 1, -35)
 ContentArea.BorderSizePixel = 0
 Instance.new("UICorner", ContentArea).CornerRadius = UDim.new(0, 6)
-
--- FLOATING BUTTON
-local FloatBtn = Instance.new("ImageButton")
-FloatBtn.Parent = ScreenGui
-FloatBtn.BackgroundColor3 = THEME.ACCENT
-FloatBtn.BackgroundTransparency = 0.3
-FloatBtn.Position = UDim2.new(0, 20, 0.5, -25)
-FloatBtn.Size = UDim2.new(0, 50, 0, 50)
-FloatBtn.BorderSizePixel = 0
-FloatBtn.Draggable = true
-FloatBtn.Image = "rbxassetid://124025278726144"
-FloatBtn.ImageColor3 = Color3.fromRGB(255, 255, 255)
-Instance.new("UICorner", FloatBtn).CornerRadius = UDim.new(1, 0)
 
 -- HELPER FUNCTIONS
 local function CreateSidebarBtn(text, yPos, pageToOpen)
@@ -222,7 +253,6 @@ local FlyEnabled, RunEnabled, WaterEnabled, InfJumpEnabled = false, false, false
 CreateToggle(MovePage, "Enable Fly (Terbang)", 40, false, function(state) FlyEnabled = state; UpBtn.Visible = state; DownBtn.Visible = state end)
 CreateToggle(MovePage, "Walk on Water", 85, false, function(state) WaterEnabled = state end)
 CreateToggle(MovePage, "Infinite Jump", 130, false, function(state) InfJumpEnabled = state end)
--- TOMBOL RUN SPEED YANG TADI HILANG UDAH GUE MASUKIN LAGI
 CreateToggle(MovePage, "Enable Run Speed", 175, false, function(state) RunEnabled = state end)
 
 -- Slider Fly Speed
@@ -343,8 +373,8 @@ CombatTitle.TextColor3 = THEME.ACCENT
 CombatTitle.TextSize = 12
 CombatTitle.TextXAlignment = Enum.TextXAlignment.Left
 
-local KillAuraEnabled = false
-CreateToggle(CombatPage, "Kill Aura (Blox Fruits)", 40, false, function(state) KillAuraEnabled = state end)
+local AutoAttackEnabled = false
+CreateToggle(CombatPage, "Auto Attack (Nearby)", 40, false, function(state) AutoAttackEnabled = state end)
 
 -- HALAMAN VISUAL
 local VisualPage = Instance.new("Frame")
@@ -424,39 +454,6 @@ local NavTP = CreateSidebarBtn("TELEPORT", 130, TPPage)
 NavMove.TextColor3 = THEME.ACCENT
 NavMove:FindFirstChildOfClass("Frame").Visible = true
 
--- TOMBOL NAIK / TURUN
-local UpBtn = Instance.new("TextButton")
-UpBtn.Parent = ScreenGui
-UpBtn.Size = UDim2.new(0, 50, 0, 50)
-UpBtn.Position = UDim2.new(1, -80, 1, -200)
-UpBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
-UpBtn.BackgroundTransparency = 0.3
-UpBtn.Text = "⬆"
-UpBtn.TextColor3 = THEME.ACCENT
-UpBtn.Font = Enum.Font.GothamBold
-UpBtn.TextSize = 24
-UpBtn.Visible = false
-Instance.new("UICorner", UpBtn).CornerRadius = UDim.new(1, 0)
-
-local DownBtn = Instance.new("TextButton")
-DownBtn.Parent = ScreenGui
-DownBtn.Size = UDim2.new(0, 50, 0, 50)
-DownBtn.Position = UDim2.new(1, -140, 1, -200)
-DownBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
-DownBtn.BackgroundTransparency = 0.3
-DownBtn.Text = "⬇"
-DownBtn.TextColor3 = THEME.ACCENT
-DownBtn.Font = Enum.Font.GothamBold
-DownBtn.TextSize = 24
-DownBtn.Visible = false
-Instance.new("UICorner", DownBtn).CornerRadius = UDim.new(1, 0)
-
-local holdingUp, holdingDown = false, false
-UpBtn.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then holdingUp = true end end)
-UpBtn.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then holdingUp = false end end)
-DownBtn.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then holdingDown = true end end)
-DownBtn.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then holdingDown = false end end)
-
 -- INFINITE JUMP
 UserInputService.JumpRequest:Connect(function()
     if InfJumpEnabled and Player.Character and Player.Character:FindFirstChildOfClass("Humanoid") then
@@ -520,26 +517,29 @@ TPExecBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- KILL AURA (FIX BLOX FRUITS)
+-- AUTO ATTACK LOGIC
 task.spawn(function()
-    while task.wait(0.1) do
-        if KillAuraEnabled and Player.Character and Player.Character:FindFirstChildOfClass("Humanoid") then
+    while task.wait(0.15) do
+        if AutoAttackEnabled and Player.Character and Player.Character:FindFirstChildOfClass("Tool") then
             local tool = Player.Character:FindFirstChildOfClass("Tool")
-            if tool then
-                for _, mob in pairs(Workspace:GetDescendants()) do
-                    -- Ngecek apakah objek itu NPC (punya Humanoid & bukan pemain)
-                    if mob:IsA("Model") and mob:FindFirstChild("Humanoid") and mob:FindFirstChild("HumanoidRootPart") and mob.Humanoid.Health > 0 then
-                        if not game.Players:GetPlayerFromCharacter(mob) then
-                            local dist = (Player.Character.HumanoidRootPart.Position - mob.HumanoidRootPart.Position).Magnitude
-                            if dist <= 20 then -- Jarak serang 20 studs
-                                -- Ngadep ke musuh sebelum mukul
-                                Player.Character.HumanoidRootPart.CFrame = CFrame.new(Player.Character.HumanoidRootPart.Position, mob.HumanoidRootPart.Position)
-                                tool:Activate()
-                                break 
-                            end
+            local closest = nil
+            local dist = 25 -- Jarak jangkauan (studs)
+
+            for _, v in pairs(Workspace:GetDescendants()) do
+                if v:IsA("Model") and v:FindFirstChild("Humanoid") and v:FindFirstChild("HumanoidRootPart") and v.Humanoid.Health > 0 and v ~= Player.Character then
+                    if not game.Players:GetPlayerFromCharacter(v) or v ~= Player.Character then
+                        local d = (Player.Character.HumanoidRootPart.Position - v.HumanoidRootPart.Position).Magnitude
+                        if d < dist then
+                            dist = d
+                            closest = v
                         end
                     end
                 end
+            end
+
+            if closest then
+                Player.Character.HumanoidRootPart.CFrame = CFrame.new(Player.Character.HumanoidRootPart.Position, closest.HumanoidRootPart.Position)
+                tool:Activate()
             end
         end
     end
@@ -555,15 +555,30 @@ RunService.RenderStepped:Connect(function(dt)
         if RunEnabled and not FlyEnabled then Humanoid.WalkSpeed = RunSpeed
         elseif not RunEnabled and not FlyEnabled then Humanoid.WalkSpeed = 16 end
         
-        -- Walk on Water (FIX)
+        -- Walk on Water (FIX: Hover melayang di atas air)
         if WaterEnabled then
-            -- Cek kalo karakter lagi berenang, paksa naik ke atas air
             if Humanoid:GetState() == Enum.HumanoidStateType.Swimming or Humanoid.FloorMaterial == Enum.Material.Water then
-                HRP.Velocity = Vector3.new(HRP.Velocity.X, 30, HRP.Velocity.Z) -- Paksa lompat ke atas air
+                -- Trik pake BodyPosition biar ngambang tegak lurus tanpa mental
+                local bp = HRP:FindFirstChild("WaterHover")
+                if not bp then
+                    bp = Instance.new("BodyPosition")
+                    bp.Name = "WaterHover"
+                    bp.MaxForce = Vector3.new(0, 1e5, 0)
+                    bp.Position = HRP.Position + Vector3.new(0, 2, 0) -- Ngambang 2 stud di atas air
+                    bp.Parent = HRP
+                else
+                    bp.Position = HRP.Position + Vector3.new(0, 2, 0)
+                end
+            else
+                local bp = HRP:FindFirstChild("WaterHover")
+                if bp then bp:Destroy() end
             end
+        else
+            local bp = HRP:FindFirstChild("WaterHover")
+            if bp then bp:Destroy() end
         end
         
-        -- Fly Logic
+        -- Fly
         if FlyEnabled then
             Humanoid.PlatformStand = true
             local bv = HRP:FindFirstChild("VortexFlyBV")
@@ -583,7 +598,7 @@ RunService.RenderStepped:Connect(function(dt)
         end
     end
 
-    -- ESP Logic
+    -- ESP
     if ESPEnabled then
         for _, p in pairs(game.Players:GetPlayers()) do
             if p ~= Player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") and p.Character:FindFirstChild("Humanoid") then
@@ -625,4 +640,4 @@ RunService.RenderStepped:Connect(function(dt)
     end
 end)
 
-print("[VORTEEZX] ULTIMATE V2 Loaded - Bug Fixed!")
+print("[VORTEEZX] ULTIMATE V3 Loaded - Auto Attack & Water Fix!")
