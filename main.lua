@@ -1,5 +1,5 @@
 --[[
-    VORTEEZX FLY V4 (+ ESP PLAYER)
+    VORTEEZX FLY V5 (+ ESP PLAYER + TP PLAYER)
 --]]
 
 local Player = game.Players.LocalPlayer
@@ -9,7 +9,7 @@ local TweenService = game:GetService("TweenService")
 
 -- UI Setup
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "VortexFly_V4"
+ScreenGui.Name = "VortexFly_V5"
 ScreenGui.ResetOnSpawn = false
 pcall(function()
     if syn and syn.protect_gui then
@@ -48,8 +48,8 @@ MainFrame.Name = "Main"
 MainFrame.Parent = ScreenGui
 MainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
 MainFrame.BackgroundTransparency = 0.2
-MainFrame.Position = UDim2.new(0.5, -125, 0.5, -150) -- Sedikit lebih tinggi buat muat tombol baru
-MainFrame.Size = UDim2.new(0, 250, 0, 310)
+MainFrame.Position = UDim2.new(0.5, -135, 0.5, -230) -- Diperbesar
+MainFrame.Size = UDim2.new(0, 270, 0, 460)
 MainFrame.Active = true
 MainFrame.Draggable = true
 MainFrame.BorderSizePixel = 0
@@ -77,7 +77,7 @@ Title.Parent = Header
 Title.BackgroundTransparency = 1
 Title.Size = UDim2.new(1, 0, 1, 0)
 Title.Font = Enum.Font.GothamBold
-Title.Text = "VORTEEZX FLY & ESP"
+Title.Text = "VORTEEZX UTILITY"
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
 Title.TextSize = 14
 
@@ -87,11 +87,11 @@ ToggleBtn.Parent = MainFrame
 ToggleBtn.BackgroundColor3 = Color3.fromRGB(200, 0, 50)
 ToggleBtn.BackgroundTransparency = 0.2
 ToggleBtn.Position = UDim2.new(0.1, 0, 0, 60)
-ToggleBtn.Size = UDim2.new(0.8, 0, 0, 40)
+ToggleBtn.Size = UDim2.new(0.8, 0, 0, 35)
 ToggleBtn.Font = Enum.Font.GothamBold
 ToggleBtn.Text = "FLY: OFF"
 ToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-ToggleBtn.TextSize = 14
+ToggleBtn.TextSize = 12
 local ToggleCorner = Instance.new("UICorner", ToggleBtn)
 ToggleCorner.CornerRadius = UDim.new(0, 8)
 
@@ -100,8 +100,8 @@ local SpeedFrame = Instance.new("Frame")
 SpeedFrame.Parent = MainFrame
 SpeedFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
 SpeedFrame.BackgroundTransparency = 0.5
-SpeedFrame.Position = UDim2.new(0.1, 0, 0, 120)
-SpeedFrame.Size = UDim2.new(0.8, 0, 0, 60)
+SpeedFrame.Position = UDim2.new(0.1, 0, 0, 105)
+SpeedFrame.Size = UDim2.new(0.8, 0, 0, 55)
 SpeedFrame.BorderSizePixel = 0
 local SpeedCorner = Instance.new("UICorner", SpeedFrame)
 SpeedCorner.CornerRadius = UDim.new(0, 8)
@@ -120,7 +120,7 @@ SpeedLabel.TextXAlignment = Enum.TextXAlignment.Left
 local Bar = Instance.new("TextButton")
 Bar.Parent = SpeedFrame
 Bar.BackgroundColor3 = Color3.fromRGB(65, 55, 75)
-Bar.Position = UDim2.new(0, 10, 0, 35)
+Bar.Position = UDim2.new(0, 10, 0, 30)
 Bar.Size = UDim2.new(1, -20, 0, 8)
 Bar.AutoButtonColor = false
 Bar.Text = ""
@@ -135,19 +135,65 @@ Fill.BorderSizePixel = 0
 local FillCorner = Instance.new("UICorner", Fill)
 FillCorner.CornerRadius = UDim.new(1, 0)
 
--- ESP Toggle Button (BARU)
+-- ESP Toggle Button
 local ESPBtn = Instance.new("TextButton")
 ESPBtn.Parent = MainFrame
 ESPBtn.BackgroundColor3 = Color3.fromRGB(200, 0, 50)
 ESPBtn.BackgroundTransparency = 0.2
-ESPBtn.Position = UDim2.new(0.1, 0, 0, 195)
-ESPBtn.Size = UDim2.new(0.8, 0, 0, 40)
+ESPBtn.Position = UDim2.new(0.1, 0, 0, 170)
+ESPBtn.Size = UDim2.new(0.8, 0, 0, 35)
 ESPBtn.Font = Enum.Font.GothamBold
 ESPBtn.Text = "ESP PLAYER: OFF"
 ESPBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-ESPBtn.TextSize = 14
+ESPBtn.TextSize = 12
 local ESPCorner = Instance.new("UICorner", ESPBtn)
 ESPCorner.CornerRadius = UDim.new(0, 8)
+
+-- TP Toggle Button
+local TPToggleBtn = Instance.new("TextButton")
+TPToggleBtn.Parent = MainFrame
+TPToggleBtn.BackgroundColor3 = Color3.fromRGB(200, 0, 50)
+TPToggleBtn.BackgroundTransparency = 0.2
+TPToggleBtn.Position = UDim2.new(0.1, 0, 0, 215)
+TPToggleBtn.Size = UDim2.new(0.8, 0, 0, 35)
+TPToggleBtn.Font = Enum.Font.GothamBold
+TPToggleBtn.Text = "TP PLAYER: OFF"
+TPToggleBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+TPToggleBtn.TextSize = 12
+local TPToggleCorner = Instance.new("UICorner", TPToggleBtn)
+TPToggleCorner.CornerRadius = UDim.new(0, 8)
+
+-- Player List Frame
+local PlayerListFrame = Instance.new("ScrollingFrame")
+PlayerListFrame.Parent = MainFrame
+PlayerListFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
+PlayerListFrame.BackgroundTransparency = 0.4
+PlayerListFrame.Position = UDim2.new(0.1, 0, 0, 260)
+PlayerListFrame.Size = UDim2.new(0.8, 0, 0, 110)
+PlayerListFrame.BorderSizePixel = 0
+PlayerListFrame.ScrollBarThickness = 3
+PlayerListFrame.ScrollBarImageColor3 = Color3.fromRGB(0, 255, 204)
+PlayerListFrame.Visible = false
+local PLFCorner = Instance.new("UICorner", PlayerListFrame)
+PLFCorner.CornerRadius = UDim.new(0, 8)
+local PLFLayout = Instance.new("UIListLayout", PlayerListFrame)
+PLFLayout.SortOrder = Enum.SortOrder.Name
+PLFLayout.Padding = UDim.new(0, 2)
+
+-- Tombol Eksekusi TP
+local TPExecBtn = Instance.new("TextButton")
+TPExecBtn.Parent = MainFrame
+TPExecBtn.BackgroundColor3 = Color3.fromRGB(0, 150, 50)
+TPExecBtn.BackgroundTransparency = 0.2
+TPExecBtn.Position = UDim2.new(0.1, 0, 0, 380)
+TPExecBtn.Size = UDim2.new(0.8, 0, 0, 35)
+TPExecBtn.Font = Enum.Font.GothamBold
+TPExecBtn.Text = "TELEPORT KE PLAYER"
+TPExecBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+TPExecBtn.TextSize = 12
+TPExecBtn.Visible = false
+local TPExecCorner = Instance.new("UICorner", TPExecBtn)
+TPExecCorner.CornerRadius = UDim.new(0, 8)
 
 -- Tombol Naik / Turun
 local UpBtn = Instance.new("TextButton")
@@ -181,6 +227,8 @@ DownCorner.CornerRadius = UDim.new(1, 0)
 -- ================= LOGIC =================
 local FlyEnabled = false
 local ESPEnabled = false
+local TPPEnabled = false
+local SelectedTarget = nil
 local FlySpeed = 60
 local isMenuOpen = false
 local holdingUp = false
@@ -261,7 +309,6 @@ local function ToggleFly()
         end
     end
 end
-
 ToggleBtn.MouseButton1Click:Connect(ToggleFly)
 
 -- ESP Player Logic
@@ -273,15 +320,78 @@ ESPBtn.MouseButton1Click:Connect(function()
     else
         ESPBtn.Text = "ESP PLAYER: OFF"
         ESPBtn.BackgroundColor3 = Color3.fromRGB(200, 0, 50)
-        for _, v in pairs(ESPFolder:GetChildren()) do
-            v:Destroy()
+        for _, v in pairs(ESPFolder:GetChildren()) do v:Destroy() end
+    end
+end)
+
+-- TP Player UI & Logic
+local function RefreshPlayerList()
+    for _, v in pairs(PlayerListFrame:GetChildren()) do
+        if v:IsA("TextButton") then v:Destroy() end
+    end
+    
+    for _, p in pairs(game.Players:GetPlayers()) do
+        if p ~= Player then
+            local btn = Instance.new("TextButton")
+            btn.Parent = PlayerListFrame
+            btn.BackgroundColor3 = Color3.fromRGB(40, 40, 45)
+            btn.Size = UDim2.new(1, -6, 0, 25)
+            btn.Font = Enum.Font.GothamMedium
+            btn.Text = p.Name
+            btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+            btn.TextSize = 11
+            local c = Instance.new("UICorner", btn)
+            c.CornerRadius = UDim.new(0, 4)
+            
+            btn.MouseButton1Click:Connect(function()
+                SelectedTarget = p
+                -- Kasih tanda visual tombol mana yang dipilih
+                for _, otherBtn in pairs(PlayerListFrame:GetChildren()) do
+                    if otherBtn:IsA("TextButton") then
+                        otherBtn.BackgroundColor3 = Color3.fromRGB(40, 40, 45)
+                    end
+                end
+                btn.BackgroundColor3 = Color3.fromRGB(0, 255, 204) -- Warna Cyan kalo dipilih
+                btn.TextColor3 = Color3.fromRGB(0, 0, 0)
+            end)
         end
+    end
+end
+
+TPToggleBtn.MouseButton1Click:Connect(function()
+    TPPEnabled = not TPPEnabled
+    if TPPEnabled then
+        TPToggleBtn.Text = "TP PLAYER: ON"
+        TPToggleBtn.BackgroundColor3 = Color3.fromRGB(0, 150, 50)
+        PlayerListFrame.Visible = true
+        TPExecBtn.Visible = true
+        RefreshPlayerList()
+    else
+        TPToggleBtn.Text = "TP PLAYER: OFF"
+        TPToggleBtn.BackgroundColor3 = Color3.fromRGB(200, 0, 50)
+        PlayerListFrame.Visible = false
+        TPExecBtn.Visible = false
+        SelectedTarget = nil
+    end
+end)
+
+TPExecBtn.MouseButton1Click:Connect(function()
+    if SelectedTarget and SelectedTarget.Character and SelectedTarget.Character:FindFirstChild("HumanoidRootPart") then
+        if Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
+            -- Teleport dengan sedikit jarak biar gak tembus badan target
+            Player.Character.HumanoidRootPart.CFrame = SelectedTarget.Character.HumanoidRootPart.CFrame * CFrame.new(0, 0, 3)
+        end
+    else
+        -- Kalo target mati / keluar server
+        TPExecBtn.Text = "TARGET TIDAK VALID!"
+        wait(1.5)
+        TPExecBtn.Text = "TELEPORT KE PLAYER"
     end
 end)
 
 -- Loop ESP & Fly
 RunService.RenderStepped:Connect(function(dt)
-    -- 1. LOGIKA FLY
+    -- LOGIKA FLY
     if FlyEnabled and Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
         local HRP = Player.Character.HumanoidRootPart
         local Humanoid = Player.Character:FindFirstChildOfClass("Humanoid")
@@ -298,7 +408,7 @@ RunService.RenderStepped:Connect(function(dt)
         HRP.Velocity = Vector3.new(0, 0, 0) 
     end
 
-    -- 2. LOGIKA ESP PLAYER
+    -- LOGIKA ESP PLAYER
     if ESPEnabled then
         for _, p in pairs(game.Players:GetPlayers()) do
             if p ~= Player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") and p.Character:FindFirstChild("Humanoid") then
@@ -307,7 +417,6 @@ RunService.RenderStepped:Connect(function(dt)
                 local hum = char.Humanoid
                 
                 if hum.Health > 0 then
-                    -- Bikin Highlight (Kotak warna di tubuh)
                     if not ESPFolder:FindFirstChild(p.Name .. "_Highlight") then
                         local highlight = Instance.new("Highlight")
                         highlight.Name = p.Name .. "_Highlight"
@@ -315,11 +424,9 @@ RunService.RenderStepped:Connect(function(dt)
                         highlight.FillColor = Color3.fromRGB(255, 0, 0)
                         highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
                         highlight.FillTransparency = 0.5
-                        highlight.OutlineTransparency = 0
                         highlight.Parent = ESPFolder
                     end
                     
-                    -- Bikin Billboard (Teks Jarak & Nama)
                     if not ESPFolder:FindFirstChild(p.Name .. "_Text") then
                         local billboard = Instance.new("BillboardGui")
                         billboard.Name = p.Name .. "_Text"
@@ -339,7 +446,6 @@ RunService.RenderStepped:Connect(function(dt)
                         text.Name = "Text"
                     end
                     
-                    -- Update Jarak (Distance)
                     local distance = math.floor((Player.Character.HumanoidRootPart.Position - hrp.Position).Magnitude)
                     local textLabel = ESPFolder:FindFirstChild(p.Name .. "_Text"):FindFirstChild("Text")
                     textLabel.Text = p.Name .. "\n[" .. distance .. " studs]"
@@ -349,4 +455,4 @@ RunService.RenderStepped:Connect(function(dt)
     end
 end)
 
-print("[VORTEEZX] Fly V4 + ESP Player Loaded!")
+print("[VORTEEZX] Fly V5 + ESP + TP Player Loaded!")
