@@ -109,6 +109,45 @@ ContentArea.BorderSizePixel = 0
 ContentArea.ClipsDescendants = true
 Instance.new("UICorner", ContentArea).CornerRadius = UDim.new(0, 6)
 
+-- RESIZE HANDLE (Buat Panjang Lebar UI)
+local ResizeHandle = Instance.new("TextButton")
+ResizeHandle.Parent = MainFrame
+ResizeHandle.BackgroundTransparency = 1
+ResizeHandle.Size = UDim2.new(0, 25, 0, 25)
+ResizeHandle.Position = UDim2.new(1, -25, 1, -25) -- Posisi di pojok kanan bawah
+ResizeHandle.Text = "◢"
+ResizeHandle.TextColor3 = THEME.TEXT_DIM
+ResizeHandle.TextSize = 18
+ResizeHandle.Font = Enum.Font.GothamBold
+ResizeHandle.ZIndex = 10 -- Biar selalu di paling atas
+ResizeHandle.AnchorPoint = Vector2.new(1, 1) -- Biar pas di pojok
+
+local isResizing, startSize, startPos = false, nil, nil
+ResizeHandle.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then 
+        isResizing = true
+        startSize = MainFrame.AbsoluteSize
+        startPos = input.Position
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if isResizing and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+        local delta = input.Position - startPos
+        -- Minimal ukuran 300x200 biar ga kekecilan
+        MainFrame.Size = UDim2.fromOffset(
+            math.max(300, startSize.X + delta.X), 
+            math.max(200, startSize.Y + delta.Y)
+        )
+    end
+end)
+
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then 
+        isResizing = false 
+    end
+end)
+
 local function CreateSidebarBtn(text, yPos, pageToOpen)
     local btn = Instance.new("TextButton")
     btn.Parent = Sidebar
