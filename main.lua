@@ -1,5 +1,5 @@
 --[[
-    VORTEEZX HUB - FINAL V2 (UI & BUG FIX)
+    VORTEEZX HUB - FINAL V3 (BUG FIX & STEERING)
 --]]
 
 local Player = game.Players.LocalPlayer
@@ -31,6 +31,10 @@ local THEME = {
     ITEM_BG = Color3.fromRGB(35, 35, 35)
 }
 
+-- FIX ESP: Bikin folder di awal biar gak error
+local ESPFolder = Instance.new("Folder", game.CoreGui)
+ESPFolder.Name = "VortexPlayerESP"
+
 -- FLOATING BUTTON
 local FloatBtn = Instance.new("ImageButton")
 FloatBtn.Parent = ScreenGui
@@ -44,7 +48,7 @@ FloatBtn.Image = "rbxassetid://124025278726144"
 FloatBtn.ImageColor3 = Color3.fromRGB(255, 255, 255)
 Instance.new("UICorner", FloatBtn).CornerRadius = UDim.new(1, 0)
 
--- MAIN FRAME (FIX: ClipsDescendants = true)
+-- MAIN FRAME (FIX UI TEMBUS)
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "Main"
 MainFrame.Parent = ScreenGui
@@ -55,7 +59,7 @@ MainFrame.Active = true
 MainFrame.Draggable = true
 MainFrame.BorderSizePixel = 0
 MainFrame.Visible = false
-MainFrame.ClipsDescendants = true -- INI YANG BIKIN GAK TEMBUS
+MainFrame.ClipsDescendants = true -- FIX: Biar gak nembus
 Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 6)
 
 local TopBar = Instance.new("Frame")
@@ -71,7 +75,7 @@ Title.BackgroundTransparency = 1
 Title.Position = UDim2.new(0, 10, 0, 0)
 Title.Size = UDim2.new(1, -50, 1, 0)
 Title.Font = Enum.Font.GothamBlack
-Title.Text = "VORTEEZX FINAL V2"
+Title.Text = "VORTEEZX FINAL V3"
 Title.TextColor3 = THEME.ACCENT
 Title.TextSize = 14
 Title.TextXAlignment = Enum.TextXAlignment.Left
@@ -88,30 +92,6 @@ CloseBtn.TextSize = 12
 CloseBtn.BorderSizePixel = 0
 Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(1, 0)
 
--- RESIZE HANDLE
-local ResizeHandle = Instance.new("TextButton")
-ResizeHandle.Parent = MainFrame
-ResizeHandle.BackgroundTransparency = 1
-ResizeHandle.Size = UDim2.new(0, 25, 0, 25)
-ResizeHandle.Position = UDim2.new(1, -25, 1, -25)
-ResizeHandle.Text = "◢"
-ResizeHandle.TextColor3 = THEME.TEXT_DIM
-ResizeHandle.TextSize = 18
-ResizeHandle.Font = Enum.Font.GothamBold
-ResizeHandle.ZIndex = 10
-
-local isResizing, startSize, startPos = false, nil, nil
-ResizeHandle.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then isResizing = true; startSize = MainFrame.AbsoluteSize; startPos = input.Position end
-end)
-UserInputService.InputChanged:Connect(function(input)
-    if isResizing and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-        local delta = input.Position - startPos
-        MainFrame.Size = UDim2.fromOffset(math.max(300, startSize.X + delta.X), math.max(200, startSize.Y + delta.Y))
-    end
-end)
-UserInputService.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then isResizing = false end end)
-
 local Sidebar = Instance.new("Frame")
 Sidebar.Parent = MainFrame
 Sidebar.BackgroundColor3 = THEME.SIDEBAR
@@ -126,7 +106,7 @@ ContentArea.BackgroundColor3 = THEME.BG
 ContentArea.Position = UDim2.new(0, 120, 0, 35)
 ContentArea.Size = UDim2.new(1, -120, 1, -35)
 ContentArea.BorderSizePixel = 0
-ContentArea.ClipsDescendants = true -- Biar isinya gak tembus juga
+ContentArea.ClipsDescendants = true
 Instance.new("UICorner", ContentArea).CornerRadius = UDim.new(0, 6)
 
 local function CreateSidebarBtn(text, yPos, pageToOpen)
@@ -447,16 +427,11 @@ VisTitle.TextColor3 = THEME.ACCENT
 VisTitle.TextSize = 12
 VisTitle.TextXAlignment = Enum.TextXAlignment.Left
 
--- ESP FIX: Hapus ClearAllChildren pas toggle mati
 local ESPEnabled = false
 CreateToggle(VisualPage, "ESP Player (Wallhack)", 40, false, function(state)
     ESPEnabled = state
     if not state then
-        for _, v in pairs(game.CoreGui:GetChildren()) do
-            if v.Name == "VortexPlayerESP" then v:Destroy() end
-        end
-        local newFolder = Instance.new("Folder", game.CoreGui)
-        newFolder.Name = "VortexPlayerESP"
+        ESPFolder:ClearAllChildren() -- FIX: Cuma hapus isinya, foldernya jangan dihancurin
     end
 end)
 
@@ -516,10 +491,7 @@ UserInputService.JumpRequest:Connect(function()
     end
 end)
 
-local ESPFolder = Instance.new("Folder", game.CoreGui)
-ESPFolder.Name = "VortexPlayerESP"
 local SelectedTarget = nil
-
 local function RefreshPlayerList()
     for _, v in pairs(PlayerList:GetChildren()) do if v:IsA("TextButton") then v:Destroy() end end
     for _, p in pairs(game.Players:GetPlayers()) do
@@ -563,7 +535,7 @@ TPExecBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- MAIN LOOP
+-- MAIN LOOP (FIX CAR STEERING & FLY)
 RunService.RenderStepped:Connect(function(dt)
     if Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
         local HRP = Player.Character.HumanoidRootPart
@@ -597,35 +569,40 @@ RunService.RenderStepped:Connect(function(dt)
             local bv = HRP:FindFirstChild("VortexFlyBV"); if bv then bv:Destroy() end
         end
 
-        -- CAR SPEED LOGIC (FIX BELOK)
+        -- CAR SPEED LOGIC (FIX STEERING)
         if CarSpeedEnabled then
             local seat = Humanoid.SeatPart
-            if seat then
+            if seat and (seat:IsA("VehicleSeat") or seat:IsA("Seat")) then
                 local vehicle = seat:FindFirstAncestorOfClass("Model")
                 if vehicle then
-                    -- Cari BodyVelocity bawaan mobil (biasanya ada di chassis)
-                    local carVel = vehicle:FindFirstChild("BodyVelocity") or vehicle:FindFirstChild("Velocity")
+                    local mainPart = vehicle.PrimaryPart or vehicle:FindFirstChild("HumanoidRootPart") or seat
+                    local carVel = mainPart:FindFirstChild("VortexSpeed")
                     
-                    if carVel and carVel:IsA("BodyVelocity") then
-                        -- Trik: Ambil arah setir mobil (LookVector bawaan mobil, bukan CFrame kamera)
-                        -- Biar mobil tetep bisa dibelokin
-                        local currentVelocity = seat.Velocity
-                        local driveDirection = seat.CFrame.LookVector
-                        
-                        -- Kita cuma nge-boost kecepatan maju/mundurnya, bukan ngunci arah
-                        carVel.Velocity = Vector3.new(
-                            driveDirection.X * CarSpeed,
-                            currentVelocity.Y, -- Biarin gravitasi jalan
-                            driveDirection.Z * CarSpeed
-                        )
-                        -- Tambah MaxForce biar gak goyang
-                        carVel.MaxForce = Vector3.new(100000, 100000, 100000)
+                    if not carVel then
+                        carVel = Instance.new("BodyVelocity")
+                        carVel.Name = "VortexSpeed"
+                        carVel.Parent = mainPart
                     end
+                    -- Trik: Cuma dorong ke depan (LookVector). 
+                    -- MaxForce di-set 0 buat sumbu Y biar mobil gak terbang/mental.
+                    -- MaxForce X & Z tetep gede biar ngebut.
+                    carVel.MaxForce = Vector3.new(1e5, 0, 1e5) 
+                    carVel.Velocity = seat.CFrame.LookVector * CarSpeed
+                end
+            end
+        else
+            if Humanoid.SeatPart then
+                local vehicle = Humanoid.SeatPart:FindFirstAncestorOfClass("Model")
+                if vehicle then
+                    local mainPart = vehicle.PrimaryPart or vehicle:FindFirstChild("HumanoidRootPart") or Humanoid.SeatPart
+                    local carVel = mainPart:FindFirstChild("VortexSpeed")
+                    if carVel then carVel:Destroy() end
                 end
             end
         end
     end
 
+    -- ESP LOGIC (FIX REDRAW)
     if ESPEnabled then
         for _, p in pairs(game.Players:GetPlayers()) do
             if p ~= Player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") and p.Character:FindFirstChild("Humanoid") then
@@ -655,4 +632,4 @@ RunService.RenderStepped:Connect(function(dt)
     end
 end)
 
-print("[VORTEEZX] FINAL V2 Loaded - ESP Fixed & Car Steering Fixed!")
+print("[VORTEEZX] FINAL V3 Loaded - ESP Multi-Use & Car Steer Fixed!")
