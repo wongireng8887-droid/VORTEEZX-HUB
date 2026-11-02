@@ -1,5 +1,5 @@
 --[[
-    VORTEEZX HUB - FINAL V4 (ANTI-NGEPOT)
+    VORTEEZX HUB - TROLL EDITION V5
 --]]
 
 local Player = game.Players.LocalPlayer
@@ -7,9 +7,10 @@ local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
 local Workspace = game:GetService("Workspace")
+local Debris = game:GetService("Debris")
 
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "VORTEEZX_HUB_FINAL"
+ScreenGui.Name = "VORTEEZX_HUB_TROLL"
 ScreenGui.ResetOnSpawn = false
 pcall(function()
     if syn and syn.protect_gui then
@@ -74,7 +75,7 @@ Title.BackgroundTransparency = 1
 Title.Position = UDim2.new(0, 10, 0, 0)
 Title.Size = UDim2.new(1, -50, 1, 0)
 Title.Font = Enum.Font.GothamBlack
-Title.Text = "VORTEEZX FINAL V4"
+Title.Text = "VORTEEZX TROLL V5"
 Title.TextColor3 = THEME.ACCENT
 Title.TextSize = 14
 Title.TextXAlignment = Enum.TextXAlignment.Left
@@ -90,39 +91,6 @@ CloseBtn.TextColor3 = THEME.TEXT
 CloseBtn.TextSize = 12
 CloseBtn.BorderSizePixel = 0
 Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(1, 0)
-
--- RESIZE HANDLE
-local ResizeHandle = Instance.new("TextButton")
-ResizeHandle.Parent = MainFrame
-ResizeHandle.BackgroundTransparency = 1
-ResizeHandle.Size = UDim2.new(0, 25, 0, 25)
-ResizeHandle.Position = UDim2.new(1, -25, 1, -25)
-ResizeHandle.Text = "◢"
-ResizeHandle.TextColor3 = THEME.TEXT_DIM
-ResizeHandle.TextSize = 18
-ResizeHandle.Font = Enum.Font.GothamBold
-ResizeHandle.ZIndex = 10
-ResizeHandle.AnchorPoint = Vector2.new(1, 1)
-
-local isResizing, startSize, startPos = false, nil, nil
-ResizeHandle.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then 
-        isResizing = true
-        startSize = MainFrame.AbsoluteSize
-        startPos = input.Position
-    end
-end)
-UserInputService.InputChanged:Connect(function(input)
-    if isResizing and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-        local delta = input.Position - startPos
-        MainFrame.Size = UDim2.fromOffset(math.max(300, startSize.X + delta.X), math.max(200, startSize.Y + delta.Y))
-    end
-end)
-UserInputService.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then 
-        isResizing = false 
-    end
-end)
 
 local Sidebar = Instance.new("Frame")
 Sidebar.Parent = MainFrame
@@ -277,64 +245,14 @@ MoveTitle.TextColor3 = THEME.ACCENT
 MoveTitle.TextSize = 12
 MoveTitle.TextXAlignment = Enum.TextXAlignment.Left
 
-local FlyEnabled, RunEnabled, WaterEnabled, InfJumpEnabled = false, false, false, false
-
+local FlyEnabled, RunEnabled = false, false
 CreateToggle(MovePage, "Enable Fly (Terbang)", 40, false, function(state) FlyEnabled = state; UpBtn.Visible = state; DownBtn.Visible = state end)
-CreateToggle(MovePage, "Walk on Water", 85, false, function(state) WaterEnabled = state end)
-CreateToggle(MovePage, "Infinite Jump", 130, false, function(state) InfJumpEnabled = state end)
-CreateToggle(MovePage, "Enable Run Speed", 175, false, function(state) RunEnabled = state end)
+CreateToggle(MovePage, "Enable Run Speed", 85, false, function(state) RunEnabled = state end)
 
--- Slider Fly Speed
-local FlySpeedFrame = Instance.new("Frame")
-FlySpeedFrame.Parent = MovePage
-FlySpeedFrame.BackgroundColor3 = THEME.ITEM_BG
-FlySpeedFrame.Position = UDim2.new(0, 10, 0, 225)
-FlySpeedFrame.Size = UDim2.new(1, -20, 0, 50)
-FlySpeedFrame.BorderSizePixel = 0
-Instance.new("UICorner", FlySpeedFrame).CornerRadius = UDim.new(0, 6)
-local FlySpeedLabel = Instance.new("TextLabel")
-FlySpeedLabel.Parent = FlySpeedFrame
-FlySpeedLabel.BackgroundTransparency = 1
-FlySpeedLabel.Position = UDim2.new(0, 10, 0, 5)
-FlySpeedLabel.Size = UDim2.new(1, 0, 0, 20)
-FlySpeedLabel.Font = Enum.Font.GothamMedium
-FlySpeedLabel.Text = "Fly Speed: 60"
-FlySpeedLabel.TextColor3 = THEME.TEXT
-FlySpeedLabel.TextSize = 11
-FlySpeedLabel.TextXAlignment = Enum.TextXAlignment.Left
-local FlyBar = Instance.new("TextButton")
-FlyBar.Parent = FlySpeedFrame
-FlyBar.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-FlyBar.Position = UDim2.new(0, 10, 0, 30)
-FlyBar.Size = UDim2.new(1, -20, 0, 6)
-FlyBar.AutoButtonColor = false
-FlyBar.Text = ""
-Instance.new("UICorner", FlyBar).CornerRadius = UDim.new(1, 0)
-local FlyFill = Instance.new("Frame")
-FlyFill.Parent = FlyBar
-FlyFill.BackgroundColor3 = THEME.ACCENT
-FlyFill.Size = UDim2.new(0.05, 0, 1, 0)
-FlyFill.BorderSizePixel = 0
-Instance.new("UICorner", FlyFill).CornerRadius = UDim.new(1, 0)
-local FlySpeed = 60
-local draggingFlySlider = false
-local function updateFlySpeed(input)
-    local width = FlyBar.AbsoluteSize.X
-    if width <= 0 then return end
-    local relative = math.clamp((input.Position.X - FlyBar.AbsolutePosition.X) / width, 0, 1)
-    FlySpeed = math.floor(10 + relative * 990) 
-    FlySpeedLabel.Text = "Fly Speed: " .. FlySpeed
-    FlyFill.Size = UDim2.new(relative, 0, 1, 0)
-end
-FlyBar.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then draggingFlySlider = true; updateFlySpeed(input) end end)
-UserInputService.InputChanged:Connect(function(input) if draggingFlySlider and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then updateFlySpeed(input) end end)
-UserInputService.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then draggingFlySlider = false end end)
-
--- Slider Run Speed
 local RunSpeedFrame = Instance.new("Frame")
 RunSpeedFrame.Parent = MovePage
 RunSpeedFrame.BackgroundColor3 = THEME.ITEM_BG
-RunSpeedFrame.Position = UDim2.new(0, 10, 0, 285)
+RunSpeedFrame.Position = UDim2.new(0, 10, 0, 135)
 RunSpeedFrame.Size = UDim2.new(1, -20, 0, 50)
 RunSpeedFrame.BorderSizePixel = 0
 Instance.new("UICorner", RunSpeedFrame).CornerRadius = UDim.new(0, 6)
@@ -389,7 +307,7 @@ CombatTitle.BackgroundTransparency = 1
 CombatTitle.Position = UDim2.new(0, 10, 0, 10)
 CombatTitle.Size = UDim2.new(1, 0, 0, 20)
 CombatTitle.Font = Enum.Font.GothamBold
-CombatTitle.Text = "CAR SETTINGS"
+CombatTitle.Text = "CAR SPEED SETTINGS"
 CombatTitle.TextColor3 = THEME.ACCENT
 CombatTitle.TextSize = 12
 CombatTitle.TextXAlignment = Enum.TextXAlignment.Left
@@ -434,13 +352,80 @@ local function updateCarSpeed(input)
     local width = CarBar.AbsoluteSize.X
     if width <= 0 then return end
     local relative = math.clamp((input.Position.X - CarBar.AbsolutePosition.X) / width, 0, 1)
-    CarSpeed = math.floor(50 + relative * 950)
+    CarSpeed = math.floor(50 + relative * 450) -- Max 500 biar ga ngepot
     CarSpeedLabel.Text = "Car Speed: " .. CarSpeed
     CarFill.Size = UDim2.new(relative, 0, 1, 0)
 end
 CarBar.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then draggingCarSlider = true; updateCarSpeed(input) end end)
 UserInputService.InputChanged:Connect(function(input) if draggingCarSlider and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then updateCarSpeed(input) end end)
 UserInputService.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then draggingCarSlider = false end end)
+
+-- HALAMAN TROLL (BARU)
+local TrollPage = Instance.new("Frame")
+TrollPage.Parent = ContentArea
+TrollPage.BackgroundTransparency = 1
+TrollPage.Size = UDim2.new(1, 0, 1, 0)
+TrollPage.Visible = false
+
+local TrollTitle = Instance.new("TextLabel")
+TrollTitle.Parent = TrollPage
+TrollTitle.BackgroundTransparency = 1
+TrollTitle.Position = UDim2.new(0, 10, 0, 10)
+TrollTitle.Size = UDim2.new(1, 0, 0, 20)
+TrollTitle.Font = Enum.Font.GothamBold
+TrollTitle.Text = "TROLL SETTINGS"
+TrollTitle.TextColor3 = THEME.ACCENT
+TrollTitle.TextSize = 12
+TrollTitle.TextXAlignment = Enum.TextXAlignment.Left
+
+local CarFlingEnabled = false
+CreateToggle(TrollPage, "Auto Fling Nearest Car", 40, false, function(state) CarFlingEnabled = state end)
+
+-- Tombol Car Size
+local SizeFrame = Instance.new("Frame")
+SizeFrame.Parent = TrollPage
+SizeFrame.BackgroundColor3 = THEME.ITEM_BG
+SizeFrame.Position = UDim2.new(0, 10, 0, 85)
+SizeFrame.Size = UDim2.new(1, -20, 0, 70)
+SizeFrame.BorderSizePixel = 0
+Instance.new("UICorner", SizeFrame).CornerRadius = UDim.new(0, 6)
+
+local SizeLabel = Instance.new("TextLabel")
+SizeLabel.Parent = SizeFrame
+SizeLabel.BackgroundTransparency = 1
+SizeLabel.Position = UDim2.new(0, 10, 0, 5)
+SizeLabel.Size = UDim2.new(1, 0, 0, 20)
+SizeLabel.Font = Enum.Font.GothamBold
+SizeLabel.Text = "Car Size Changer"
+SizeLabel.TextColor3 = THEME.TEXT
+SizeLabel.TextSize = 11
+SizeLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+local function CreateSizeBtn(text, xPos, sizeVal)
+    local btn = Instance.new("TextButton")
+    btn.Parent = SizeFrame
+    btn.BackgroundColor3 = THEME.ACCENT
+    btn.Position = UDim2.new(0, xPos, 0, 35)
+    btn.Size = UDim2.new(0.3, 0, 0, 25)
+    btn.Font = Enum.Font.GothamBold
+    btn.Text = text
+    btn.TextColor3 = THEME.TEXT
+    btn.TextSize = 10
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 4)
+    btn.MouseButton1Click:Connect(function()
+        local seat = Player.Character and Player.Character:FindFirstChildOfClass("Humanoid") and Player.Character.Humanoid.SeatPart
+        if seat then
+            local vehicle = seat:FindFirstAncestorOfClass("Model")
+            if vehicle then
+                pcall(function() vehicle:ScaleTo(sizeVal) end)
+            end
+        end
+    end)
+end
+
+CreateSizeBtn("Mini", 5, 0.5)
+CreateSizeBtn("Normal", 85, 1.0)
+CreateSizeBtn("Giant", 165, 2.5)
 
 -- HALAMAN VISUAL
 local VisualPage = Instance.new("Frame")
@@ -462,9 +447,7 @@ VisTitle.TextXAlignment = Enum.TextXAlignment.Left
 local ESPEnabled = false
 CreateToggle(VisualPage, "ESP Player (Wallhack)", 40, false, function(state)
     ESPEnabled = state
-    if not state then
-        ESPFolder:ClearAllChildren()
-    end
+    if not state then ESPFolder:ClearAllChildren() end
 end)
 
 -- HALAMAN TELEPORT
@@ -511,17 +494,11 @@ Instance.new("UICorner", TPExecBtn).CornerRadius = UDim.new(0, 6)
 -- NAV SIDEBAR
 local NavMove = CreateSidebarBtn("MOVEMENT", 10, MovePage)
 local NavCombat = CreateSidebarBtn("CAR SPEED", 50, CombatPage)
-local NavVis = CreateSidebarBtn("VISUAL", 90, VisualPage)
-local NavTP = CreateSidebarBtn("TELEPORT", 130, TPPage)
+local NavTroll = CreateSidebarBtn("TROLL", 90, TrollPage)
+local NavVis = CreateSidebarBtn("VISUAL", 130, VisualPage)
+local NavTP = CreateSidebarBtn("TELEPORT", 170, TPPage)
 NavMove.TextColor3 = THEME.ACCENT
 NavMove:FindFirstChildOfClass("Frame").Visible = true
-
--- INFINITE JUMP
-UserInputService.JumpRequest:Connect(function()
-    if InfJumpEnabled and Player.Character and Player.Character:FindFirstChildOfClass("Humanoid") then
-        Player.Character:FindFirstChildOfClass("Humanoid"):ChangeState("Jumping")
-    end
-end)
 
 local SelectedTarget = nil
 local function RefreshPlayerList()
@@ -567,7 +544,37 @@ TPExecBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- MAIN LOOP (FIX CAR STEERING & FLY)
+-- FUNGSI FLING MOBIL
+local function FlingNearestCar()
+    local closestCar = nil
+    local shortestDist = math.huge
+    local myPos = Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") and Player.Character.HumanoidRootPart.Position
+
+    if myPos then
+        for _, p in pairs(game.Players:GetPlayers()) do
+            if p ~= Player and p.Character and p.Character:FindFirstChildOfClass("Humanoid") and p.Character.Humanoid.SeatPart then
+                local vehicle = p.Character.Humanoid.SeatPart:FindFirstAncestorOfClass("Model")
+                if vehicle and vehicle.PrimaryPart then
+                    local dist = (myPos - vehicle.PrimaryPart.Position).Magnitude
+                    if dist < shortestDist then
+                        shortestDist = dist
+                        closestCar = vehicle
+                    end
+                end
+            end
+        end
+    end
+
+    if closestCar and closestCar.PrimaryPart then
+        local bv = Instance.new("BodyVelocity")
+        bv.Velocity = Vector3.new(math.random(-100, 100), 500, math.random(-100, 100))
+        bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+        bv.Parent = closestCar.PrimaryPart
+        Debris:AddItem(bv, 1)
+    end
+end
+
+-- MAIN LOOP (LOGIKA FLY, CAR SPEED, TROLL, ESP)
 RunService.RenderStepped:Connect(function(dt)
     if Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
         local HRP = Player.Character.HumanoidRootPart
@@ -576,73 +583,41 @@ RunService.RenderStepped:Connect(function(dt)
         if RunEnabled and not FlyEnabled then Humanoid.WalkSpeed = RunSpeed
         elseif not RunEnabled and not FlyEnabled then Humanoid.WalkSpeed = 16 end
         
-        if WaterEnabled then
-            if Humanoid.FloorMaterial == Enum.Material.Water or Humanoid:GetState() == Enum.HumanoidStateType.Swimming then
-                local bf = HRP:FindFirstChild("WaterForce")
-                if not bf then bf = Instance.new("BodyForce"); bf.Name = "WaterForce"; bf.Parent = HRP end
-                bf.Force = Vector3.new(0, HRP:GetMass() * Workspace.Gravity * 1.1, 0) 
-                if Humanoid:GetState() == Enum.HumanoidStateType.Swimming then Humanoid:ChangeState(Enum.HumanoidStateType.Running) end
-            else
-                local bf = HRP:FindFirstChild("WaterForce"); if bf then bf:Destroy() end
-            end
-        else
-            local bf = HRP:FindFirstChild("WaterForce"); if bf then bf:Destroy() end
-        end
-        
         if FlyEnabled then
             Humanoid.PlatformStand = true
             local bv = HRP:FindFirstChild("VortexFlyBV")
             if not bv then bv = Instance.new("BodyVelocity"); bv.Name = "VortexFlyBV"; bv.MaxForce = Vector3.new(1e5, 1e5, 1e5); bv.Parent = HRP end
-            local velocity = Humanoid.MoveDirection * FlySpeed
-            if holdingUp then velocity = velocity + Vector3.new(0, FlySpeed, 0)
-            elseif holdingDown then velocity = velocity - Vector3.new(0, FlySpeed, 0) end
+            local velocity = Humanoid.MoveDirection * 60
+            if holdingUp then velocity = velocity + Vector3.new(0, 60, 0)
+            elseif holdingDown then velocity = velocity - Vector3.new(0, 60, 0) end
             bv.Velocity = velocity
         else
             local bv = HRP:FindFirstChild("VortexFlyBV"); if bv then bv:Destroy() end
         end
 
-        -- CAR SPEED LOGIC (ANTI-NGEPOT / STABILIZER)
+        -- CAR SPEED LOGIC
         if CarSpeedEnabled then
             local seat = Humanoid.SeatPart
-            if seat and (seat:IsA("VehicleSeat") or seat:IsA("Seat")) then
-                
-                if seat:IsA("VehicleSeat") then
-                    pcall(function()
-                        seat.MaxSpeed = CarSpeed
-                        seat.Torque = CarSpeed * 5
-                        seat.TurnSpeed = 15 
-                    end)
-                end
-
+            if seat and seat:IsA("VehicleSeat") then
                 local vehicle = seat:FindFirstAncestorOfClass("Model")
                 if vehicle then
                     local mainPart = vehicle.PrimaryPart or vehicle:FindFirstChild("HumanoidRootPart") or seat
                     
                     local downForce = mainPart:FindFirstChild("VortexDownForce")
                     if not downForce then
-                        downForce = Instance.new("BodyForce")
-                        downForce.Name = "VortexDownForce"
-                        downForce.Parent = mainPart
+                        downForce = Instance.new("BodyForce"); downForce.Name = "VortexDownForce"; downForce.Parent = mainPart
                     end
                     downForce.Force = Vector3.new(0, -mainPart:GetMass() * Workspace.Gravity * 5, 0)
 
                     local gyro = mainPart:FindFirstChild("VortexGyro")
                     if not gyro then
-                        gyro = Instance.new("BodyGyro")
-                        gyro.Name = "VortexGyro"
-                        gyro.P = 10000
-                        gyro.D = 1000
-                        gyro.MaxTorque = Vector3.new(1e5, 0, 1e5)
-                        gyro.Parent = mainPart
+                        gyro = Instance.new("BodyGyro"); gyro.Name = "VortexGyro"; gyro.P = 10000; gyro.D = 1000; gyro.MaxTorque = Vector3.new(1e5, 0, 1e5); gyro.Parent = mainPart
                     end
-                    -- Kunci stabilizer datar biar gak ngepot, tapi sumbu Y dibebasin buat belok
                     gyro.CFrame = CFrame.new(mainPart.Position, mainPart.Position + seat.CFrame.LookVector)
 
                     local carVel = mainPart:FindFirstChild("VortexSpeed")
                     if not carVel then
-                        carVel = Instance.new("BodyVelocity")
-                        carVel.Name = "VortexSpeed"
-                        carVel.Parent = mainPart
+                        carVel = Instance.new("BodyVelocity"); carVel.Name = "VortexSpeed"; carVel.Parent = mainPart
                     end
                     
                     carVel.MaxForce = Vector3.new(25000, 0, 25000)
@@ -651,25 +626,23 @@ RunService.RenderStepped:Connect(function(dt)
             end
         else
             if Humanoid.SeatPart then
-                local seat = Humanoid.SeatPart
-                if seat:IsA("VehicleSeat") then
-                    pcall(function()
-                        seat.MaxSpeed = 20 
-                        seat.Torque = 10
-                    end)
-                end
-                local vehicle = seat:FindFirstAncestorOfClass("Model")
+                local vehicle = Humanoid.SeatPart:FindFirstAncestorOfClass("Model")
                 if vehicle then
-                    local mainPart = vehicle.PrimaryPart or vehicle:FindFirstChild("HumanoidRootPart") or seat
-                    local carVel = mainPart:FindFirstChild("VortexSpeed")
-                    if carVel then carVel:Destroy() end
-                    local downForce = mainPart:FindFirstChild("VortexDownForce")
-                    if downForce then downForce:Destroy() end
-                    local gyro = mainPart:FindFirstChild("VortexGyro")
-                    if gyro then gyro:Destroy() end
+                    local mainPart = vehicle.PrimaryPart or vehicle:FindFirstChild("HumanoidRootPart") or Humanoid.SeatPart
+                    local carVel = mainPart:FindFirstChild("VortexSpeed"); if carVel then carVel:Destroy() end
+                    local downForce = mainPart:FindFirstChild("VortexDownForce"); if downForce then downForce:Destroy() end
+                    local gyro = mainPart:FindFirstChild("VortexGyro"); if gyro then gyro:Destroy() end
                 end
             end
         end
+    end
+
+    -- CAR FLING LOGIC
+    if CarFlingEnabled then
+        CarFlingEnabled = false -- Biar gak spam (sekali pencet sekali fling)
+        FlingNearestCar()
+        -- Kasih jeda biar gak nge-lag
+        task.wait(0.5)
     end
 
     -- ESP LOGIC
@@ -702,4 +675,4 @@ RunService.RenderStepped:Connect(function(dt)
     end
 end)
 
-print("[VORTEEZX] FINAL V4 Loaded - Anti Ngepot Edition!")
+print("[VORTEEZX] TROLL EDITION V5 Loaded!")
