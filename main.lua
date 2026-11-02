@@ -596,25 +596,33 @@ RunService.RenderStepped:Connect(function(dt)
             local bv = HRP:FindFirstChild("VortexFlyBV"); if bv then bv:Destroy() end
         end
 
-        -- CAR SPEED LOGIC
-        if CarSpeedEnabled then
-            local seat = Humanoid.SeatPart
-            if seat then
-                local vehicle = seat:FindFirstAncestorOfClass("Model")
-                if vehicle then
-                    local carVelocity = vehicle:FindFirstChild("BodyVelocity") or vehicle:FindFirstChild("Velocity")
-                    if carVelocity and carVelocity:IsA("BodyVelocity") then
-                        carVelocity.Velocity = seat.CFrame.LookVector * CarSpeed
-                    else
-                        local carForce = vehicle:FindFirstChild("BodyForce")
-                        if carForce then
-                            carForce.Force = seat.CFrame.LookVector * (CarSpeed * 1000)
-                        end
-                    end
+        -- CAR SPEED LOGIC (BRUTAL BYPASS)
+if CarSpeedEnabled then
+    local seat = Humanoid.SeatPart
+    if seat then
+        local vehicle = seat:FindFirstAncestorOfClass("Model")
+        if vehicle then
+            local carVelocity = vehicle:FindFirstChild("BodyVelocity") or vehicle:FindFirstChild("Velocity")
+            
+            -- Hapus script bawaan mobil yang nge-limit kecepatan (Kalau ada)
+            for _, v in pairs(vehicle:GetDescendants()) do
+                if v:IsA("Script") and (string.find(v.Name, "Speed") or string.find(v.Name, "Engine")) then
+                    v.Enabled = false 
                 end
+            end
+
+            if carVelocity and carVelocity:IsA("BodyVelocity") then
+                -- Paksa velocity ke 1000 pake arah pandang mobil
+                carVelocity.Velocity = seat.CFrame.LookVector * CarSpeed
+                -- Tambahin MaxForce biar gak ditahan sama physics
+                carVelocity.MaxForce = Vector3.new(100000, 100000, 100000) 
+            else
+                -- Kalo ga ada BodyVelocity, kita paksa mobilnya geser pake CFrame (Tapi ini bakal nembus tembok)
+                vehicle:PivotTo(vehicle:GetPivot() + (seat.CFrame.LookVector * (CarSpeed * dt)))
             end
         end
     end
+            end
 
     if ESPEnabled then
         for _, p in pairs(game.Players:GetPlayers()) do
