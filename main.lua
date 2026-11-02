@@ -1,5 +1,5 @@
 --[[
-    VORTEEZX HUB - FINAL CDID EDITION
+    VORTEEZX HUB - FINAL V2 (UI & BUG FIX)
 --]]
 
 local Player = game.Players.LocalPlayer
@@ -44,7 +44,7 @@ FloatBtn.Image = "rbxassetid://124025278726144"
 FloatBtn.ImageColor3 = Color3.fromRGB(255, 255, 255)
 Instance.new("UICorner", FloatBtn).CornerRadius = UDim.new(1, 0)
 
--- MAIN FRAME
+-- MAIN FRAME (FIX: ClipsDescendants = true)
 local MainFrame = Instance.new("Frame")
 MainFrame.Name = "Main"
 MainFrame.Parent = ScreenGui
@@ -55,6 +55,7 @@ MainFrame.Active = true
 MainFrame.Draggable = true
 MainFrame.BorderSizePixel = 0
 MainFrame.Visible = false
+MainFrame.ClipsDescendants = true -- INI YANG BIKIN GAK TEMBUS
 Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 6)
 
 local TopBar = Instance.new("Frame")
@@ -70,7 +71,7 @@ Title.BackgroundTransparency = 1
 Title.Position = UDim2.new(0, 10, 0, 0)
 Title.Size = UDim2.new(1, -50, 1, 0)
 Title.Font = Enum.Font.GothamBlack
-Title.Text = "VORTEEZX FINAL"
+Title.Text = "VORTEEZX FINAL V2"
 Title.TextColor3 = THEME.ACCENT
 Title.TextSize = 14
 Title.TextXAlignment = Enum.TextXAlignment.Left
@@ -125,6 +126,7 @@ ContentArea.BackgroundColor3 = THEME.BG
 ContentArea.Position = UDim2.new(0, 120, 0, 35)
 ContentArea.Size = UDim2.new(1, -120, 1, -35)
 ContentArea.BorderSizePixel = 0
+ContentArea.ClipsDescendants = true -- Biar isinya gak tembus juga
 Instance.new("UICorner", ContentArea).CornerRadius = UDim.new(0, 6)
 
 local function CreateSidebarBtn(text, yPos, pageToOpen)
@@ -383,7 +385,6 @@ CombatTitle.TextXAlignment = Enum.TextXAlignment.Left
 local CarSpeedEnabled = false
 CreateToggle(CombatPage, "Enable Car Speed", 40, false, function(state) CarSpeedEnabled = state end)
 
--- Slider Car Speed
 local CarSpeedFrame = Instance.new("Frame")
 CarSpeedFrame.Parent = CombatPage
 CarSpeedFrame.BackgroundColor3 = THEME.ITEM_BG
@@ -446,6 +447,7 @@ VisTitle.TextColor3 = THEME.ACCENT
 VisTitle.TextSize = 12
 VisTitle.TextXAlignment = Enum.TextXAlignment.Left
 
+-- ESP FIX: Hapus ClearAllChildren pas toggle mati
 local ESPEnabled = false
 CreateToggle(VisualPage, "ESP Player (Wallhack)", 40, false, function(state)
     ESPEnabled = state
@@ -453,6 +455,8 @@ CreateToggle(VisualPage, "ESP Player (Wallhack)", 40, false, function(state)
         for _, v in pairs(game.CoreGui:GetChildren()) do
             if v.Name == "VortexPlayerESP" then v:Destroy() end
         end
+        local newFolder = Instance.new("Folder", game.CoreGui)
+        newFolder.Name = "VortexPlayerESP"
     end
 end)
 
@@ -512,7 +516,6 @@ UserInputService.JumpRequest:Connect(function()
     end
 end)
 
--- ESP & TELEPORT LOGIC
 local ESPFolder = Instance.new("Folder", game.CoreGui)
 ESPFolder.Name = "VortexPlayerESP"
 local SelectedTarget = nil
@@ -594,21 +597,29 @@ RunService.RenderStepped:Connect(function(dt)
             local bv = HRP:FindFirstChild("VortexFlyBV"); if bv then bv:Destroy() end
         end
 
-        -- CAR SPEED LOGIC
+        -- CAR SPEED LOGIC (FIX BELOK)
         if CarSpeedEnabled then
             local seat = Humanoid.SeatPart
             if seat then
                 local vehicle = seat:FindFirstAncestorOfClass("Model")
                 if vehicle then
-                    local carVelocity = vehicle:FindFirstChild("BodyVelocity") or vehicle:FindFirstChild("Velocity")
-                    for _, v in pairs(vehicle:GetDescendants()) do
-                        if v:IsA("Script") and (string.find(v.Name, "Speed") or string.find(v.Name, "Engine")) then v.Enabled = false end
-                    end
-                    if carVelocity and carVelocity:IsA("BodyVelocity") then
-                        carVelocity.Velocity = seat.CFrame.LookVector * CarSpeed
-                        carVelocity.MaxForce = Vector3.new(100000, 100000, 100000) 
-                    else
-                        vehicle:PivotTo(vehicle:GetPivot() + (seat.CFrame.LookVector * (CarSpeed * dt)))
+                    -- Cari BodyVelocity bawaan mobil (biasanya ada di chassis)
+                    local carVel = vehicle:FindFirstChild("BodyVelocity") or vehicle:FindFirstChild("Velocity")
+                    
+                    if carVel and carVel:IsA("BodyVelocity") then
+                        -- Trik: Ambil arah setir mobil (LookVector bawaan mobil, bukan CFrame kamera)
+                        -- Biar mobil tetep bisa dibelokin
+                        local currentVelocity = seat.Velocity
+                        local driveDirection = seat.CFrame.LookVector
+                        
+                        -- Kita cuma nge-boost kecepatan maju/mundurnya, bukan ngunci arah
+                        carVel.Velocity = Vector3.new(
+                            driveDirection.X * CarSpeed,
+                            currentVelocity.Y, -- Biarin gravitasi jalan
+                            driveDirection.Z * CarSpeed
+                        )
+                        -- Tambah MaxForce biar gak goyang
+                        carVel.MaxForce = Vector3.new(100000, 100000, 100000)
                     end
                 end
             end
@@ -644,4 +655,4 @@ RunService.RenderStepped:Connect(function(dt)
     end
 end)
 
-print("[VORTEEZX] CDID Roblox Edition Loaded - Full Car Speed Ready!")
+print("[VORTEEZX] FINAL V2 Loaded - ESP Fixed & Car Steering Fixed!")
