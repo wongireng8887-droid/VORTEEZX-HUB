@@ -1,5 +1,5 @@
 --[[
-    VORTEEZX HUB - TROLL EDITION V6 (FIXED)
+    VORTEEZX HUB - TROLL EDITION V7 (FULL FIX)
 --]]
 
 local Player = game.Players.LocalPlayer
@@ -75,7 +75,7 @@ Title.BackgroundTransparency = 1
 Title.Position = UDim2.new(0, 10, 0, 0)
 Title.Size = UDim2.new(1, -50, 1, 0)
 Title.Font = Enum.Font.GothamBlack
-Title.Text = "VORTEEZX TROLL V6"
+Title.Text = "VORTEEZX TROLL V7"
 Title.TextColor3 = THEME.ACCENT
 Title.TextSize = 14
 Title.TextXAlignment = Enum.TextXAlignment.Left
@@ -92,7 +92,6 @@ CloseBtn.TextSize = 12
 CloseBtn.BorderSizePixel = 0
 Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(1, 0)
 
--- RESIZE HANDLE (DIPINDAH KE SINI LAGI)
 local ResizeHandle = Instance.new("TextButton")
 ResizeHandle.Parent = MainFrame
 ResizeHandle.BackgroundTransparency = 1
@@ -108,9 +107,7 @@ ResizeHandle.AnchorPoint = Vector2.new(1, 1)
 local isResizing, startSize, startPos = false, nil, nil
 ResizeHandle.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then 
-        isResizing = true
-        startSize = MainFrame.AbsoluteSize
-        startPos = input.Position
+        isResizing = true; startSize = MainFrame.AbsoluteSize; startPos = input.Position
     end
 end)
 UserInputService.InputChanged:Connect(function(input)
@@ -120,9 +117,7 @@ UserInputService.InputChanged:Connect(function(input)
     end
 end)
 UserInputService.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then 
-        isResizing = false 
-    end
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then isResizing = false end
 end)
 
 local Sidebar = Instance.new("Frame")
@@ -260,7 +255,7 @@ UpBtn.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInpu
 DownBtn.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then holdingDown = true end end)
 DownBtn.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then holdingDown = false end end)
 
--- HALAMAN MOVEMENT
+-- HALAMAN MOVEMENT (LENGKAP)
 local MovePage = Instance.new("Frame")
 MovePage.Parent = ContentArea
 MovePage.BackgroundTransparency = 1
@@ -278,14 +273,64 @@ MoveTitle.TextColor3 = THEME.ACCENT
 MoveTitle.TextSize = 12
 MoveTitle.TextXAlignment = Enum.TextXAlignment.Left
 
-local FlyEnabled, RunEnabled = false, false
-CreateToggle(MovePage, "Enable Fly (Terbang)", 40, false, function(state) FlyEnabled = state; UpBtn.Visible = state; DownBtn.Visible = state end)
-CreateToggle(MovePage, "Enable Run Speed", 85, false, function(state) RunEnabled = state end)
+local FlyEnabled, RunEnabled, WaterEnabled, InfJumpEnabled = false, false, false, false
 
+CreateToggle(MovePage, "Enable Fly", 40, false, function(state) FlyEnabled = state; UpBtn.Visible = state; DownBtn.Visible = state end)
+CreateToggle(MovePage, "Walk on Water", 85, false, function(state) WaterEnabled = state end)
+CreateToggle(MovePage, "Infinite Jump", 130, false, function(state) InfJumpEnabled = state end)
+CreateToggle(MovePage, "Enable Run Speed", 175, false, function(state) RunEnabled = state end)
+
+-- SLIDER FLY SPEED
+local FlySpeedFrame = Instance.new("Frame")
+FlySpeedFrame.Parent = MovePage
+FlySpeedFrame.BackgroundColor3 = THEME.ITEM_BG
+FlySpeedFrame.Position = UDim2.new(0, 10, 0, 225)
+FlySpeedFrame.Size = UDim2.new(1, -20, 0, 50)
+FlySpeedFrame.BorderSizePixel = 0
+Instance.new("UICorner", FlySpeedFrame).CornerRadius = UDim.new(0, 6)
+local FlySpeedLabel = Instance.new("TextLabel")
+FlySpeedLabel.Parent = FlySpeedFrame
+FlySpeedLabel.BackgroundTransparency = 1
+FlySpeedLabel.Position = UDim2.new(0, 10, 0, 5)
+FlySpeedLabel.Size = UDim2.new(1, 0, 0, 20)
+FlySpeedLabel.Font = Enum.Font.GothamMedium
+FlySpeedLabel.Text = "Fly Speed: 60"
+FlySpeedLabel.TextColor3 = THEME.TEXT
+FlySpeedLabel.TextSize = 11
+FlySpeedLabel.TextXAlignment = Enum.TextXAlignment.Left
+local FlyBar = Instance.new("TextButton")
+FlyBar.Parent = FlySpeedFrame
+FlyBar.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+FlyBar.Position = UDim2.new(0, 10, 0, 30)
+FlyBar.Size = UDim2.new(1, -20, 0, 6)
+FlyBar.AutoButtonColor = false
+FlyBar.Text = ""
+Instance.new("UICorner", FlyBar).CornerRadius = UDim.new(1, 0)
+local FlyFill = Instance.new("Frame")
+FlyFill.Parent = FlyBar
+FlyFill.BackgroundColor3 = THEME.ACCENT
+FlyFill.Size = UDim2.new(0.05, 0, 1, 0)
+FlyFill.BorderSizePixel = 0
+Instance.new("UICorner", FlyFill).CornerRadius = UDim.new(1, 0)
+local FlySpeed = 60
+local draggingFlySlider = false
+local function updateFlySpeed(input)
+    local width = FlyBar.AbsoluteSize.X
+    if width <= 0 then return end
+    local relative = math.clamp((input.Position.X - FlyBar.AbsolutePosition.X) / width, 0, 1)
+    FlySpeed = math.floor(10 + relative * 490) 
+    FlySpeedLabel.Text = "Fly Speed: " .. FlySpeed
+    FlyFill.Size = UDim2.new(relative, 0, 1, 0)
+end
+FlyBar.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then draggingFlySlider = true; updateFlySpeed(input) end end)
+UserInputService.InputChanged:Connect(function(input) if draggingFlySlider and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then updateFlySpeed(input) end end)
+UserInputService.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then draggingFlySlider = false end end)
+
+-- SLIDER RUN SPEED
 local RunSpeedFrame = Instance.new("Frame")
 RunSpeedFrame.Parent = MovePage
 RunSpeedFrame.BackgroundColor3 = THEME.ITEM_BG
-RunSpeedFrame.Position = UDim2.new(0, 10, 0, 135)
+RunSpeedFrame.Position = UDim2.new(0, 10, 0, 285)
 RunSpeedFrame.Size = UDim2.new(1, -20, 0, 50)
 RunSpeedFrame.BorderSizePixel = 0
 Instance.new("UICorner", RunSpeedFrame).CornerRadius = UDim.new(0, 6)
@@ -319,7 +364,7 @@ local function updateRunSpeed(input)
     local width = RunBar.AbsoluteSize.X
     if width <= 0 then return end
     local relative = math.clamp((input.Position.X - RunBar.AbsolutePosition.X) / width, 0, 1)
-    RunSpeed = math.floor(16 + relative * 984) 
+    RunSpeed = math.floor(16 + relative * 484) 
     RunSpeedLabel.Text = "Run Speed: " .. RunSpeed
     RunFill.Size = UDim2.new(relative, 0, 1, 0)
 end
@@ -448,9 +493,7 @@ local function CreateSizeBtn(text, xPos, sizeVal)
         local seat = Player.Character and Player.Character:FindFirstChildOfClass("Humanoid") and Player.Character.Humanoid.SeatPart
         if seat then
             local vehicle = seat:FindFirstAncestorOfClass("Model")
-            if vehicle then
-                pcall(function() vehicle:ScaleTo(sizeVal) end)
-            end
+            if vehicle then pcall(function() vehicle:ScaleTo(sizeVal) end) end
         end
     end)
 end
@@ -458,7 +501,7 @@ CreateSizeBtn("Mini", 5, 0.5)
 CreateSizeBtn("Normal", 85, 1.0)
 CreateSizeBtn("Giant", 165, 2.5)
 
--- HALAMAN VISUAL & TELEPORT (SINGKAT)
+-- HALAMAN VISUAL
 local VisualPage = Instance.new("Frame")
 VisualPage.Parent = ContentArea
 VisualPage.BackgroundTransparency = 1
@@ -477,6 +520,7 @@ VisTitle.TextXAlignment = Enum.TextXAlignment.Left
 local ESPEnabled = false
 CreateToggle(VisualPage, "ESP Player (Wallhack)", 40, false, function(state) ESPEnabled = state; if not state then ESPFolder:ClearAllChildren() end end)
 
+-- HALAMAN TELEPORT
 local TPPage = Instance.new("Frame")
 TPPage.Parent = ContentArea
 TPPage.BackgroundTransparency = 1
@@ -570,48 +614,66 @@ TPExecBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- FUNGSI FLING MOBIL (REVISI TOTAL)
+-- FUNGSI FLING MOBIL (ANTI-LAG & TARGET ORANG LAIN)
 local function FlingNearestCar()
-    local closestCar = nil
-    local shortestDist = math.huge
     local myPos = Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") and Player.Character.HumanoidRootPart.Position
+    if not myPos then return end
 
-    if myPos then
-        for _, v in pairs(Workspace:GetDescendants()) do
-            -- Cari semua VehicleSeat (kursi mobil)
-            if v:IsA("VehicleSeat") then
-                local vehicle = v:FindFirstAncestorOfClass("Model")
-                if vehicle and vehicle.PrimaryPart and vehicle ~= Player.Character then
+    local closestPlayer = nil
+    local shortestDist = math.huge
+
+    -- Cari player lain yang lagi naik mobil
+    for _, p in pairs(game.Players:GetPlayers()) do
+        if p ~= Player and p.Character and p.Character:FindFirstChildOfClass("Humanoid") then
+            local seat = p.Character.Humanoid.SeatPart
+            if seat and seat:IsA("VehicleSeat") then
+                local vehicle = seat:FindFirstAncestorOfClass("Model")
+                if vehicle and vehicle.PrimaryPart then
                     local dist = (myPos - vehicle.PrimaryPart.Position).Magnitude
                     if dist < shortestDist then
                         shortestDist = dist
-                        closestCar = vehicle
+                        closestPlayer = p
                     end
                 end
             end
         end
     end
 
-    if closestCar and closestCar.PrimaryPart then
-        -- Hancurin BodyVelocity lama kalo ada
-        local oldBV = closestCar.PrimaryPart:FindFirstChild("FlingVelocity")
-        if oldBV then oldBV:Destroy() end
+    -- Eksekusi Fling (Karena network ownership, kita tendang drivernya)
+    if closestPlayer and closestPlayer.Character then
+        local char = closestPlayer.Character
+        local hrp = char:FindFirstChild("HumanoidRootPart")
+        local hum = char:FindFirstChildOfClass("Humanoid")
         
-        -- Trik Fling: Kasih kecepatan gila + puter
-        local bv = Instance.new("BodyVelocity")
-        bv.Name = "FlingVelocity"
-        bv.Velocity = Vector3.new(math.random(-200, 200), 1000, math.random(-200, 200))
-        bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
-        bv.Parent = closestCar.PrimaryPart
-        Debris:AddItem(bv, 2)
+        if hrp and hum then
+            -- Tendang keluar dari mobil
+            hum.Sit = false
+            task.wait(0.1)
+            
+            -- Lempar karakternya
+            local bv = Instance.new("BodyVelocity")
+            bv.Velocity = Vector3.new(math.random(-200, 200), 1000, math.random(-200, 200))
+            bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+            bv.Parent = hrp
+            Debris:AddItem(bv, 1.5)
 
-        local bav = Instance.new("BodyAngularVelocity")
-        bav.AngularVelocity = Vector3.new(math.random(-50, 50), math.random(-50, 50), math.random(-50, 50))
-        bav.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
-        bav.Parent = closestCar.PrimaryPart
-        Debris:AddItem(bav, 2)
+            local bav = Instance.new("BodyAngularVelocity")
+            bav.AngularVelocity = Vector3.new(math.random(-50, 50), math.random(-50, 50), math.random(-50, 50))
+            bav.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
+            bav.Parent = hrp
+            Debris:AddItem(bav, 1.5)
+        end
     end
 end
+
+-- LOOP FLING TERPISAH (BIAR GAK LAG)
+task.spawn(function()
+    while task.wait(1) do
+        if CarFlingEnabled then
+            FlingNearestCar()
+        end
+    end
+end)
 
 -- MAIN LOOP
 RunService.RenderStepped:Connect(function(dt)
@@ -622,13 +684,26 @@ RunService.RenderStepped:Connect(function(dt)
         if RunEnabled and not FlyEnabled then Humanoid.WalkSpeed = RunSpeed
         elseif not RunEnabled and not FlyEnabled then Humanoid.WalkSpeed = 16 end
         
+        if WaterEnabled then
+            if Humanoid.FloorMaterial == Enum.Material.Water or Humanoid:GetState() == Enum.HumanoidStateType.Swimming then
+                local bf = HRP:FindFirstChild("WaterForce")
+                if not bf then bf = Instance.new("BodyForce"); bf.Name = "WaterForce"; bf.Parent = HRP end
+                bf.Force = Vector3.new(0, HRP:GetMass() * Workspace.Gravity * 1.1, 0) 
+                if Humanoid:GetState() == Enum.HumanoidStateType.Swimming then Humanoid:ChangeState(Enum.HumanoidStateType.Running) end
+            else
+                local bf = HRP:FindFirstChild("WaterForce"); if bf then bf:Destroy() end
+            end
+        else
+            local bf = HRP:FindFirstChild("WaterForce"); if bf then bf:Destroy() end
+        end
+        
         if FlyEnabled then
             Humanoid.PlatformStand = true
             local bv = HRP:FindFirstChild("VortexFlyBV")
             if not bv then bv = Instance.new("BodyVelocity"); bv.Name = "VortexFlyBV"; bv.MaxForce = Vector3.new(1e5, 1e5, 1e5); bv.Parent = HRP end
-            local velocity = Humanoid.MoveDirection * 60
-            if holdingUp then velocity = velocity + Vector3.new(0, 60, 0)
-            elseif holdingDown then velocity = velocity - Vector3.new(0, 60, 0) end
+            local velocity = Humanoid.MoveDirection * FlySpeed
+            if holdingUp then velocity = velocity + Vector3.new(0, FlySpeed, 0)
+            elseif holdingDown then velocity = velocity - Vector3.new(0, FlySpeed, 0) end
             bv.Velocity = velocity
         else
             local bv = HRP:FindFirstChild("VortexFlyBV"); if bv then bv:Destroy() end
@@ -643,21 +718,15 @@ RunService.RenderStepped:Connect(function(dt)
                     local mainPart = vehicle.PrimaryPart or vehicle:FindFirstChild("HumanoidRootPart") or seat
                     
                     local downForce = mainPart:FindFirstChild("VortexDownForce")
-                    if not downForce then
-                        downForce = Instance.new("BodyForce"); downForce.Name = "VortexDownForce"; downForce.Parent = mainPart
-                    end
+                    if not downForce then downForce = Instance.new("BodyForce"); downForce.Name = "VortexDownForce"; downForce.Parent = mainPart end
                     downForce.Force = Vector3.new(0, -mainPart:GetMass() * Workspace.Gravity * 5, 0)
 
                     local gyro = mainPart:FindFirstChild("VortexGyro")
-                    if not gyro then
-                        gyro = Instance.new("BodyGyro"); gyro.Name = "VortexGyro"; gyro.P = 10000; gyro.D = 1000; gyro.MaxTorque = Vector3.new(1e5, 0, 1e5); gyro.Parent = mainPart
-                    end
+                    if not gyro then gyro = Instance.new("BodyGyro"); gyro.Name = "VortexGyro"; gyro.P = 10000; gyro.D = 1000; gyro.MaxTorque = Vector3.new(1e5, 0, 1e5); gyro.Parent = mainPart end
                     gyro.CFrame = CFrame.new(mainPart.Position, mainPart.Position + seat.CFrame.LookVector)
 
                     local carVel = mainPart:FindFirstChild("VortexSpeed")
-                    if not carVel then
-                        carVel = Instance.new("BodyVelocity"); carVel.Name = "VortexSpeed"; carVel.Parent = mainPart
-                    end
+                    if not carVel then carVel = Instance.new("BodyVelocity"); carVel.Name = "VortexSpeed"; carVel.Parent = mainPart end
                     
                     carVel.MaxForce = Vector3.new(25000, 0, 25000)
                     carVel.Velocity = seat.CFrame.LookVector * CarSpeed
@@ -674,12 +743,6 @@ RunService.RenderStepped:Connect(function(dt)
                 end
             end
         end
-    end
-
-    -- CAR FLING LOGIC (JALAN TERUS SELAMA ON)
-    if CarFlingEnabled then
-        FlingNearestCar()
-        task.wait(0.5) -- Jeda biar ga nge-lag
     end
 
     -- ESP LOGIC
@@ -712,4 +775,4 @@ RunService.RenderStepped:Connect(function(dt)
     end
 end)
 
-print("[VORTEEZX] TROLL V6 Loaded - Resize & Fling Fixed!")
+print("[VORTEEZX] TROLL V7 Loaded - Movement Fixed, Fling Anti-Lag!")
