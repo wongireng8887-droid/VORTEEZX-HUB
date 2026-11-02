@@ -1,6 +1,6 @@
 --[[
-    VORTEEZX HUB - TROLL EDITION V10.3
-    Features: Fly, Car Fly, Exhaust Smoke (2-layer, dynamic), ESP, TP, Freeze
+    VORTEEZX HUB - TROLL EDITION V10.5
+    Features: Fly, Car Fly, Exhaust Smoke (Fixed Height), ESP, TP, Freeze
 --]]
 
 local Player = game.Players.LocalPlayer
@@ -74,13 +74,12 @@ local function UpdateExhaustEmitters()
     end
 end
 
-local function CreateExhaustAt(primary, offsetVec, direction)
+local function CreateExhaustAt(primary, localCFrame)
     local att = Instance.new("Attachment")
     att.Name = "VortexExhaustAtt"
-    att.Position = offsetVec
+    att.CFrame = localCFrame
     att.Parent = primary
 
-    -- LAYER 1: asap pekat utama
     local pe = Instance.new("ParticleEmitter")
     pe.Name = "VortexExhaustPE"
     pe.Parent = att
@@ -108,10 +107,9 @@ local function CreateExhaustAt(primary, offsetVec, direction)
     pe.RotSpeed = NumberRange.new(-45, 45)
     pe.Rotation = NumberRange.new(0, 360)
     pe.VelocityInheritance = 0.8
-    pe.EmissionDirection = direction
+    pe.EmissionDirection = Enum.NormalId.Front
     pe.Enabled = true
 
-    -- LAYER 2: asap tipis tambahan
     local pe2 = Instance.new("ParticleEmitter")
     pe2.Name = "VortexExhaustPE2"
     pe2.Parent = att
@@ -137,35 +135,52 @@ local function CreateExhaustAt(primary, offsetVec, direction)
     pe2.RotSpeed = NumberRange.new(-30, 30)
     pe2.Rotation = NumberRange.new(0, 360)
     pe2.VelocityInheritance = 0.9
-    pe2.EmissionDirection = direction
+    pe2.EmissionDirection = Enum.NormalId.Front
     pe2.Enabled = true
 
     table.insert(ExhaustEmitters, pe)
     table.insert(ExhaustEmitters, pe2)
-    return pe
 end
 
-local function ApplyExhaust(car)
+-- FIX POSISI: Y_OFF dinaikin biar ga dari kolong
+local function ApplyExhaust(car, seat)
     ClearExhaust()
     local primary = car.PrimaryPart or car:FindFirstChildWhichIsA("BasePart")
-    if not primary then return end
+    if not primary or not seat then return end
     ExhaustLastCar = car
 
-    local F_OFF = 4.5
-    local S_OFF = 2
-    local Y_OFF = 0.5
+    local F_OFF = 6.5    -- Jarak mundur/maju
+    local S_OFF = 3.5    -- Jarak samping kiri/kanan
+    local Y_OFF = 2.5    -- Ketinggian asap dari jok (bumper)
+
+    local seatCF = seat.CFrame
+    local primaryCF = primary.CFrame
+    local backDir = -seatCF.LookVector
+    local rightDir = seatCF.RightVector
+
+    local function addExhaust(targetWorldPos, lookDir)
+        local targetCF = CFrame.lookAt(targetWorldPos, targetWorldPos - lookDir)
+        local localCF = primaryCF:ToObjectSpace(targetCF)
+        CreateExhaustAt(primary, localCF)
+    end
 
     if ExhaustPosition == "back" then
-        CreateExhaustAt(primary, Vector3.new(0, Y_OFF, -F_OFF), Enum.NormalId.Back)
+        local pos = seatCF.Position + backDir * F_OFF + Vector3.new(0, Y_OFF, 0)
+        addExhaust(pos, backDir)
     elseif ExhaustPosition == "front" then
-        CreateExhaustAt(primary, Vector3.new(0, Y_OFF, F_OFF), Enum.NormalId.Front)
+        local pos = seatCF.Position - backDir * F_OFF + Vector3.new(0, Y_OFF, 0)
+        addExhaust(pos, -backDir)
     elseif ExhaustPosition == "left" then
-        CreateExhaustAt(primary, Vector3.new(-S_OFF, Y_OFF, 0), Enum.NormalId.Left)
+        local pos = seatCF.Position - rightDir * S_OFF + Vector3.new(0, Y_OFF, 0)
+        addExhaust(pos, -rightDir)
     elseif ExhaustPosition == "right" then
-        CreateExhaustAt(primary, Vector3.new(S_OFF, Y_OFF, 0), Enum.NormalId.Right)
+        local pos = seatCF.Position + rightDir * S_OFF + Vector3.new(0, Y_OFF, 0)
+        addExhaust(pos, rightDir)
     elseif ExhaustPosition == "dual" then
-        CreateExhaustAt(primary, Vector3.new(-S_OFF, Y_OFF, -F_OFF), Enum.NormalId.Back)
-        CreateExhaustAt(primary, Vector3.new(S_OFF, Y_OFF, -F_OFF), Enum.NormalId.Back)
+        local leftPos = seatCF.Position - rightDir * S_OFF + Vector3.new(0, Y_OFF, 0)
+        addExhaust(leftPos, -rightDir)
+        local rightPos = seatCF.Position + rightDir * S_OFF + Vector3.new(0, Y_OFF, 0)
+        addExhaust(rightPos, rightDir)
     end
 end
 
@@ -207,7 +222,7 @@ Title.BackgroundTransparency = 1
 Title.Position = UDim2.new(0, 10, 0, 0)
 Title.Size = UDim2.new(1, -50, 1, 0)
 Title.Font = Enum.Font.GothamBlack
-Title.Text = "VORTEEZX TROLL V10.3"
+Title.Text = "VORTEEZX TROLL V10.5"
 Title.TextColor3 = THEME.ACCENT
 Title.TextSize = 14
 Title.TextXAlignment = Enum.TextXAlignment.Left
@@ -293,7 +308,7 @@ local function CreateSidebarBtn(text, yPos, pageToOpen)
             if v:IsA("TextButton") then v.TextColor3 = THEME.TEXT_DIM; v:FindFirstChildOfClass("Frame").Visible = false end
         end
         for _, v in pairs(ContentArea:GetChildren()) do
-            if v:IsA("Frame") then v.Visible = false end
+            if v:IsA("Frame") or v:IsA("ScrollingFrame") then v.Visible = false end
         end
         btn.TextColor3 = THEME.ACCENT
         indicator.Visible = true
@@ -721,11 +736,15 @@ CreateSizeBtn("Mini", 5, 0.5)
 CreateSizeBtn("Normal", 85, 1.0)
 CreateSizeBtn("Giant", 165, 2.5)
 
-local VisualPage = Instance.new("Frame")
+local VisualPage = Instance.new("ScrollingFrame")
 VisualPage.Parent = ContentArea
 VisualPage.BackgroundTransparency = 1
 VisualPage.Size = UDim2.new(1, 0, 1, 0)
 VisualPage.Visible = false
+VisualPage.CanvasSize = UDim2.new(0, 0, 0, 430) 
+VisualPage.ScrollBarThickness = 3
+VisualPage.ScrollBarImageColor3 = THEME.ACCENT
+VisualPage.BorderSizePixel = 0
 
 local VisTitle = Instance.new("TextLabel")
 VisTitle.Parent = VisualPage
@@ -748,7 +767,7 @@ CreateToggle(VisualPage, "Enable Exhaust Smoke", 85, false, function(state)
     else
         local seat = Player.Character and Player.Character:FindFirstChildOfClass("Humanoid") and Player.Character.Humanoid.SeatPart
         local car = seat and seat:FindFirstAncestorOfClass("Model")
-        if car then ApplyExhaust(car) end
+        if car then ApplyExhaust(car, seat) end
     end
 end)
 
@@ -799,7 +818,7 @@ for i, opt in ipairs(posOptions) do
         if ExhaustEnabled then
             local seat = Player.Character and Player.Character:FindFirstChildOfClass("Humanoid") and Player.Character.Humanoid.SeatPart
             local car = seat and seat:FindFirstAncestorOfClass("Model")
-            if car then ApplyExhaust(car) end
+            if car then ApplyExhaust(car, seat) end
         end
     end)
 end
@@ -1237,12 +1256,12 @@ RunService.RenderStepped:Connect(function(dt)
             end
         end
 
-        -- EXHAUST SMOKE (2 LAYER DYNAMIC)
+        -- EXHAUST SMOKE (SEAT-BASED)
         if ExhaustEnabled then
             local seat = Humanoid.SeatPart
             local car = seat and seat:FindFirstAncestorOfClass("Model")
             if car and car ~= ExhaustLastCar then
-                ApplyExhaust(car)
+                ApplyExhaust(car, seat)
             elseif not car and ExhaustLastCar then
                 ClearExhaust()
             end
@@ -1303,4 +1322,4 @@ RunService.RenderStepped:Connect(function(dt)
     end
 end)
 
-print("[VORTEEZX] TROLL V10.3 Loaded - 2-Layer Exhaust + Fixed Direction!")
+print("[VORTEEZX] TROLL V10.5 Loaded - Exhaust Height & Dual Fix!")
