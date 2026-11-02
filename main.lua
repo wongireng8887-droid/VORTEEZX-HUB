@@ -1,5 +1,5 @@
 --[[
-    VORTEEZX HUB - FINAL V4 (FULL FIX)
+    VORTEEZX HUB - FINAL V4 (ANTI-NGEPOT)
 --]]
 
 local Player = game.Players.LocalPlayer
@@ -601,7 +601,7 @@ RunService.RenderStepped:Connect(function(dt)
             local bv = HRP:FindFirstChild("VortexFlyBV"); if bv then bv:Destroy() end
         end
 
-        -- CAR SPEED LOGIC (STABILIZER & DOWNFORCE)
+        -- CAR SPEED LOGIC (ANTI-NGEPOT / STABILIZER)
         if CarSpeedEnabled then
             local seat = Humanoid.SeatPart
             if seat and (seat:IsA("VehicleSeat") or seat:IsA("Seat")) then
@@ -610,7 +610,7 @@ RunService.RenderStepped:Connect(function(dt)
                     pcall(function()
                         seat.MaxSpeed = CarSpeed
                         seat.Torque = CarSpeed * 5
-                        seat.TurnSpeed = 10
+                        seat.TurnSpeed = 15 
                     end)
                 end
 
@@ -624,7 +624,19 @@ RunService.RenderStepped:Connect(function(dt)
                         downForce.Name = "VortexDownForce"
                         downForce.Parent = mainPart
                     end
-                    downForce.Force = Vector3.new(0, -mainPart:GetMass() * Workspace.Gravity * 3, 0)
+                    downForce.Force = Vector3.new(0, -mainPart:GetMass() * Workspace.Gravity * 5, 0)
+
+                    local gyro = mainPart:FindFirstChild("VortexGyro")
+                    if not gyro then
+                        gyro = Instance.new("BodyGyro")
+                        gyro.Name = "VortexGyro"
+                        gyro.P = 10000
+                        gyro.D = 1000
+                        gyro.MaxTorque = Vector3.new(1e5, 0, 1e5)
+                        gyro.Parent = mainPart
+                    end
+                    -- Kunci stabilizer datar biar gak ngepot, tapi sumbu Y dibebasin buat belok
+                    gyro.CFrame = CFrame.new(mainPart.Position, mainPart.Position + seat.CFrame.LookVector)
 
                     local carVel = mainPart:FindFirstChild("VortexSpeed")
                     if not carVel then
@@ -633,7 +645,7 @@ RunService.RenderStepped:Connect(function(dt)
                         carVel.Parent = mainPart
                     end
                     
-                    carVel.MaxForce = Vector3.new(50000, 0, 50000)
+                    carVel.MaxForce = Vector3.new(25000, 0, 25000)
                     carVel.Velocity = seat.CFrame.LookVector * CarSpeed
                 end
             end
@@ -653,6 +665,8 @@ RunService.RenderStepped:Connect(function(dt)
                     if carVel then carVel:Destroy() end
                     local downForce = mainPart:FindFirstChild("VortexDownForce")
                     if downForce then downForce:Destroy() end
+                    local gyro = mainPart:FindFirstChild("VortexGyro")
+                    if gyro then gyro:Destroy() end
                 end
             end
         end
@@ -688,4 +702,4 @@ RunService.RenderStepped:Connect(function(dt)
     end
 end)
 
-print("[VORTEEZX] FINAL V4 Loaded - All Bugs Fixed!")
+print("[VORTEEZX] FINAL V4 Loaded - Anti Ngepot Edition!")
