@@ -1,5 +1,5 @@
 --[[
-    VORTEEZX HUB - TROLL EDITION V5
+    VORTEEZX HUB - TROLL EDITION V6 (FIXED)
 --]]
 
 local Player = game.Players.LocalPlayer
@@ -75,7 +75,7 @@ Title.BackgroundTransparency = 1
 Title.Position = UDim2.new(0, 10, 0, 0)
 Title.Size = UDim2.new(1, -50, 1, 0)
 Title.Font = Enum.Font.GothamBlack
-Title.Text = "VORTEEZX TROLL V5"
+Title.Text = "VORTEEZX TROLL V6"
 Title.TextColor3 = THEME.ACCENT
 Title.TextSize = 14
 Title.TextXAlignment = Enum.TextXAlignment.Left
@@ -91,6 +91,39 @@ CloseBtn.TextColor3 = THEME.TEXT
 CloseBtn.TextSize = 12
 CloseBtn.BorderSizePixel = 0
 Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(1, 0)
+
+-- RESIZE HANDLE (DIPINDAH KE SINI LAGI)
+local ResizeHandle = Instance.new("TextButton")
+ResizeHandle.Parent = MainFrame
+ResizeHandle.BackgroundTransparency = 1
+ResizeHandle.Size = UDim2.new(0, 25, 0, 25)
+ResizeHandle.Position = UDim2.new(1, -25, 1, -25)
+ResizeHandle.Text = "◢"
+ResizeHandle.TextColor3 = THEME.TEXT_DIM
+ResizeHandle.TextSize = 18
+ResizeHandle.Font = Enum.Font.GothamBold
+ResizeHandle.ZIndex = 10
+ResizeHandle.AnchorPoint = Vector2.new(1, 1)
+
+local isResizing, startSize, startPos = false, nil, nil
+ResizeHandle.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then 
+        isResizing = true
+        startSize = MainFrame.AbsoluteSize
+        startPos = input.Position
+    end
+end)
+UserInputService.InputChanged:Connect(function(input)
+    if isResizing and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+        local delta = input.Position - startPos
+        MainFrame.Size = UDim2.fromOffset(math.max(300, startSize.X + delta.X), math.max(200, startSize.Y + delta.Y))
+    end
+end)
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then 
+        isResizing = false 
+    end
+end)
 
 local Sidebar = Instance.new("Frame")
 Sidebar.Parent = MainFrame
@@ -352,7 +385,7 @@ local function updateCarSpeed(input)
     local width = CarBar.AbsoluteSize.X
     if width <= 0 then return end
     local relative = math.clamp((input.Position.X - CarBar.AbsolutePosition.X) / width, 0, 1)
-    CarSpeed = math.floor(50 + relative * 450) -- Max 500 biar ga ngepot
+    CarSpeed = math.floor(50 + relative * 450) 
     CarSpeedLabel.Text = "Car Speed: " .. CarSpeed
     CarFill.Size = UDim2.new(relative, 0, 1, 0)
 end
@@ -360,7 +393,7 @@ CarBar.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInp
 UserInputService.InputChanged:Connect(function(input) if draggingCarSlider and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then updateCarSpeed(input) end end)
 UserInputService.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then draggingCarSlider = false end end)
 
--- HALAMAN TROLL (BARU)
+-- HALAMAN TROLL
 local TrollPage = Instance.new("Frame")
 TrollPage.Parent = ContentArea
 TrollPage.BackgroundTransparency = 1
@@ -381,7 +414,6 @@ TrollTitle.TextXAlignment = Enum.TextXAlignment.Left
 local CarFlingEnabled = false
 CreateToggle(TrollPage, "Auto Fling Nearest Car", 40, false, function(state) CarFlingEnabled = state end)
 
--- Tombol Car Size
 local SizeFrame = Instance.new("Frame")
 SizeFrame.Parent = TrollPage
 SizeFrame.BackgroundColor3 = THEME.ITEM_BG
@@ -422,12 +454,11 @@ local function CreateSizeBtn(text, xPos, sizeVal)
         end
     end)
 end
-
 CreateSizeBtn("Mini", 5, 0.5)
 CreateSizeBtn("Normal", 85, 1.0)
 CreateSizeBtn("Giant", 165, 2.5)
 
--- HALAMAN VISUAL
+-- HALAMAN VISUAL & TELEPORT (SINGKAT)
 local VisualPage = Instance.new("Frame")
 VisualPage.Parent = ContentArea
 VisualPage.BackgroundTransparency = 1
@@ -443,14 +474,9 @@ VisTitle.Text = "VISUAL SETTINGS"
 VisTitle.TextColor3 = THEME.ACCENT
 VisTitle.TextSize = 12
 VisTitle.TextXAlignment = Enum.TextXAlignment.Left
-
 local ESPEnabled = false
-CreateToggle(VisualPage, "ESP Player (Wallhack)", 40, false, function(state)
-    ESPEnabled = state
-    if not state then ESPFolder:ClearAllChildren() end
-end)
+CreateToggle(VisualPage, "ESP Player (Wallhack)", 40, false, function(state) ESPEnabled = state; if not state then ESPFolder:ClearAllChildren() end end)
 
--- HALAMAN TELEPORT
 local TPPage = Instance.new("Frame")
 TPPage.Parent = ContentArea
 TPPage.BackgroundTransparency = 1
@@ -544,17 +570,18 @@ TPExecBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- FUNGSI FLING MOBIL
+-- FUNGSI FLING MOBIL (REVISI TOTAL)
 local function FlingNearestCar()
     local closestCar = nil
     local shortestDist = math.huge
     local myPos = Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") and Player.Character.HumanoidRootPart.Position
 
     if myPos then
-        for _, p in pairs(game.Players:GetPlayers()) do
-            if p ~= Player and p.Character and p.Character:FindFirstChildOfClass("Humanoid") and p.Character.Humanoid.SeatPart then
-                local vehicle = p.Character.Humanoid.SeatPart:FindFirstAncestorOfClass("Model")
-                if vehicle and vehicle.PrimaryPart then
+        for _, v in pairs(Workspace:GetDescendants()) do
+            -- Cari semua VehicleSeat (kursi mobil)
+            if v:IsA("VehicleSeat") then
+                local vehicle = v:FindFirstAncestorOfClass("Model")
+                if vehicle and vehicle.PrimaryPart and vehicle ~= Player.Character then
                     local dist = (myPos - vehicle.PrimaryPart.Position).Magnitude
                     if dist < shortestDist then
                         shortestDist = dist
@@ -566,15 +593,27 @@ local function FlingNearestCar()
     end
 
     if closestCar and closestCar.PrimaryPart then
+        -- Hancurin BodyVelocity lama kalo ada
+        local oldBV = closestCar.PrimaryPart:FindFirstChild("FlingVelocity")
+        if oldBV then oldBV:Destroy() end
+        
+        -- Trik Fling: Kasih kecepatan gila + puter
         local bv = Instance.new("BodyVelocity")
-        bv.Velocity = Vector3.new(math.random(-100, 100), 500, math.random(-100, 100))
+        bv.Name = "FlingVelocity"
+        bv.Velocity = Vector3.new(math.random(-200, 200), 1000, math.random(-200, 200))
         bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
         bv.Parent = closestCar.PrimaryPart
-        Debris:AddItem(bv, 1)
+        Debris:AddItem(bv, 2)
+
+        local bav = Instance.new("BodyAngularVelocity")
+        bav.AngularVelocity = Vector3.new(math.random(-50, 50), math.random(-50, 50), math.random(-50, 50))
+        bav.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
+        bav.Parent = closestCar.PrimaryPart
+        Debris:AddItem(bav, 2)
     end
 end
 
--- MAIN LOOP (LOGIKA FLY, CAR SPEED, TROLL, ESP)
+-- MAIN LOOP
 RunService.RenderStepped:Connect(function(dt)
     if Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
         local HRP = Player.Character.HumanoidRootPart
@@ -637,12 +676,10 @@ RunService.RenderStepped:Connect(function(dt)
         end
     end
 
-    -- CAR FLING LOGIC
+    -- CAR FLING LOGIC (JALAN TERUS SELAMA ON)
     if CarFlingEnabled then
-        CarFlingEnabled = false -- Biar gak spam (sekali pencet sekali fling)
         FlingNearestCar()
-        -- Kasih jeda biar gak nge-lag
-        task.wait(0.5)
+        task.wait(0.5) -- Jeda biar ga nge-lag
     end
 
     -- ESP LOGIC
@@ -675,4 +712,4 @@ RunService.RenderStepped:Connect(function(dt)
     end
 end)
 
-print("[VORTEEZX] TROLL EDITION V5 Loaded!")
+print("[VORTEEZX] TROLL V6 Loaded - Resize & Fling Fixed!")
