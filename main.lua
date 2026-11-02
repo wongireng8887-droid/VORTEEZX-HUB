@@ -1,6 +1,6 @@
 --[[
-    VORTEEZX HUB - TROLL EDITION V9.2
-    Features: Magnet (all cars), Stop All, Freeze Car, Car Fly (camera-based)
+    VORTEEZX HUB - TROLL EDITION V10.1
+    Features: Fly, Car Fly, Exhaust Smoke (in VISUAL), ESP, TP, Freeze
 --]]
 
 local Player = game.Players.LocalPlayer
@@ -38,19 +38,108 @@ local ESPFolder = Instance.new("Folder", game.CoreGui)
 ESPFolder.Name = "VortexPlayerESP"
 local CarFlyEnabled = false
 
-local CarOwnershipRequested = {}
-local function RequestCarOwnership(veh, primary)
-    local now = tick()
-    local last = CarOwnershipRequested[veh]
-    if last and (now - last) < 2 then return false end
-    local interaction = ReplicatedStorage:FindFirstChild("Interaction")
-    if interaction then
-        local req = interaction:FindFirstChild("ClientRequestOwnership")
-        if req then pcall(function() req:FireServer(primary) end) end
+-- ============ EXHAUST SYSTEM STATE ============
+local ExhaustEnabled = false
+local ExhaustPosition = "back"
+local ExhaustRate = 60
+local ExhaustSize = 2.5
+local ExhaustLifetime = 2.0
+local ExhaustColor = Color3.fromRGB(10, 10, 10)
+local ExhaustEmitters = {}
+local ExhaustLastCar = nil
+
+local function ClearExhaust()
+    for _, emitter in pairs(ExhaustEmitters) do
+        pcall(function() emitter:Destroy() end)
     end
-    pcall(function() primary:SetNetworkOwner(Player) end)
-    CarOwnershipRequested[veh] = now
-    return true
+    ExhaustEmitters = {}
+    ExhaustLastCar = nil
+end
+
+local function UpdateExhaustEmitters()
+    for _, pe in pairs(ExhaustEmitters) do
+        if pe and pe.Parent then
+            pcall(function()
+                pe.Rate = ExhaustRate
+                pe.Size = NumberSequence.new({
+                    NumberSequenceKeypoint.new(0, ExhaustSize * 0.3),
+                    NumberSequenceKeypoint.new(0.5, ExhaustSize),
+                    NumberSequenceKeypoint.new(1, ExhaustSize * 2.5)
+                })
+                pe.Lifetime = NumberRange.new(ExhaustLifetime * 0.7, ExhaustLifetime * 1.3)
+                pe.Color = ColorSequence.new(ExhaustColor)
+            end)
+        end
+    end
+end
+
+local function CreateExhaustAt(primary, worldPos, worldDir)
+    local att = Instance.new("Attachment")
+    att.Name = "VortexExhaustAtt"
+    att.WorldCFrame = CFrame.lookAt(worldPos, worldPos + worldDir)
+    att.Parent = primary
+
+    local pe = Instance.new("ParticleEmitter")
+    pe.Name = "VortexExhaustPE"
+    pe.Parent = att
+    pe.Texture = "rbxassetid://243098098"
+    pe.LightEmission = 0
+    pe.LightInfluence = 0
+    pe.Color = ColorSequence.new(ExhaustColor)
+    pe.Size = NumberSequence.new({
+        NumberSequenceKeypoint.new(0, ExhaustSize * 0.3),
+        NumberSequenceKeypoint.new(0.5, ExhaustSize),
+        NumberSequenceKeypoint.new(1, ExhaustSize * 2.5)
+    })
+    pe.Transparency = NumberSequence.new({
+        NumberSequenceKeypoint.new(0, 0.05),
+        NumberSequenceKeypoint.new(0.4, 0.3),
+        NumberSequenceKeypoint.new(1, 1)
+    })
+    pe.Lifetime = NumberRange.new(ExhaustLifetime * 0.7, ExhaustLifetime * 1.3)
+    pe.Rate = ExhaustRate
+    pe.Speed = NumberRange.new(8, 18)
+    pe.Drag = 2
+    pe.Acceleration = Vector3.new(0, 3, 0)
+    pe.SpreadAngle = Vector3.new(25, 25, 25)
+    pe.RotSpeed = NumberRange.new(-60, 60)
+    pe.Rotation = NumberRange.new(0, 360)
+    pe.VelocityInheritance = 0.3
+    pe.EmissionDirection = Enum.NormalId.Front
+    pe.Enabled = true
+
+    table.insert(ExhaustEmitters, pe)
+    return pe
+end
+
+local function ApplyExhaust(car)
+    ClearExhaust()
+    local primary = car.PrimaryPart or car:FindFirstChildWhichIsA("BasePart")
+    if not primary then return end
+    ExhaustLastCar = car
+
+    local cf = primary.CFrame
+    local fwd = cf.LookVector
+    local right = cf.RightVector
+    local up = cf.UpVector
+    local pos = primary.Position
+
+    local F_OFF = 5
+    local S_OFF = 2.5
+    local Y_OFF = -0.5
+
+    if ExhaustPosition == "back" then
+        CreateExhaustAt(primary, pos - fwd * F_OFF + up * Y_OFF, -fwd)
+    elseif ExhaustPosition == "front" then
+        CreateExhaustAt(primary, pos + fwd * F_OFF + up * Y_OFF, fwd)
+    elseif ExhaustPosition == "left" then
+        CreateExhaustAt(primary, pos - right * S_OFF + up * Y_OFF, -right)
+    elseif ExhaustPosition == "right" then
+        CreateExhaustAt(primary, pos + right * S_OFF + up * Y_OFF, right)
+    elseif ExhaustPosition == "dual" then
+        CreateExhaustAt(primary, pos - right * S_OFF + up * Y_OFF, -right)
+        CreateExhaustAt(primary, pos + right * S_OFF + up * Y_OFF, right)
+    end
 end
 
 local FloatBtn = Instance.new("ImageButton")
@@ -91,7 +180,7 @@ Title.BackgroundTransparency = 1
 Title.Position = UDim2.new(0, 10, 0, 0)
 Title.Size = UDim2.new(1, -50, 1, 0)
 Title.Font = Enum.Font.GothamBlack
-Title.Text = "VORTEEZX TROLL V9.2"
+Title.Text = "VORTEEZX TROLL V10.1"
 Title.TextColor3 = THEME.ACCENT
 Title.TextSize = 14
 Title.TextXAlignment = Enum.TextXAlignment.Left
@@ -496,166 +585,12 @@ TrollTitle.BackgroundTransparency = 1
 TrollTitle.Position = UDim2.new(0, 10, 0, 10)
 TrollTitle.Size = UDim2.new(1, 0, 0, 20)
 TrollTitle.Font = Enum.Font.GothamBold
-TrollTitle.Text = "CAR CONTROL (MAGNET / STOP / FLY)"
+TrollTitle.Text = "CAR CONTROL (FLY / SIZE)"
 TrollTitle.TextColor3 = THEME.ACCENT
 TrollTitle.TextSize = 12
 TrollTitle.TextXAlignment = Enum.TextXAlignment.Left
 
--- CAR MAGNET
-local CarMagnetEnabled = false
-CreateToggle(TrollPage, "Enable Car Magnet", 40, false, function(state)
-    CarMagnetEnabled = state
-    if not state then
-        for _, v in pairs(Workspace:GetDescendants()) do
-            if v.Name == "VortexMagnetBV" then v:Destroy() end
-        end
-    end
-end)
-
-local MagnetFrame = Instance.new("Frame")
-MagnetFrame.Parent = TrollPage
-MagnetFrame.BackgroundColor3 = THEME.ITEM_BG
-MagnetFrame.Position = UDim2.new(0, 10, 0, 80)
-MagnetFrame.Size = UDim2.new(1, -20, 0, 75)
-MagnetFrame.BorderSizePixel = 0
-Instance.new("UICorner", MagnetFrame).CornerRadius = UDim.new(0, 6)
-
-local RadiusLabel = Instance.new("TextLabel")
-RadiusLabel.Parent = MagnetFrame
-RadiusLabel.BackgroundTransparency = 1
-RadiusLabel.Position = UDim2.new(0, 10, 0, 5)
-RadiusLabel.Size = UDim2.new(1, 0, 0, 15)
-RadiusLabel.Font = Enum.Font.GothamMedium
-RadiusLabel.Text = "Magnet Radius: 60"
-RadiusLabel.TextColor3 = THEME.TEXT
-RadiusLabel.TextSize = 11
-RadiusLabel.TextXAlignment = Enum.TextXAlignment.Left
-
-local RadiusBar = Instance.new("TextButton")
-RadiusBar.Parent = MagnetFrame
-RadiusBar.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-RadiusBar.Position = UDim2.new(0, 10, 0, 22)
-RadiusBar.Size = UDim2.new(1, -20, 0, 6)
-RadiusBar.AutoButtonColor = false
-RadiusBar.Text = ""
-Instance.new("UICorner", RadiusBar).CornerRadius = UDim.new(1, 0)
-
-local RadiusFill = Instance.new("Frame")
-RadiusFill.Parent = RadiusBar
-RadiusFill.BackgroundColor3 = THEME.ACCENT
-RadiusFill.Size = UDim2.new(0.22, 0, 1, 0)
-RadiusFill.BorderSizePixel = 0
-Instance.new("UICorner", RadiusFill).CornerRadius = UDim.new(1, 0)
-
-local MagnetRadius = 60
-local draggingRadius = false
-local function updateMagnetRadius(input)
-    local w = RadiusBar.AbsoluteSize.X
-    if w <= 0 then return end
-    local rel = math.clamp((input.Position.X - RadiusBar.AbsolutePosition.X) / w, 0, 1)
-    MagnetRadius = math.floor(20 + rel * 180)
-    RadiusLabel.Text = "Magnet Radius: " .. MagnetRadius
-    RadiusFill.Size = UDim2.new(rel, 0, 1, 0)
-end
-RadiusBar.InputBegan:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then draggingRadius = true; updateMagnetRadius(i) end end)
-UserInputService.InputChanged:Connect(function(i) if draggingRadius and (i.UserInputType == Enum.UserInputType.MouseMovement or i.UserInputType == Enum.UserInputType.Touch) then updateMagnetRadius(i) end end)
-UserInputService.InputEnded:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then draggingRadius = false end end)
-
-local StrengthLabel = Instance.new("TextLabel")
-StrengthLabel.Parent = MagnetFrame
-StrengthLabel.BackgroundTransparency = 1
-StrengthLabel.Position = UDim2.new(0, 10, 0, 40)
-StrengthLabel.Size = UDim2.new(1, 0, 0, 15)
-StrengthLabel.Font = Enum.Font.GothamMedium
-StrengthLabel.Text = "Magnet Strength: 80"
-StrengthLabel.TextColor3 = THEME.TEXT
-StrengthLabel.TextSize = 11
-StrengthLabel.TextXAlignment = Enum.TextXAlignment.Left
-
-local StrengthBar = Instance.new("TextButton")
-StrengthBar.Parent = MagnetFrame
-StrengthBar.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-StrengthBar.Position = UDim2.new(0, 10, 0, 57)
-StrengthBar.Size = UDim2.new(1, -20, 0, 6)
-StrengthBar.AutoButtonColor = false
-StrengthBar.Text = ""
-Instance.new("UICorner", StrengthBar).CornerRadius = UDim.new(1, 0)
-
-local StrengthFill = Instance.new("Frame")
-StrengthFill.Parent = StrengthBar
-StrengthFill.BackgroundColor3 = THEME.ACCENT
-StrengthFill.Size = UDim2.new(0.3, 0, 1, 0)
-StrengthFill.BorderSizePixel = 0
-Instance.new("UICorner", StrengthFill).CornerRadius = UDim.new(1, 0)
-
-local MagnetStrength = 80
-local draggingStrength = false
-local function updateMagnetStrength(input)
-    local w = StrengthBar.AbsoluteSize.X
-    if w <= 0 then return end
-    local rel = math.clamp((input.Position.X - StrengthBar.AbsolutePosition.X) / w, 0, 1)
-    MagnetStrength = math.floor(20 + rel * 200)
-    StrengthLabel.Text = "Magnet Strength: " .. MagnetStrength
-    StrengthFill.Size = UDim2.new(rel, 0, 1, 0)
-end
-StrengthBar.InputBegan:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then draggingStrength = true; updateMagnetStrength(i) end end)
-UserInputService.InputChanged:Connect(function(i) if draggingStrength and (i.UserInputType == Enum.UserInputType.MouseMovement or i.UserInputType == Enum.UserInputType.Touch) then updateMagnetStrength(i) end end)
-UserInputService.InputEnded:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then draggingStrength = false end end)
-
--- INSTANT STOP ALL CARS
-local StopAllBtn = Instance.new("TextButton")
-StopAllBtn.Parent = TrollPage
-StopAllBtn.BackgroundColor3 = THEME.ACCENT
-StopAllBtn.Position = UDim2.new(0, 10, 0, 160)
-StopAllBtn.Size = UDim2.new(1, -20, 0, 30)
-StopAllBtn.Font = Enum.Font.GothamBold
-StopAllBtn.Text = "INSTANT STOP ALL CARS"
-StopAllBtn.TextColor3 = THEME.TEXT
-StopAllBtn.TextSize = 12
-Instance.new("UICorner", StopAllBtn).CornerRadius = UDim.new(0, 6)
-
-StopAllBtn.MouseButton1Click:Connect(function()
-    StopAllBtn.Text = "STOPPING..."
-    task.spawn(function()
-        local myHRP = Player.Character and Player.Character:FindFirstChild("HumanoidRootPart")
-        local myPos = myHRP and myHRP.Position
-        for attempt = 1, 4 do
-            local count = 0
-            for _, v in pairs(Workspace:GetDescendants()) do
-                if v:IsA("VehicleSeat") then
-                    local veh = v:FindFirstAncestorOfClass("Model")
-                    if veh and veh.PrimaryPart then
-                        local primary = veh.PrimaryPart
-                        local dist = myPos and (myPos - primary.Position).Magnitude or math.huge
-                        if dist <= 600 then
-                            local interaction = ReplicatedStorage:FindFirstChild("Interaction")
-                            if interaction then
-                                local req = interaction:FindFirstChild("ClientRequestOwnership")
-                                if req then pcall(function() req:FireServer(primary) end) end
-                            end
-                            pcall(function() primary:SetNetworkOwner(Player) end)
-                            for _, p in pairs(veh:GetDescendants()) do
-                                if p:IsA("BasePart") then
-                                    pcall(function()
-                                        p.AssemblyLinearVelocity = Vector3.zero
-                                        p.AssemblyAngularVelocity = Vector3.zero
-                                    end)
-                                end
-                            end
-                            count = count + 1
-                        end
-                    end
-                end
-            end
-            print("[VORTEEZX] Stop attempt " .. attempt .. ": " .. count .. " cars")
-            task.wait(0.15)
-        end
-        StopAllBtn.Text = "INSTANT STOP ALL CARS"
-    end)
-end)
-
--- CAR FLY
-CreateToggle(TrollPage, "Enable Car Fly", 195, false, function(state)
+CreateToggle(TrollPage, "Enable Car Fly", 40, false, function(state)
     CarFlyEnabled = state
     UpBtn.Visible = state or FlyEnabled
     DownBtn.Visible = state or FlyEnabled
@@ -671,7 +606,7 @@ end)
 local CFlyFrame = Instance.new("Frame")
 CFlyFrame.Parent = TrollPage
 CFlyFrame.BackgroundColor3 = THEME.ITEM_BG
-CFlyFrame.Position = UDim2.new(0, 10, 0, 235)
+CFlyFrame.Position = UDim2.new(0, 10, 0, 80)
 CFlyFrame.Size = UDim2.new(1, -20, 0, 45)
 CFlyFrame.BorderSizePixel = 0
 Instance.new("UICorner", CFlyFrame).CornerRadius = UDim.new(0, 6)
@@ -717,11 +652,10 @@ CFlyBar.InputBegan:Connect(function(i) if i.UserInputType == Enum.UserInputType.
 UserInputService.InputChanged:Connect(function(i) if draggingCFly and (i.UserInputType == Enum.UserInputType.MouseMovement or i.UserInputType == Enum.UserInputType.Touch) then updateCarFlySpeed(i) end end)
 UserInputService.InputEnded:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then draggingCFly = false end end)
 
--- CAR SIZE CHANGER
 local SizeFrame = Instance.new("Frame")
 SizeFrame.Parent = TrollPage
 SizeFrame.BackgroundColor3 = THEME.ITEM_BG
-SizeFrame.Position = UDim2.new(0, 10, 0, 285)
+SizeFrame.Position = UDim2.new(0, 10, 0, 130)
 SizeFrame.Size = UDim2.new(1, -20, 0, 55)
 SizeFrame.BorderSizePixel = 0
 Instance.new("UICorner", SizeFrame).CornerRadius = UDim.new(0, 6)
@@ -765,6 +699,7 @@ VisualPage.Parent = ContentArea
 VisualPage.BackgroundTransparency = 1
 VisualPage.Size = UDim2.new(1, 0, 1, 0)
 VisualPage.Visible = false
+
 local VisTitle = Instance.new("TextLabel")
 VisTitle.Parent = VisualPage
 VisTitle.BackgroundTransparency = 1
@@ -775,8 +710,262 @@ VisTitle.Text = "VISUAL SETTINGS"
 VisTitle.TextColor3 = THEME.ACCENT
 VisTitle.TextSize = 12
 VisTitle.TextXAlignment = Enum.TextXAlignment.Left
+
 local ESPEnabled = false
 CreateToggle(VisualPage, "ESP Player (Wallhack)", 40, false, function(state) ESPEnabled = state; if not state then ESPFolder:ClearAllChildren() end end)
+
+CreateToggle(VisualPage, "Enable Exhaust Smoke", 85, false, function(state)
+    ExhaustEnabled = state
+    if not state then
+        ClearExhaust()
+    else
+        local seat = Player.Character and Player.Character:FindFirstChildOfClass("Humanoid") and Player.Character.Humanoid.SeatPart
+        local car = seat and seat:FindFirstAncestorOfClass("Model")
+        if car then ApplyExhaust(car) end
+    end
+end)
+
+local PosFrame = Instance.new("Frame")
+PosFrame.Parent = VisualPage
+PosFrame.BackgroundColor3 = THEME.ITEM_BG
+PosFrame.Position = UDim2.new(0, 10, 0, 130)
+PosFrame.Size = UDim2.new(1, -20, 0, 65)
+PosFrame.BorderSizePixel = 0
+Instance.new("UICorner", PosFrame).CornerRadius = UDim.new(0, 6)
+
+local PosLabel = Instance.new("TextLabel")
+PosLabel.Parent = PosFrame
+PosLabel.BackgroundTransparency = 1
+PosLabel.Position = UDim2.new(0, 10, 0, 3)
+PosLabel.Size = UDim2.new(1, 0, 0, 15)
+PosLabel.Font = Enum.Font.GothamBold
+PosLabel.Text = "Exhaust Position: BACK"
+PosLabel.TextColor3 = THEME.TEXT
+PosLabel.TextSize = 10
+PosLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+local PosButtons = {}
+local posOptions = {
+    {key = "back", label = "BACK"},
+    {key = "front", label = "FRONT"},
+    {key = "left", label = "LEFT"},
+    {key = "right", label = "RIGHT"},
+    {key = "dual", label = "DUAL"}
+}
+for i, opt in ipairs(posOptions) do
+    local btn = Instance.new("TextButton")
+    btn.Parent = PosFrame
+    btn.BackgroundColor3 = (opt.key == "back") and THEME.ACCENT or Color3.fromRGB(60, 60, 60)
+    btn.Position = UDim2.new(0, 5 + (i - 1) * 74, 0, 22)
+    btn.Size = UDim2.new(0, 70, 0, 28)
+    btn.Font = Enum.Font.GothamBold
+    btn.Text = opt.label
+    btn.TextColor3 = THEME.TEXT
+    btn.TextSize = 9
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 4)
+    PosButtons[opt.key] = btn
+    btn.MouseButton1Click:Connect(function()
+        for _, b in pairs(PosButtons) do b.BackgroundColor3 = Color3.fromRGB(60, 60, 60) end
+        btn.BackgroundColor3 = THEME.ACCENT
+        ExhaustPosition = opt.key
+        PosLabel.Text = "Exhaust Position: " .. opt.label
+        if ExhaustEnabled then
+            local seat = Player.Character and Player.Character:FindFirstChildOfClass("Humanoid") and Player.Character.Humanoid.SeatPart
+            local car = seat and seat:FindFirstAncestorOfClass("Model")
+            if car then ApplyExhaust(car) end
+        end
+    end)
+end
+
+local RateFrame = Instance.new("Frame")
+RateFrame.Parent = VisualPage
+RateFrame.BackgroundColor3 = THEME.ITEM_BG
+RateFrame.Position = UDim2.new(0, 10, 0, 205)
+RateFrame.Size = UDim2.new(1, -20, 0, 45)
+RateFrame.BorderSizePixel = 0
+Instance.new("UICorner", RateFrame).CornerRadius = UDim.new(0, 6)
+
+local RateLabel = Instance.new("TextLabel")
+RateLabel.Parent = RateFrame
+RateLabel.BackgroundTransparency = 1
+RateLabel.Position = UDim2.new(0, 10, 0, 3)
+RateLabel.Size = UDim2.new(1, 0, 0, 15)
+RateLabel.Font = Enum.Font.GothamMedium
+RateLabel.Text = "Smoke Density: 60"
+RateLabel.TextColor3 = THEME.TEXT
+RateLabel.TextSize = 10
+RateLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+local RateBar = Instance.new("TextButton")
+RateBar.Parent = RateFrame
+RateBar.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+RateBar.Position = UDim2.new(0, 10, 0, 22)
+RateBar.Size = UDim2.new(1, -20, 0, 6)
+RateBar.AutoButtonColor = false
+RateBar.Text = ""
+Instance.new("UICorner", RateBar).CornerRadius = UDim.new(1, 0)
+
+local RateFill = Instance.new("Frame")
+RateFill.Parent = RateBar
+RateFill.BackgroundColor3 = THEME.ACCENT
+RateFill.Size = UDim2.new(0.6, 0, 1, 0)
+RateFill.BorderSizePixel = 0
+Instance.new("UICorner", RateFill).CornerRadius = UDim.new(1, 0)
+
+local draggingRate = false
+local function updateRate(input)
+    local w = RateBar.AbsoluteSize.X
+    if w <= 0 then return end
+    local rel = math.clamp((input.Position.X - RateBar.AbsolutePosition.X) / w, 0, 1)
+    ExhaustRate = math.floor(5 + rel * 195)
+    RateLabel.Text = "Smoke Density: " .. ExhaustRate
+    RateFill.Size = UDim2.new(rel, 0, 1, 0)
+    UpdateExhaustEmitters()
+end
+RateBar.InputBegan:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then draggingRate = true; updateRate(i) end end)
+UserInputService.InputChanged:Connect(function(i) if draggingRate and (i.UserInputType == Enum.UserInputType.MouseMovement or i.UserInputType == Enum.UserInputType.Touch) then updateRate(i) end end)
+UserInputService.InputEnded:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then draggingRate = false end end)
+
+local SizeSldFrame = Instance.new("Frame")
+SizeSldFrame.Parent = VisualPage
+SizeSldFrame.BackgroundColor3 = THEME.ITEM_BG
+SizeSldFrame.Position = UDim2.new(0, 10, 0, 255)
+SizeSldFrame.Size = UDim2.new(1, -20, 0, 45)
+SizeSldFrame.BorderSizePixel = 0
+Instance.new("UICorner", SizeSldFrame).CornerRadius = UDim.new(0, 6)
+
+local SizeSldLabel = Instance.new("TextLabel")
+SizeSldLabel.Parent = SizeSldFrame
+SizeSldLabel.BackgroundTransparency = 1
+SizeSldLabel.Position = UDim2.new(0, 10, 0, 3)
+SizeSldLabel.Size = UDim2.new(1, 0, 0, 15)
+SizeSldLabel.Font = Enum.Font.GothamMedium
+SizeSldLabel.Text = "Smoke Size: 2.5"
+SizeSldLabel.TextColor3 = THEME.TEXT
+SizeSldLabel.TextSize = 10
+SizeSldLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+local SizeSldBar = Instance.new("TextButton")
+SizeSldBar.Parent = SizeSldFrame
+SizeSldBar.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+SizeSldBar.Position = UDim2.new(0, 10, 0, 22)
+SizeSldBar.Size = UDim2.new(1, -20, 0, 6)
+SizeSldBar.AutoButtonColor = false
+SizeSldBar.Text = ""
+Instance.new("UICorner", SizeSldBar).CornerRadius = UDim.new(1, 0)
+
+local SizeSldFill = Instance.new("Frame")
+SizeSldFill.Parent = SizeSldBar
+SizeSldFill.BackgroundColor3 = THEME.ACCENT
+SizeSldFill.Size = UDim2.new(0.4, 0, 1, 0)
+SizeSldFill.BorderSizePixel = 0
+Instance.new("UICorner", SizeSldFill).CornerRadius = UDim.new(1, 0)
+
+local draggingSize = false
+local function updateSize(input)
+    local w = SizeSldBar.AbsoluteSize.X
+    if w <= 0 then return end
+    local rel = math.clamp((input.Position.X - SizeSldBar.AbsolutePosition.X) / w, 0, 1)
+    ExhaustSize = math.floor((0.5 + rel * 5.5) * 10) / 10
+    SizeSldLabel.Text = "Smoke Size: " .. ExhaustSize
+    SizeSldFill.Size = UDim2.new(rel, 0, 1, 0)
+    UpdateExhaustEmitters()
+end
+SizeSldBar.InputBegan:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then draggingSize = true; updateSize(i) end end)
+UserInputService.InputChanged:Connect(function(i) if draggingSize and (i.UserInputType == Enum.UserInputType.MouseMovement or i.UserInputType == Enum.UserInputType.Touch) then updateSize(i) end end)
+UserInputService.InputEnded:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then draggingSize = false end end)
+
+local LifeFrame = Instance.new("Frame")
+LifeFrame.Parent = VisualPage
+LifeFrame.BackgroundColor3 = THEME.ITEM_BG
+LifeFrame.Position = UDim2.new(0, 10, 0, 305)
+LifeFrame.Size = UDim2.new(1, -20, 0, 45)
+LifeFrame.BorderSizePixel = 0
+Instance.new("UICorner", LifeFrame).CornerRadius = UDim.new(0, 6)
+
+local LifeLabel = Instance.new("TextLabel")
+LifeLabel.Parent = LifeFrame
+LifeLabel.BackgroundTransparency = 1
+LifeLabel.Position = UDim2.new(0, 10, 0, 3)
+LifeLabel.Size = UDim2.new(1, 0, 0, 15)
+LifeLabel.Font = Enum.Font.GothamMedium
+LifeLabel.Text = "Smoke Lifetime: 2.0s"
+LifeLabel.TextColor3 = THEME.TEXT
+LifeLabel.TextSize = 10
+LifeLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+local LifeBar = Instance.new("TextButton")
+LifeBar.Parent = LifeFrame
+LifeBar.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+LifeBar.Position = UDim2.new(0, 10, 0, 22)
+LifeBar.Size = UDim2.new(1, -20, 0, 6)
+LifeBar.AutoButtonColor = false
+LifeBar.Text = ""
+Instance.new("UICorner", LifeBar).CornerRadius = UDim.new(1, 0)
+
+local LifeFill = Instance.new("Frame")
+LifeFill.Parent = LifeBar
+LifeFill.BackgroundColor3 = THEME.ACCENT
+LifeFill.Size = UDim2.new(0.5, 0, 1, 0)
+LifeFill.BorderSizePixel = 0
+Instance.new("UICorner", LifeFill).CornerRadius = UDim.new(1, 0)
+
+local draggingLife = false
+local function updateLife(input)
+    local w = LifeBar.AbsoluteSize.X
+    if w <= 0 then return end
+    local rel = math.clamp((input.Position.X - LifeBar.AbsolutePosition.X) / w, 0, 1)
+    ExhaustLifetime = math.floor((0.5 + rel * 3.5) * 10) / 10
+    LifeLabel.Text = "Smoke Lifetime: " .. ExhaustLifetime .. "s"
+    LifeFill.Size = UDim2.new(rel, 0, 1, 0)
+    UpdateExhaustEmitters()
+end
+LifeBar.InputBegan:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then draggingLife = true; updateLife(i) end end)
+UserInputService.InputChanged:Connect(function(i) if draggingLife and (i.UserInputType == Enum.UserInputType.MouseMovement or i.UserInputType == Enum.UserInputType.Touch) then updateLife(i) end end)
+UserInputService.InputEnded:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then draggingLife = false end end)
+
+local ColorFrame = Instance.new("Frame")
+ColorFrame.Parent = VisualPage
+ColorFrame.BackgroundColor3 = THEME.ITEM_BG
+ColorFrame.Position = UDim2.new(0, 10, 0, 355)
+ColorFrame.Size = UDim2.new(1, -20, 0, 55)
+ColorFrame.BorderSizePixel = 0
+Instance.new("UICorner", ColorFrame).CornerRadius = UDim.new(0, 6)
+
+local ColorLabel = Instance.new("TextLabel")
+ColorLabel.Parent = ColorFrame
+ColorLabel.BackgroundTransparency = 1
+ColorLabel.Position = UDim2.new(0, 10, 0, 3)
+ColorLabel.Size = UDim2.new(1, 0, 0, 15)
+ColorLabel.Font = Enum.Font.GothamBold
+ColorLabel.Text = "Smoke Color"
+ColorLabel.TextColor3 = THEME.TEXT
+ColorLabel.TextSize = 10
+ColorLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+local colorPresets = {
+    {name = "BLACK", col = Color3.fromRGB(10, 10, 10)},
+    {name = "WHITE", col = Color3.fromRGB(240, 240, 240)},
+    {name = "GREEN", col = Color3.fromRGB(50, 200, 50)},
+    {name = "RED", col = Color3.fromRGB(220, 30, 30)},
+    {name = "PINK", col = Color3.fromRGB(255, 100, 200)},
+    {name = "GOLD", col = Color3.fromRGB(255, 200, 0)}
+}
+for i, preset in ipairs(colorPresets) do
+    local btn = Instance.new("TextButton")
+    btn.Parent = ColorFrame
+    btn.BackgroundColor3 = preset.col
+    btn.Position = UDim2.new(0, 5 + (i - 1) * 60, 0, 22)
+    btn.Size = UDim2.new(0, 55, 0, 25)
+    btn.Font = Enum.Font.GothamBold
+    btn.Text = ""
+    btn.TextColor3 = THEME.TEXT
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 4)
+    btn.MouseButton1Click:Connect(function()
+        ExhaustColor = preset.col
+        UpdateExhaustEmitters()
+    end)
+end
 
 local TPPage = Instance.new("Frame")
 TPPage.Parent = ContentArea
@@ -954,7 +1143,6 @@ RunService.RenderStepped:Connect(function(dt)
             local bv = HRP:FindFirstChild("VortexFlyBV"); if bv then bv:Destroy() end
         end
 
-        -- CAR FLY (camera-based + tombol MAJU/MUNDUR)
         if CarFlyEnabled then
             local seat = Humanoid.SeatPart
             if seat and seat:IsA("VehicleSeat") then
@@ -992,7 +1180,6 @@ RunService.RenderStepped:Connect(function(dt)
             end
         end
 
-        -- CAR SPEED
         if CarSpeedEnabled then
             local seat = Humanoid.SeatPart
             if seat and seat:IsA("VehicleSeat") then
@@ -1022,41 +1209,18 @@ RunService.RenderStepped:Connect(function(dt)
                 end
             end
         end
-    end
 
-    -- CAR MAGNET (fix: request ownership dulu, skip mobil sendiri)
-    if CarMagnetEnabled then
-        local myHRP = Player.Character and Player.Character:FindFirstChild("HumanoidRootPart")
-        if myHRP then
-            local myPos = myHRP.Position
-            local mySeat = Player.Character:FindFirstChildOfClass("Humanoid") and Player.Character.Humanoid.SeatPart
-            local myCar = mySeat and mySeat:FindFirstAncestorOfClass("Model")
-            for _, v in pairs(Workspace:GetDescendants()) do
-                if v:IsA("VehicleSeat") then
-                    local veh = v:FindFirstAncestorOfClass("Model")
-                    if veh and veh.PrimaryPart and veh ~= Player.Character and veh ~= myCar then
-                        local primary = veh.PrimaryPart
-                        local dist = (myPos - primary.Position).Magnitude
-                        if dist <= MagnetRadius and dist > 3 then
-                            RequestCarOwnership(veh, primary)
-                            local pullDir = (myPos - primary.Position).Unit
-                            local bv = primary:FindFirstChild("VortexMagnetBV")
-                            if not bv then
-                                bv = Instance.new("BodyVelocity")
-                                bv.Name = "VortexMagnetBV"
-                                bv.MaxForce = Vector3.new(1e5, 1e5, 1e5)
-                                bv.P = 5000
-                                bv.Parent = primary
-                            end
-                            bv.Velocity = pullDir * MagnetStrength
-                        end
-                    end
-                end
+        if ExhaustEnabled then
+            local seat = Humanoid.SeatPart
+            local car = seat and seat:FindFirstAncestorOfClass("Model")
+            if car and car ~= ExhaustLastCar then
+                ApplyExhaust(car)
+            elseif not car and ExhaustLastCar then
+                ClearExhaust()
             end
         end
     end
 
-    -- ESP
     if ESPEnabled then
         for _, p in pairs(game.Players:GetPlayers()) do
             if p ~= Player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") and p.Character:FindFirstChild("Humanoid") then
@@ -1086,4 +1250,4 @@ RunService.RenderStepped:Connect(function(dt)
     end
 end)
 
-print("[VORTEEZX] TROLL V9.2 Loaded - Magnet+Stop+Freeze+CarFly FIXED!")
+print("[VORTEEZX] TROLL V10.1 Loaded - Exhaust in VISUAL page!")
