@@ -1,5 +1,5 @@
 --[[
-    VORTEEZX HUB - ULTIMATE V3 (AUTO ATTACK + WATER FIX)
+    VORTEEZX HUB - CDID EDITION (FULL CAR SPEED)
 --]]
 
 local Player = game.Players.LocalPlayer
@@ -9,7 +9,7 @@ local TweenService = game:GetService("TweenService")
 local Workspace = game:GetService("Workspace")
 
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "VORTEEZX_HUB_V3"
+ScreenGui.Name = "VORTEEZX_HUB_CDID"
 ScreenGui.ResetOnSpawn = false
 pcall(function()
     if syn and syn.protect_gui then
@@ -30,39 +30,6 @@ local THEME = {
     TEXT_DIM = Color3.fromRGB(150, 150, 150),
     ITEM_BG = Color3.fromRGB(35, 35, 35)
 }
-
--- TOMBOL NAIK / TURUN FLY
-local UpBtn = Instance.new("TextButton")
-UpBtn.Parent = ScreenGui
-UpBtn.Size = UDim2.new(0, 50, 0, 50)
-UpBtn.Position = UDim2.new(1, -80, 1, -200)
-UpBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
-UpBtn.BackgroundTransparency = 0.3
-UpBtn.Text = "⬆"
-UpBtn.TextColor3 = THEME.ACCENT
-UpBtn.Font = Enum.Font.GothamBold
-UpBtn.TextSize = 24
-UpBtn.Visible = false
-Instance.new("UICorner", UpBtn).CornerRadius = UDim.new(1, 0)
-
-local DownBtn = Instance.new("TextButton")
-DownBtn.Parent = ScreenGui
-DownBtn.Size = UDim2.new(0, 50, 0, 50)
-DownBtn.Position = UDim2.new(1, -140, 1, -200)
-DownBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
-DownBtn.BackgroundTransparency = 0.3
-DownBtn.Text = "⬇"
-DownBtn.TextColor3 = THEME.ACCENT
-DownBtn.Font = Enum.Font.GothamBold
-DownBtn.TextSize = 24
-DownBtn.Visible = false
-Instance.new("UICorner", DownBtn).CornerRadius = UDim.new(1, 0)
-
-local holdingUp, holdingDown = false, false
-UpBtn.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then holdingUp = true end end)
-UpBtn.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then holdingUp = false end end)
-DownBtn.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then holdingDown = true end end)
-DownBtn.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then holdingDown = false end end)
 
 -- FLOATING BUTTON
 local FloatBtn = Instance.new("ImageButton")
@@ -103,7 +70,7 @@ Title.BackgroundTransparency = 1
 Title.Position = UDim2.new(0, 10, 0, 0)
 Title.Size = UDim2.new(1, -50, 1, 0)
 Title.Font = Enum.Font.GothamBlack
-Title.Text = "VORTEEZX ULTIMATE V3"
+Title.Text = "VORTEEZX CAR EDITION"
 Title.TextColor3 = THEME.ACCENT
 Title.TextSize = 14
 Title.TextXAlignment = Enum.TextXAlignment.Left
@@ -119,6 +86,30 @@ CloseBtn.TextColor3 = THEME.TEXT
 CloseBtn.TextSize = 12
 CloseBtn.BorderSizePixel = 0
 Instance.new("UICorner", CloseBtn).CornerRadius = UDim.new(1, 0)
+
+-- RESIZE HANDLE
+local ResizeHandle = Instance.new("TextButton")
+ResizeHandle.Parent = MainFrame
+ResizeHandle.BackgroundTransparency = 1
+ResizeHandle.Size = UDim2.new(0, 25, 0, 25)
+ResizeHandle.Position = UDim2.new(1, -25, 1, -25)
+ResizeHandle.Text = "◢"
+ResizeHandle.TextColor3 = THEME.TEXT_DIM
+ResizeHandle.TextSize = 18
+ResizeHandle.Font = Enum.Font.GothamBold
+ResizeHandle.ZIndex = 10
+
+local isResizing, startSize, startPos = false, nil, nil
+ResizeHandle.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then isResizing = true; startSize = MainFrame.AbsoluteSize; startPos = input.Position end
+end)
+UserInputService.InputChanged:Connect(function(input)
+    if isResizing and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+        local delta = input.Position - startPos
+        MainFrame.Size = UDim2.fromOffset(math.max(300, startSize.X + delta.X), math.max(200, startSize.Y + delta.Y))
+    end
+end)
+UserInputService.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then isResizing = false end end)
 
 local Sidebar = Instance.new("Frame")
 Sidebar.Parent = MainFrame
@@ -136,7 +127,6 @@ ContentArea.Size = UDim2.new(1, -120, 1, -35)
 ContentArea.BorderSizePixel = 0
 Instance.new("UICorner", ContentArea).CornerRadius = UDim.new(0, 6)
 
--- HELPER FUNCTIONS
 local function CreateSidebarBtn(text, yPos, pageToOpen)
     local btn = Instance.new("TextButton")
     btn.Parent = Sidebar
@@ -160,10 +150,7 @@ local function CreateSidebarBtn(text, yPos, pageToOpen)
     
     btn.MouseButton1Click:Connect(function()
         for _, v in pairs(Sidebar:GetChildren()) do
-            if v:IsA("TextButton") then
-                v.TextColor3 = THEME.TEXT_DIM
-                v:FindFirstChildOfClass("Frame").Visible = false
-            end
+            if v:IsA("TextButton") then v.TextColor3 = THEME.TEXT_DIM; v:FindFirstChildOfClass("Frame").Visible = false end
         end
         for _, v in pairs(ContentArea:GetChildren()) do
             if v:IsA("Frame") then v.Visible = false end
@@ -183,7 +170,6 @@ local function CreateToggle(parent, text, yPos, defaultState, callback)
     row.Size = UDim2.new(1, -20, 0, 35)
     row.BorderSizePixel = 0
     Instance.new("UICorner", row).CornerRadius = UDim.new(0, 6)
-
     local label = Instance.new("TextLabel")
     label.Parent = row
     label.BackgroundTransparency = 1
@@ -194,7 +180,6 @@ local function CreateToggle(parent, text, yPos, defaultState, callback)
     label.TextColor3 = THEME.TEXT
     label.TextSize = 11
     label.TextXAlignment = Enum.TextXAlignment.Left
-
     local switchBg = Instance.new("TextButton")
     switchBg.Parent = row
     switchBg.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
@@ -203,20 +188,17 @@ local function CreateToggle(parent, text, yPos, defaultState, callback)
     switchBg.AutoButtonColor = false
     switchBg.Text = ""
     Instance.new("UICorner", switchBg).CornerRadius = UDim.new(1, 0)
-
     local circle = Instance.new("Frame")
     circle.Parent = switchBg
     circle.BackgroundColor3 = THEME.TEXT
     circle.Position = UDim2.new(0, 2, 0.5, -8)
     circle.Size = UDim2.new(0, 16, 0, 16)
     Instance.new("UICorner", circle).CornerRadius = UDim.new(1, 0)
-
     local state = defaultState
     if state then
         switchBg.BackgroundColor3 = THEME.ACCENT
         circle.Position = UDim2.new(1, -18, 0.5, -8)
     end
-
     switchBg.MouseButton1Click:Connect(function()
         state = not state
         if state then
@@ -229,6 +211,39 @@ local function CreateToggle(parent, text, yPos, defaultState, callback)
         if callback then callback(state) end
     end)
 end
+
+-- TOMBOL FLY NAIK/TURUN
+local UpBtn = Instance.new("TextButton")
+UpBtn.Parent = ScreenGui
+UpBtn.Size = UDim2.new(0, 50, 0, 50)
+UpBtn.Position = UDim2.new(1, -80, 1, -200)
+UpBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+UpBtn.BackgroundTransparency = 0.3
+UpBtn.Text = "⬆"
+UpBtn.TextColor3 = THEME.ACCENT
+UpBtn.Font = Enum.Font.GothamBold
+UpBtn.TextSize = 24
+UpBtn.Visible = false
+Instance.new("UICorner", UpBtn).CornerRadius = UDim.new(1, 0)
+
+local DownBtn = Instance.new("TextButton")
+DownBtn.Parent = ScreenGui
+DownBtn.Size = UDim2.new(0, 50, 0, 50)
+DownBtn.Position = UDim2.new(1, -140, 1, -200)
+DownBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+DownBtn.BackgroundTransparency = 0.3
+DownBtn.Text = "⬇"
+DownBtn.TextColor3 = THEME.ACCENT
+DownBtn.Font = Enum.Font.GothamBold
+DownBtn.TextSize = 24
+DownBtn.Visible = false
+Instance.new("UICorner", DownBtn).CornerRadius = UDim.new(1, 0)
+
+local holdingUp, holdingDown = false, false
+UpBtn.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then holdingUp = true end end)
+UpBtn.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then holdingUp = false end end)
+DownBtn.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then holdingDown = true end end)
+DownBtn.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then holdingDown = false end end)
 
 -- HALAMAN MOVEMENT
 local MovePage = Instance.new("Frame")
@@ -263,7 +278,6 @@ FlySpeedFrame.Position = UDim2.new(0, 10, 0, 225)
 FlySpeedFrame.Size = UDim2.new(1, -20, 0, 50)
 FlySpeedFrame.BorderSizePixel = 0
 Instance.new("UICorner", FlySpeedFrame).CornerRadius = UDim.new(0, 6)
-
 local FlySpeedLabel = Instance.new("TextLabel")
 FlySpeedLabel.Parent = FlySpeedFrame
 FlySpeedLabel.BackgroundTransparency = 1
@@ -274,7 +288,6 @@ FlySpeedLabel.Text = "Fly Speed: 60"
 FlySpeedLabel.TextColor3 = THEME.TEXT
 FlySpeedLabel.TextSize = 11
 FlySpeedLabel.TextXAlignment = Enum.TextXAlignment.Left
-
 local FlyBar = Instance.new("TextButton")
 FlyBar.Parent = FlySpeedFrame
 FlyBar.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
@@ -283,14 +296,12 @@ FlyBar.Size = UDim2.new(1, -20, 0, 6)
 FlyBar.AutoButtonColor = false
 FlyBar.Text = ""
 Instance.new("UICorner", FlyBar).CornerRadius = UDim.new(1, 0)
-
 local FlyFill = Instance.new("Frame")
 FlyFill.Parent = FlyBar
 FlyFill.BackgroundColor3 = THEME.ACCENT
 FlyFill.Size = UDim2.new(0.05, 0, 1, 0)
 FlyFill.BorderSizePixel = 0
 Instance.new("UICorner", FlyFill).CornerRadius = UDim.new(1, 0)
-
 local FlySpeed = 60
 local draggingFlySlider = false
 local function updateFlySpeed(input)
@@ -313,7 +324,6 @@ RunSpeedFrame.Position = UDim2.new(0, 10, 0, 285)
 RunSpeedFrame.Size = UDim2.new(1, -20, 0, 50)
 RunSpeedFrame.BorderSizePixel = 0
 Instance.new("UICorner", RunSpeedFrame).CornerRadius = UDim.new(0, 6)
-
 local RunSpeedLabel = Instance.new("TextLabel")
 RunSpeedLabel.Parent = RunSpeedFrame
 RunSpeedLabel.BackgroundTransparency = 1
@@ -324,7 +334,6 @@ RunSpeedLabel.Text = "Run Speed: 16"
 RunSpeedLabel.TextColor3 = THEME.TEXT
 RunSpeedLabel.TextSize = 11
 RunSpeedLabel.TextXAlignment = Enum.TextXAlignment.Left
-
 local RunBar = Instance.new("TextButton")
 RunBar.Parent = RunSpeedFrame
 RunBar.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
@@ -333,14 +342,12 @@ RunBar.Size = UDim2.new(1, -20, 0, 6)
 RunBar.AutoButtonColor = false
 RunBar.Text = ""
 Instance.new("UICorner", RunBar).CornerRadius = UDim.new(1, 0)
-
 local RunFill = Instance.new("Frame")
 RunFill.Parent = RunBar
 RunFill.BackgroundColor3 = THEME.ACCENT
 RunFill.Size = UDim2.new(0, 0, 1, 0)
 RunFill.BorderSizePixel = 0
 Instance.new("UICorner", RunFill).CornerRadius = UDim.new(1, 0)
-
 local RunSpeed = 16
 local draggingRunSlider = false
 local function updateRunSpeed(input)
@@ -355,7 +362,7 @@ RunBar.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInp
 UserInputService.InputChanged:Connect(function(input) if draggingRunSlider and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then updateRunSpeed(input) end end)
 UserInputService.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then draggingRunSlider = false end end)
 
--- HALAMAN COMBAT
+-- HALAMAN CAR SPEED
 local CombatPage = Instance.new("Frame")
 CombatPage.Parent = ContentArea
 CombatPage.BackgroundTransparency = 1
@@ -368,13 +375,59 @@ CombatTitle.BackgroundTransparency = 1
 CombatTitle.Position = UDim2.new(0, 10, 0, 10)
 CombatTitle.Size = UDim2.new(1, 0, 0, 20)
 CombatTitle.Font = Enum.Font.GothamBold
-CombatTitle.Text = "COMBAT SETTINGS"
+CombatTitle.Text = "CAR SETTINGS"
 CombatTitle.TextColor3 = THEME.ACCENT
 CombatTitle.TextSize = 12
 CombatTitle.TextXAlignment = Enum.TextXAlignment.Left
 
-local AutoAttackEnabled = false
-CreateToggle(CombatPage, "Auto Attack (Nearby)", 40, false, function(state) AutoAttackEnabled = state end)
+local CarSpeedEnabled = false
+CreateToggle(CombatPage, "Enable Car Speed", 40, false, function(state) CarSpeedEnabled = state end)
+
+-- Slider Car Speed
+local CarSpeedFrame = Instance.new("Frame")
+CarSpeedFrame.Parent = CombatPage
+CarSpeedFrame.BackgroundColor3 = THEME.ITEM_BG
+CarSpeedFrame.Position = UDim2.new(0, 10, 0, 85)
+CarSpeedFrame.Size = UDim2.new(1, -20, 0, 50)
+CarSpeedFrame.BorderSizePixel = 0
+Instance.new("UICorner", CarSpeedFrame).CornerRadius = UDim.new(0, 6)
+local CarSpeedLabel = Instance.new("TextLabel")
+CarSpeedLabel.Parent = CarSpeedFrame
+CarSpeedLabel.BackgroundTransparency = 1
+CarSpeedLabel.Position = UDim2.new(0, 10, 0, 5)
+CarSpeedLabel.Size = UDim2.new(1, 0, 0, 20)
+CarSpeedLabel.Font = Enum.Font.GothamMedium
+CarSpeedLabel.Text = "Car Speed: 100"
+CarSpeedLabel.TextColor3 = THEME.TEXT
+CarSpeedLabel.TextSize = 11
+CarSpeedLabel.TextXAlignment = Enum.TextXAlignment.Left
+local CarBar = Instance.new("TextButton")
+CarBar.Parent = CarSpeedFrame
+CarBar.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+CarBar.Position = UDim2.new(0, 10, 0, 30)
+CarBar.Size = UDim2.new(1, -20, 0, 6)
+CarBar.AutoButtonColor = false
+CarBar.Text = ""
+Instance.new("UICorner", CarBar).CornerRadius = UDim.new(1, 0)
+local CarFill = Instance.new("Frame")
+CarFill.Parent = CarBar
+CarFill.BackgroundColor3 = THEME.ACCENT
+CarFill.Size = UDim2.new(0.1, 0, 1, 0)
+CarFill.BorderSizePixel = 0
+Instance.new("UICorner", CarFill).CornerRadius = UDim.new(1, 0)
+local CarSpeed = 100
+local draggingCarSlider = false
+local function updateCarSpeed(input)
+    local width = CarBar.AbsoluteSize.X
+    if width <= 0 then return end
+    local relative = math.clamp((input.Position.X - CarBar.AbsolutePosition.X) / width, 0, 1)
+    CarSpeed = math.floor(50 + relative * 950)
+    CarSpeedLabel.Text = "Car Speed: " .. CarSpeed
+    CarFill.Size = UDim2.new(relative, 0, 1, 0)
+end
+CarBar.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then draggingCarSlider = true; updateCarSpeed(input) end end)
+UserInputService.InputChanged:Connect(function(input) if draggingCarSlider and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then updateCarSpeed(input) end end)
+UserInputService.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then draggingCarSlider = false end end)
 
 -- HALAMAN VISUAL
 local VisualPage = Instance.new("Frame")
@@ -448,7 +501,7 @@ Instance.new("UICorner", TPExecBtn).CornerRadius = UDim.new(0, 6)
 
 -- NAV SIDEBAR
 local NavMove = CreateSidebarBtn("MOVEMENT", 10, MovePage)
-local NavCombat = CreateSidebarBtn("COMBAT", 50, CombatPage)
+local NavCombat = CreateSidebarBtn("CAR SPEED", 50, CombatPage)
 local NavVis = CreateSidebarBtn("VISUAL", 90, VisualPage)
 local NavTP = CreateSidebarBtn("TELEPORT", 130, TPPage)
 NavMove.TextColor3 = THEME.ACCENT
@@ -467,9 +520,7 @@ ESPFolder.Name = "VortexPlayerESP"
 local SelectedTarget = nil
 
 local function RefreshPlayerList()
-    for _, v in pairs(PlayerList:GetChildren()) do
-        if v:IsA("TextButton") then v:Destroy() end
-    end
+    for _, v in pairs(PlayerList:GetChildren()) do if v:IsA("TextButton") then v:Destroy() end end
     for _, p in pairs(game.Players:GetPlayers()) do
         if p ~= Player then
             local btn = Instance.new("TextButton")
@@ -483,9 +534,7 @@ local function RefreshPlayerList()
             Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 4)
             btn.MouseButton1Click:Connect(function()
                 SelectedTarget = p
-                for _, otherBtn in pairs(PlayerList:GetChildren()) do
-                    if otherBtn:IsA("TextButton") then otherBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50) end
-                end
+                for _, otherBtn in pairs(PlayerList:GetChildren()) do if otherBtn:IsA("TextButton") then otherBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50) end end
                 btn.BackgroundColor3 = THEME.ACCENT
                 btn.TextColor3 = Color3.fromRGB(0, 0, 0)
             end)
@@ -510,38 +559,6 @@ TPExecBtn.MouseButton1Click:Connect(function()
         if Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
             Player.Character.HumanoidRootPart.CFrame = SelectedTarget.Character.HumanoidRootPart.CFrame * CFrame.new(0, 0, 3)
         end
-    else
-        TPExecBtn.Text = "TARGET INVALID!"
-        task.wait(1)
-        TPExecBtn.Text = "TELEPORT"
-    end
-end)
-
--- AUTO ATTACK LOGIC
-task.spawn(function()
-    while task.wait(0.15) do
-        if AutoAttackEnabled and Player.Character and Player.Character:FindFirstChildOfClass("Tool") then
-            local tool = Player.Character:FindFirstChildOfClass("Tool")
-            local closest = nil
-            local dist = 25 -- Jarak jangkauan (studs)
-
-            for _, v in pairs(Workspace:GetDescendants()) do
-                if v:IsA("Model") and v:FindFirstChild("Humanoid") and v:FindFirstChild("HumanoidRootPart") and v.Humanoid.Health > 0 and v ~= Player.Character then
-                    if not game.Players:GetPlayerFromCharacter(v) or v ~= Player.Character then
-                        local d = (Player.Character.HumanoidRootPart.Position - v.HumanoidRootPart.Position).Magnitude
-                        if d < dist then
-                            dist = d
-                            closest = v
-                        end
-                    end
-                end
-            end
-
-            if closest then
-                Player.Character.HumanoidRootPart.CFrame = CFrame.new(Player.Character.HumanoidRootPart.Position, closest.HumanoidRootPart.Position)
-                tool:Activate()
-            end
-        end
     end
 end)
 
@@ -551,54 +568,54 @@ RunService.RenderStepped:Connect(function(dt)
         local HRP = Player.Character.HumanoidRootPart
         local Humanoid = Player.Character:FindFirstChildOfClass("Humanoid")
         
-        -- Run Speed
         if RunEnabled and not FlyEnabled then Humanoid.WalkSpeed = RunSpeed
         elseif not RunEnabled and not FlyEnabled then Humanoid.WalkSpeed = 16 end
         
-        -- Walk on Water (FIX: Hover melayang di atas air)
         if WaterEnabled then
-            if Humanoid:GetState() == Enum.HumanoidStateType.Swimming or Humanoid.FloorMaterial == Enum.Material.Water then
-                -- Trik pake BodyPosition biar ngambang tegak lurus tanpa mental
-                local bp = HRP:FindFirstChild("WaterHover")
-                if not bp then
-                    bp = Instance.new("BodyPosition")
-                    bp.Name = "WaterHover"
-                    bp.MaxForce = Vector3.new(0, 1e5, 0)
-                    bp.Position = HRP.Position + Vector3.new(0, 2, 0) -- Ngambang 2 stud di atas air
-                    bp.Parent = HRP
-                else
-                    bp.Position = HRP.Position + Vector3.new(0, 2, 0)
-                end
+            if Humanoid.FloorMaterial == Enum.Material.Water or Humanoid:GetState() == Enum.HumanoidStateType.Swimming then
+                local bf = HRP:FindFirstChild("WaterForce")
+                if not bf then bf = Instance.new("BodyForce"); bf.Name = "WaterForce"; bf.Parent = HRP end
+                bf.Force = Vector3.new(0, HRP:GetMass() * Workspace.Gravity * 1.1, 0) 
+                if Humanoid:GetState() == Enum.HumanoidStateType.Swimming then Humanoid:ChangeState(Enum.HumanoidStateType.Running) end
             else
-                local bp = HRP:FindFirstChild("WaterHover")
-                if bp then bp:Destroy() end
+                local bf = HRP:FindFirstChild("WaterForce"); if bf then bf:Destroy() end
             end
         else
-            local bp = HRP:FindFirstChild("WaterHover")
-            if bp then bp:Destroy() end
+            local bf = HRP:FindFirstChild("WaterForce"); if bf then bf:Destroy() end
         end
         
-        -- Fly
         if FlyEnabled then
             Humanoid.PlatformStand = true
             local bv = HRP:FindFirstChild("VortexFlyBV")
-            if not bv then
-                bv = Instance.new("BodyVelocity")
-                bv.Name = "VortexFlyBV"
-                bv.MaxForce = Vector3.new(1e5, 1e5, 1e5)
-                bv.Parent = HRP
-            end
+            if not bv then bv = Instance.new("BodyVelocity"); bv.Name = "VortexFlyBV"; bv.MaxForce = Vector3.new(1e5, 1e5, 1e5); bv.Parent = HRP end
             local velocity = Humanoid.MoveDirection * FlySpeed
             if holdingUp then velocity = velocity + Vector3.new(0, FlySpeed, 0)
             elseif holdingDown then velocity = velocity - Vector3.new(0, FlySpeed, 0) end
             bv.Velocity = velocity
         else
-            local bv = HRP:FindFirstChild("VortexFlyBV")
-            if bv then bv:Destroy() end
+            local bv = HRP:FindFirstChild("VortexFlyBV"); if bv then bv:Destroy() end
+        end
+
+        -- CAR SPEED LOGIC
+        if CarSpeedEnabled then
+            local seat = Humanoid.SeatPart
+            if seat then
+                local vehicle = seat:FindFirstAncestorOfClass("Model")
+                if vehicle then
+                    local carVelocity = vehicle:FindFirstChild("BodyVelocity") or vehicle:FindFirstChild("Velocity")
+                    if carVelocity and carVelocity:IsA("BodyVelocity") then
+                        carVelocity.Velocity = seat.CFrame.LookVector * CarSpeed
+                    else
+                        local carForce = vehicle:FindFirstChild("BodyForce")
+                        if carForce then
+                            carForce.Force = seat.CFrame.LookVector * (CarSpeed * 1000)
+                        end
+                    end
+                end
+            end
         end
     end
 
-    -- ESP
     if ESPEnabled then
         for _, p in pairs(game.Players:GetPlayers()) do
             if p ~= Player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") and p.Character:FindFirstChild("Humanoid") then
@@ -607,29 +624,17 @@ RunService.RenderStepped:Connect(function(dt)
                 if char.Humanoid.Health > 0 then
                     if not ESPFolder:FindFirstChild(p.Name .. "_Highlight") then
                         local highlight = Instance.new("Highlight")
-                        highlight.Name = p.Name .. "_Highlight"
-                        highlight.Adornee = char
-                        highlight.FillColor = Color3.fromRGB(255, 0, 0)
-                        highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
-                        highlight.FillTransparency = 0.5
-                        highlight.Parent = ESPFolder
+                        highlight.Name = p.Name .. "_Highlight"; highlight.Adornee = char
+                        highlight.FillColor = Color3.fromRGB(255, 0, 0); highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+                        highlight.FillTransparency = 0.5; highlight.Parent = ESPFolder
                     end
                     if not ESPFolder:FindFirstChild(p.Name .. "_Text") then
                         local billboard = Instance.new("BillboardGui")
-                        billboard.Name = p.Name .. "_Text"
-                        billboard.Adornee = hrp
-                        billboard.Size = UDim2.new(0, 100, 0, 50)
-                        billboard.AlwaysOnTop = true
-                        billboard.Parent = ESPFolder
+                        billboard.Name = p.Name .. "_Text"; billboard.Adornee = hrp
+                        billboard.Size = UDim2.new(0, 100, 0, 50); billboard.AlwaysOnTop = true; billboard.Parent = ESPFolder
                         local text = Instance.new("TextLabel")
-                        text.Parent = billboard
-                        text.BackgroundTransparency = 1
-                        text.Size = UDim2.new(1, 0, 1, 0)
-                        text.Font = Enum.Font.GothamBold
-                        text.TextColor3 = Color3.fromRGB(255, 0, 0)
-                        text.TextStrokeTransparency = 0.5
-                        text.TextSize = 12
-                        text.Name = "Text"
+                        text.Parent = billboard; text.BackgroundTransparency = 1; text.Size = UDim2.new(1, 0, 1, 0)
+                        text.Font = Enum.Font.GothamBold; text.TextColor3 = Color3.fromRGB(255, 0, 0); text.TextStrokeTransparency = 0.5; text.TextSize = 12; text.Name = "Text"
                     end
                     local distance = math.floor((Player.Character.HumanoidRootPart.Position - hrp.Position).Magnitude)
                     local textLabel = ESPFolder:FindFirstChild(p.Name .. "_Text"):FindFirstChild("Text")
@@ -640,4 +645,4 @@ RunService.RenderStepped:Connect(function(dt)
     end
 end)
 
-print("[VORTEEZX] ULTIMATE V3 Loaded - Auto Attack & Water Fix!")
+print("[VORTEEZX] CDID Roblox Edition Loaded - Full Car Speed Ready!")
