@@ -1,6 +1,6 @@
 --[[
-    VORTEEZX HUB - TROLL EDITION V10.2
-    Features: Fly, Car Fly, Exhaust Smoke (dynamic), ESP, TP, Freeze
+    VORTEEZX HUB - TROLL EDITION V10.3
+    Features: Fly, Car Fly, Exhaust Smoke (2-layer, dynamic), ESP, TP, Freeze
 --]]
 
 local Player = game.Players.LocalPlayer
@@ -41,9 +41,9 @@ local CarFlyEnabled = false
 -- ============ EXHAUST SYSTEM STATE ============
 local ExhaustEnabled = false
 local ExhaustPosition = "back"
-local ExhaustRate = 60
-local ExhaustSize = 2.5
-local ExhaustLifetime = 2.0
+local ExhaustRate = 100
+local ExhaustSize = 3.5
+local ExhaustLifetime = 2.5
 local ExhaustColor = Color3.fromRGB(10, 10, 10)
 local ExhaustEmitters = {}
 local ExhaustLastCar = nil
@@ -60,55 +60,88 @@ local function UpdateExhaustEmitters()
     for _, pe in pairs(ExhaustEmitters) do
         if pe and pe.Parent then
             pcall(function()
+                local isLayer2 = (pe.Name == "VortexExhaustPE2")
+                local sizeMul = isLayer2 and 1.2 or 1
                 pe.Size = NumberSequence.new({
-                    NumberSequenceKeypoint.new(0, ExhaustSize * 0.3),
-                    NumberSequenceKeypoint.new(0.5, ExhaustSize),
-                    NumberSequenceKeypoint.new(1, ExhaustSize * 2.5)
+                    NumberSequenceKeypoint.new(0, ExhaustSize * 0.4 * sizeMul),
+                    NumberSequenceKeypoint.new(0.5, ExhaustSize * sizeMul),
+                    NumberSequenceKeypoint.new(1, ExhaustSize * 2.5 * sizeMul)
                 })
-                pe.Lifetime = NumberRange.new(ExhaustLifetime * 0.7, ExhaustLifetime * 1.3)
+                pe.Lifetime = NumberRange.new(ExhaustLifetime * 0.8, ExhaustLifetime * 1.3)
                 pe.Color = ColorSequence.new(ExhaustColor)
             end)
         end
     end
 end
 
-local function CreateExhaustAt(primary, offsetVec)
+local function CreateExhaustAt(primary, offsetVec, direction)
     local att = Instance.new("Attachment")
     att.Name = "VortexExhaustAtt"
     att.Position = offsetVec
     att.Parent = primary
 
+    -- LAYER 1: asap pekat utama
     local pe = Instance.new("ParticleEmitter")
     pe.Name = "VortexExhaustPE"
     pe.Parent = att
-
     pe.Texture = "rbxasset://textures/particles/smoke_main.dds"
     pe.LightEmission = 0
-    pe.LightInfluence = 1
+    pe.LightInfluence = 0
     pe.Color = ColorSequence.new(ExhaustColor)
     pe.Size = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, ExhaustSize * 0.3),
+        NumberSequenceKeypoint.new(0, ExhaustSize * 0.4),
         NumberSequenceKeypoint.new(0.5, ExhaustSize),
         NumberSequenceKeypoint.new(1, ExhaustSize * 2.5)
     })
     pe.Transparency = NumberSequence.new({
-        NumberSequenceKeypoint.new(0, 0.1),
-        NumberSequenceKeypoint.new(0.4, 0.4),
+        NumberSequenceKeypoint.new(0, 0),
+        NumberSequenceKeypoint.new(0.2, 0.05),
+        NumberSequenceKeypoint.new(0.6, 0.35),
         NumberSequenceKeypoint.new(1, 1)
     })
-    pe.Lifetime = NumberRange.new(ExhaustLifetime * 0.7, ExhaustLifetime * 1.3)
+    pe.Lifetime = NumberRange.new(ExhaustLifetime * 0.8, ExhaustLifetime * 1.2)
     pe.Rate = 0
-    pe.Speed = NumberRange.new(5, 12)
-    pe.Drag = 3
-    pe.Acceleration = Vector3.new(0, 8, 0)
-    pe.SpreadAngle = Vector2.new(20, 20)
-    pe.RotSpeed = NumberRange.new(-90, 90)
+    pe.Speed = NumberRange.new(2, 6)
+    pe.Drag = 1.5
+    pe.Acceleration = Vector3.new(0, 2, 0)
+    pe.SpreadAngle = Vector2.new(35, 35)
+    pe.RotSpeed = NumberRange.new(-45, 45)
     pe.Rotation = NumberRange.new(0, 360)
-    pe.VelocityInheritance = 0.5
-    pe.EmissionDirection = Enum.NormalId.Top
+    pe.VelocityInheritance = 0.8
+    pe.EmissionDirection = direction
     pe.Enabled = true
 
+    -- LAYER 2: asap tipis tambahan
+    local pe2 = Instance.new("ParticleEmitter")
+    pe2.Name = "VortexExhaustPE2"
+    pe2.Parent = att
+    pe2.Texture = "rbxasset://textures/particles/smoke_main.dds"
+    pe2.LightEmission = 0
+    pe2.LightInfluence = 0
+    pe2.Color = ColorSequence.new(ExhaustColor)
+    pe2.Size = NumberSequence.new({
+        NumberSequenceKeypoint.new(0, ExhaustSize * 0.6),
+        NumberSequenceKeypoint.new(1, ExhaustSize * 3)
+    })
+    pe2.Transparency = NumberSequence.new({
+        NumberSequenceKeypoint.new(0, 0.2),
+        NumberSequenceKeypoint.new(0.5, 0.5),
+        NumberSequenceKeypoint.new(1, 1)
+    })
+    pe2.Lifetime = NumberRange.new(ExhaustLifetime * 1.0, ExhaustLifetime * 1.5)
+    pe2.Rate = 0
+    pe2.Speed = NumberRange.new(1, 4)
+    pe2.Drag = 1
+    pe2.Acceleration = Vector3.new(0, 1, 0)
+    pe2.SpreadAngle = Vector2.new(50, 50)
+    pe2.RotSpeed = NumberRange.new(-30, 30)
+    pe2.Rotation = NumberRange.new(0, 360)
+    pe2.VelocityInheritance = 0.9
+    pe2.EmissionDirection = direction
+    pe2.Enabled = true
+
     table.insert(ExhaustEmitters, pe)
+    table.insert(ExhaustEmitters, pe2)
     return pe
 end
 
@@ -123,16 +156,16 @@ local function ApplyExhaust(car)
     local Y_OFF = 0.5
 
     if ExhaustPosition == "back" then
-        CreateExhaustAt(primary, Vector3.new(0, Y_OFF, -F_OFF))
+        CreateExhaustAt(primary, Vector3.new(0, Y_OFF, -F_OFF), Enum.NormalId.Back)
     elseif ExhaustPosition == "front" then
-        CreateExhaustAt(primary, Vector3.new(0, Y_OFF, F_OFF))
+        CreateExhaustAt(primary, Vector3.new(0, Y_OFF, F_OFF), Enum.NormalId.Front)
     elseif ExhaustPosition == "left" then
-        CreateExhaustAt(primary, Vector3.new(-S_OFF, Y_OFF, 0))
+        CreateExhaustAt(primary, Vector3.new(-S_OFF, Y_OFF, 0), Enum.NormalId.Left)
     elseif ExhaustPosition == "right" then
-        CreateExhaustAt(primary, Vector3.new(S_OFF, Y_OFF, 0))
+        CreateExhaustAt(primary, Vector3.new(S_OFF, Y_OFF, 0), Enum.NormalId.Right)
     elseif ExhaustPosition == "dual" then
-        CreateExhaustAt(primary, Vector3.new(-S_OFF, Y_OFF, -F_OFF))
-        CreateExhaustAt(primary, Vector3.new(S_OFF, Y_OFF, -F_OFF))
+        CreateExhaustAt(primary, Vector3.new(-S_OFF, Y_OFF, -F_OFF), Enum.NormalId.Back)
+        CreateExhaustAt(primary, Vector3.new(S_OFF, Y_OFF, -F_OFF), Enum.NormalId.Back)
     end
 end
 
@@ -174,7 +207,7 @@ Title.BackgroundTransparency = 1
 Title.Position = UDim2.new(0, 10, 0, 0)
 Title.Size = UDim2.new(1, -50, 1, 0)
 Title.Font = Enum.Font.GothamBlack
-Title.Text = "VORTEEZX TROLL V10.2"
+Title.Text = "VORTEEZX TROLL V10.3"
 Title.TextColor3 = THEME.ACCENT
 Title.TextSize = 14
 Title.TextXAlignment = Enum.TextXAlignment.Left
@@ -785,7 +818,7 @@ RateLabel.BackgroundTransparency = 1
 RateLabel.Position = UDim2.new(0, 10, 0, 3)
 RateLabel.Size = UDim2.new(1, 0, 0, 15)
 RateLabel.Font = Enum.Font.GothamMedium
-RateLabel.Text = "Smoke Density: 60"
+RateLabel.Text = "Smoke Density: 100"
 RateLabel.TextColor3 = THEME.TEXT
 RateLabel.TextSize = 10
 RateLabel.TextXAlignment = Enum.TextXAlignment.Left
@@ -811,7 +844,7 @@ local function updateRate(input)
     local w = RateBar.AbsoluteSize.X
     if w <= 0 then return end
     local rel = math.clamp((input.Position.X - RateBar.AbsolutePosition.X) / w, 0, 1)
-    ExhaustRate = math.floor(5 + rel * 195)
+    ExhaustRate = math.floor(10 + rel * 490)
     RateLabel.Text = "Smoke Density: " .. ExhaustRate
     RateFill.Size = UDim2.new(rel, 0, 1, 0)
     UpdateExhaustEmitters()
@@ -834,7 +867,7 @@ SizeSldLabel.BackgroundTransparency = 1
 SizeSldLabel.Position = UDim2.new(0, 10, 0, 3)
 SizeSldLabel.Size = UDim2.new(1, 0, 0, 15)
 SizeSldLabel.Font = Enum.Font.GothamMedium
-SizeSldLabel.Text = "Smoke Size: 2.5"
+SizeSldLabel.Text = "Smoke Size: 3.5"
 SizeSldLabel.TextColor3 = THEME.TEXT
 SizeSldLabel.TextSize = 10
 SizeSldLabel.TextXAlignment = Enum.TextXAlignment.Left
@@ -860,7 +893,7 @@ local function updateSize(input)
     local w = SizeSldBar.AbsoluteSize.X
     if w <= 0 then return end
     local rel = math.clamp((input.Position.X - SizeSldBar.AbsolutePosition.X) / w, 0, 1)
-    ExhaustSize = math.floor((0.5 + rel * 5.5) * 10) / 10
+    ExhaustSize = math.floor((0.5 + rel * 9.5) * 10) / 10
     SizeSldLabel.Text = "Smoke Size: " .. ExhaustSize
     SizeSldFill.Size = UDim2.new(rel, 0, 1, 0)
     UpdateExhaustEmitters()
@@ -883,7 +916,7 @@ LifeLabel.BackgroundTransparency = 1
 LifeLabel.Position = UDim2.new(0, 10, 0, 3)
 LifeLabel.Size = UDim2.new(1, 0, 0, 15)
 LifeLabel.Font = Enum.Font.GothamMedium
-LifeLabel.Text = "Smoke Lifetime: 2.0s"
+LifeLabel.Text = "Smoke Lifetime: 2.5s"
 LifeLabel.TextColor3 = THEME.TEXT
 LifeLabel.TextSize = 10
 LifeLabel.TextXAlignment = Enum.TextXAlignment.Left
@@ -1204,7 +1237,7 @@ RunService.RenderStepped:Connect(function(dt)
             end
         end
 
-        -- EXHAUST SMOKE (DYNAMIC RATE)
+        -- EXHAUST SMOKE (2 LAYER DYNAMIC)
         if ExhaustEnabled then
             local seat = Humanoid.SeatPart
             local car = seat and seat:FindFirstAncestorOfClass("Model")
@@ -1228,7 +1261,13 @@ RunService.RenderStepped:Connect(function(dt)
 
                 for _, pe in pairs(ExhaustEmitters) do
                     if pe and pe.Parent then
-                        pcall(function() pe.Rate = targetRate end)
+                        pcall(function()
+                            if pe.Name == "VortexExhaustPE2" then
+                                pe.Rate = math.floor(targetRate * 0.6)
+                            else
+                                pe.Rate = targetRate
+                            end
+                        end)
                     end
                 end
             end
@@ -1264,4 +1303,4 @@ RunService.RenderStepped:Connect(function(dt)
     end
 end)
 
-print("[VORTEEZX] TROLL V10.2 Loaded - Dynamic Exhaust Active!")
+print("[VORTEEZX] TROLL V10.3 Loaded - 2-Layer Exhaust + Fixed Direction!")
