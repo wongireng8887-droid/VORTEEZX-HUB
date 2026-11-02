@@ -1,5 +1,5 @@
 --[[
-    VORTEEZX HUB - TROLL EDITION V7 (FULL FIX)
+    VORTEEZX HUB - TROLL EDITION V8 (FULL FIX)
 --]]
 
 local Player = game.Players.LocalPlayer
@@ -75,7 +75,7 @@ Title.BackgroundTransparency = 1
 Title.Position = UDim2.new(0, 10, 0, 0)
 Title.Size = UDim2.new(1, -50, 1, 0)
 Title.Font = Enum.Font.GothamBlack
-Title.Text = "VORTEEZX TROLL V7"
+Title.Text = "VORTEEZX TROLL V8"
 Title.TextColor3 = THEME.ACCENT
 Title.TextSize = 14
 Title.TextXAlignment = Enum.TextXAlignment.Left
@@ -255,7 +255,7 @@ UpBtn.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInpu
 DownBtn.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then holdingDown = true end end)
 DownBtn.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then holdingDown = false end end)
 
--- HALAMAN MOVEMENT (LENGKAP)
+-- HALAMAN MOVEMENT
 local MovePage = Instance.new("Frame")
 MovePage.Parent = ContentArea
 MovePage.BackgroundTransparency = 1
@@ -280,7 +280,14 @@ CreateToggle(MovePage, "Walk on Water", 85, false, function(state) WaterEnabled 
 CreateToggle(MovePage, "Infinite Jump", 130, false, function(state) InfJumpEnabled = state end)
 CreateToggle(MovePage, "Enable Run Speed", 175, false, function(state) RunEnabled = state end)
 
--- SLIDER FLY SPEED
+-- INFINITE JUMP LOGIC (INI YANG TADI KELUPAAN)
+UserInputService.JumpRequest:Connect(function()
+    if InfJumpEnabled and Player.Character and Player.Character:FindFirstChildOfClass("Humanoid") then
+        Player.Character:FindFirstChildOfClass("Humanoid"):ChangeState(Enum.HumanoidStateType.Jumping)
+    end
+end)
+
+-- Slider Fly Speed
 local FlySpeedFrame = Instance.new("Frame")
 FlySpeedFrame.Parent = MovePage
 FlySpeedFrame.BackgroundColor3 = THEME.ITEM_BG
@@ -326,7 +333,7 @@ FlyBar.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInp
 UserInputService.InputChanged:Connect(function(input) if draggingFlySlider and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then updateFlySpeed(input) end end)
 UserInputService.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then draggingFlySlider = false end end)
 
--- SLIDER RUN SPEED
+-- Slider Run Speed
 local RunSpeedFrame = Instance.new("Frame")
 RunSpeedFrame.Parent = MovePage
 RunSpeedFrame.BackgroundColor3 = THEME.ITEM_BG
@@ -614,61 +621,50 @@ TPExecBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- FUNGSI FLING MOBIL (ANTI-LAG & TARGET ORANG LAIN)
+-- FUNGSI FLING MOBIL PAKE EXPLOSION (ANTI GAGAL)
 local function FlingNearestCar()
     local myPos = Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") and Player.Character.HumanoidRootPart.Position
     if not myPos then return end
 
-    local closestPlayer = nil
+    local closestCar = nil
     local shortestDist = math.huge
 
-    -- Cari player lain yang lagi naik mobil
-    for _, p in pairs(game.Players:GetPlayers()) do
-        if p ~= Player and p.Character and p.Character:FindFirstChildOfClass("Humanoid") then
-            local seat = p.Character.Humanoid.SeatPart
-            if seat and seat:IsA("VehicleSeat") then
-                local vehicle = seat:FindFirstAncestorOfClass("Model")
-                if vehicle and vehicle.PrimaryPart then
-                    local dist = (myPos - vehicle.PrimaryPart.Position).Magnitude
-                    if dist < shortestDist then
-                        shortestDist = dist
-                        closestPlayer = p
-                    end
+    -- Cari VehicleSeat di map
+    for _, v in pairs(Workspace:GetDescendants()) do
+        if v:IsA("VehicleSeat") then
+            local vehicle = v:FindFirstAncestorOfClass("Model")
+            if vehicle and vehicle.PrimaryPart and vehicle ~= Player.Character then
+                local dist = (myPos - vehicle.PrimaryPart.Position).Magnitude
+                if dist < shortestDist then
+                    shortestDist = dist
+                    closestCar = vehicle
                 end
             end
         end
     end
 
-    -- Eksekusi Fling (Karena network ownership, kita tendang drivernya)
-    if closestPlayer and closestPlayer.Character then
-        local char = closestPlayer.Character
-        local hrp = char:FindFirstChild("HumanoidRootPart")
-        local hum = char:FindFirstChildOfClass("Humanoid")
+    if closestCar and closestCar.PrimaryPart then
+        -- Trik Brutal: Pake Explosion biar Physics Engine Roblox yang ngangkat
+        local exp = Instance.new("Explosion")
+        exp.Position = closestCar.PrimaryPart.Position
+        exp.BlastRadius = 20
+        exp.BlastPressure = 500000 -- Tekanan gede biar mental
+        exp.DestroyJointRadiusPercent = 0
+        exp.Visible = false
+        exp.Parent = Workspace
         
-        if hrp and hum then
-            -- Tendang keluar dari mobil
-            hum.Sit = false
-            task.wait(0.1)
-            
-            -- Lempar karakternya
-            local bv = Instance.new("BodyVelocity")
-            bv.Velocity = Vector3.new(math.random(-200, 200), 1000, math.random(-200, 200))
-            bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
-            bv.Parent = hrp
-            Debris:AddItem(bv, 1.5)
-
-            local bav = Instance.new("BodyAngularVelocity")
-            bav.AngularVelocity = Vector3.new(math.random(-50, 50), math.random(-50, 50), math.random(-50, 50))
-            bav.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
-            bav.Parent = hrp
-            Debris:AddItem(bav, 1.5)
-        end
+        -- Tambahan Velocity biar makin kenceng
+        local bv = Instance.new("BodyVelocity")
+        bv.Velocity = Vector3.new(math.random(-200, 200), 1000, math.random(-200, 200))
+        bv.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+        bv.Parent = closestCar.PrimaryPart
+        Debris:AddItem(bv, 2)
     end
 end
 
--- LOOP FLING TERPISAH (BIAR GAK LAG)
+-- LOOP FLING
 task.spawn(function()
-    while task.wait(1) do
+    while task.wait(1.5) do
         if CarFlingEnabled then
             FlingNearestCar()
         end
@@ -775,4 +771,4 @@ RunService.RenderStepped:Connect(function(dt)
     end
 end)
 
-print("[VORTEEZX] TROLL V7 Loaded - Movement Fixed, Fling Anti-Lag!")
+print("[VORTEEZX] TROLL V8 Loaded - Inf Jump & Fling Explosion!")
