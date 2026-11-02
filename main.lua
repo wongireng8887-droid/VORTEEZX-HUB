@@ -1,5 +1,5 @@
 --[[
-    VORTEEZX HUB - CDID EDITION (FULL CAR SPEED)
+    VORTEEZX HUB - FINAL CDID EDITION
 --]]
 
 local Player = game.Players.LocalPlayer
@@ -9,7 +9,7 @@ local TweenService = game:GetService("TweenService")
 local Workspace = game:GetService("Workspace")
 
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "VORTEEZX_HUB_CDID"
+ScreenGui.Name = "VORTEEZX_HUB_FINAL"
 ScreenGui.ResetOnSpawn = false
 pcall(function()
     if syn and syn.protect_gui then
@@ -70,7 +70,7 @@ Title.BackgroundTransparency = 1
 Title.Position = UDim2.new(0, 10, 0, 0)
 Title.Size = UDim2.new(1, -50, 1, 0)
 Title.Font = Enum.Font.GothamBlack
-Title.Text = "VORTEEZX CAR EDITION"
+Title.Text = "VORTEEZX FINAL"
 Title.TextColor3 = THEME.ACCENT
 Title.TextSize = 14
 Title.TextXAlignment = Enum.TextXAlignment.Left
@@ -212,7 +212,7 @@ local function CreateToggle(parent, text, yPos, defaultState, callback)
     end)
 end
 
--- TOMBOL FLY NAIK/TURUN
+-- TOMBOL FLY
 local UpBtn = Instance.new("TextButton")
 UpBtn.Parent = ScreenGui
 UpBtn.Size = UDim2.new(0, 50, 0, 50)
@@ -435,7 +435,6 @@ VisualPage.Parent = ContentArea
 VisualPage.BackgroundTransparency = 1
 VisualPage.Size = UDim2.new(1, 0, 1, 0)
 VisualPage.Visible = false
-
 local VisTitle = Instance.new("TextLabel")
 VisTitle.Parent = VisualPage
 VisTitle.BackgroundTransparency = 1
@@ -463,7 +462,6 @@ TPPage.Parent = ContentArea
 TPPage.BackgroundTransparency = 1
 TPPage.Size = UDim2.new(1, 0, 1, 0)
 TPPage.Visible = false
-
 local TPTitle = Instance.new("TextLabel")
 TPTitle.Parent = TPPage
 TPTitle.BackgroundTransparency = 1
@@ -596,33 +594,26 @@ RunService.RenderStepped:Connect(function(dt)
             local bv = HRP:FindFirstChild("VortexFlyBV"); if bv then bv:Destroy() end
         end
 
-        -- CAR SPEED LOGIC (BRUTAL BYPASS)
-if CarSpeedEnabled then
-    local seat = Humanoid.SeatPart
-    if seat then
-        local vehicle = seat:FindFirstAncestorOfClass("Model")
-        if vehicle then
-            local carVelocity = vehicle:FindFirstChild("BodyVelocity") or vehicle:FindFirstChild("Velocity")
-            
-            -- Hapus script bawaan mobil yang nge-limit kecepatan (Kalau ada)
-            for _, v in pairs(vehicle:GetDescendants()) do
-                if v:IsA("Script") and (string.find(v.Name, "Speed") or string.find(v.Name, "Engine")) then
-                    v.Enabled = false 
+        -- CAR SPEED LOGIC
+        if CarSpeedEnabled then
+            local seat = Humanoid.SeatPart
+            if seat then
+                local vehicle = seat:FindFirstAncestorOfClass("Model")
+                if vehicle then
+                    local carVelocity = vehicle:FindFirstChild("BodyVelocity") or vehicle:FindFirstChild("Velocity")
+                    for _, v in pairs(vehicle:GetDescendants()) do
+                        if v:IsA("Script") and (string.find(v.Name, "Speed") or string.find(v.Name, "Engine")) then v.Enabled = false end
+                    end
+                    if carVelocity and carVelocity:IsA("BodyVelocity") then
+                        carVelocity.Velocity = seat.CFrame.LookVector * CarSpeed
+                        carVelocity.MaxForce = Vector3.new(100000, 100000, 100000) 
+                    else
+                        vehicle:PivotTo(vehicle:GetPivot() + (seat.CFrame.LookVector * (CarSpeed * dt)))
+                    end
                 end
-            end
-
-            if carVelocity and carVelocity:IsA("BodyVelocity") then
-                -- Paksa velocity ke 1000 pake arah pandang mobil
-                carVelocity.Velocity = seat.CFrame.LookVector * CarSpeed
-                -- Tambahin MaxForce biar gak ditahan sama physics
-                carVelocity.MaxForce = Vector3.new(100000, 100000, 100000) 
-            else
-                -- Kalo ga ada BodyVelocity, kita paksa mobilnya geser pake CFrame (Tapi ini bakal nembus tembok)
-                vehicle:PivotTo(vehicle:GetPivot() + (seat.CFrame.LookVector * (CarSpeed * dt)))
             end
         end
     end
-            end
 
     if ESPEnabled then
         for _, p in pairs(game.Players:GetPlayers()) do
