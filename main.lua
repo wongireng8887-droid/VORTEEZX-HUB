@@ -1,6 +1,6 @@
 --[[
-    VORTEEZX HUB - TROLL EDITION V9.1
-    Features: Magnet, Stop All, Freeze Car, Car Fly
+    VORTEEZX HUB - TROLL EDITION V9.2
+    Features: Magnet (all cars), Stop All, Freeze Car, Car Fly (camera-based)
 --]]
 
 local Player = game.Players.LocalPlayer
@@ -37,6 +37,21 @@ local THEME = {
 local ESPFolder = Instance.new("Folder", game.CoreGui)
 ESPFolder.Name = "VortexPlayerESP"
 local CarFlyEnabled = false
+
+local CarOwnershipRequested = {}
+local function RequestCarOwnership(veh, primary)
+    local now = tick()
+    local last = CarOwnershipRequested[veh]
+    if last and (now - last) < 2 then return false end
+    local interaction = ReplicatedStorage:FindFirstChild("Interaction")
+    if interaction then
+        local req = interaction:FindFirstChild("ClientRequestOwnership")
+        if req then pcall(function() req:FireServer(primary) end) end
+    end
+    pcall(function() primary:SetNetworkOwner(Player) end)
+    CarOwnershipRequested[veh] = now
+    return true
+end
 
 local FloatBtn = Instance.new("ImageButton")
 FloatBtn.Parent = ScreenGui
@@ -76,7 +91,7 @@ Title.BackgroundTransparency = 1
 Title.Position = UDim2.new(0, 10, 0, 0)
 Title.Size = UDim2.new(1, -50, 1, 0)
 Title.Font = Enum.Font.GothamBlack
-Title.Text = "VORTEEZX TROLL V9.1"
+Title.Text = "VORTEEZX TROLL V9.2"
 Title.TextColor3 = THEME.ACCENT
 Title.TextSize = 14
 Title.TextXAlignment = Enum.TextXAlignment.Left
@@ -252,6 +267,38 @@ UpBtn.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInpu
 UpBtn.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then holdingUp = false end end)
 DownBtn.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then holdingDown = true end end)
 DownBtn.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then holdingDown = false end end)
+
+local ForwardBtn = Instance.new("TextButton")
+ForwardBtn.Parent = ScreenGui
+ForwardBtn.Size = UDim2.new(0, 50, 0, 50)
+ForwardBtn.Position = UDim2.new(0, 20, 1, -200)
+ForwardBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+ForwardBtn.BackgroundTransparency = 0.3
+ForwardBtn.Text = "MAJU"
+ForwardBtn.TextColor3 = THEME.ACCENT
+ForwardBtn.Font = Enum.Font.GothamBold
+ForwardBtn.TextSize = 13
+ForwardBtn.Visible = false
+Instance.new("UICorner", ForwardBtn).CornerRadius = UDim.new(1, 0)
+
+local BackwardBtn = Instance.new("TextButton")
+BackwardBtn.Parent = ScreenGui
+BackwardBtn.Size = UDim2.new(0, 50, 0, 50)
+BackwardBtn.Position = UDim2.new(0, 20, 1, -140)
+BackwardBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
+BackwardBtn.BackgroundTransparency = 0.3
+BackwardBtn.Text = "MUNDUR"
+BackwardBtn.TextColor3 = THEME.ACCENT
+BackwardBtn.Font = Enum.Font.GothamBold
+BackwardBtn.TextSize = 11
+BackwardBtn.Visible = false
+Instance.new("UICorner", BackwardBtn).CornerRadius = UDim.new(1, 0)
+
+local holdingForward, holdingBackward = false, false
+ForwardBtn.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then holdingForward = true end end)
+ForwardBtn.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then holdingForward = false end end)
+BackwardBtn.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then holdingBackward = true end end)
+BackwardBtn.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then holdingBackward = false end end)
 
 local MovePage = Instance.new("Frame")
 MovePage.Parent = ContentArea
@@ -568,25 +615,43 @@ StopAllBtn.TextSize = 12
 Instance.new("UICorner", StopAllBtn).CornerRadius = UDim.new(0, 6)
 
 StopAllBtn.MouseButton1Click:Connect(function()
-    local count = 0
-    for _, v in pairs(Workspace:GetDescendants()) do
-        if v:IsA("VehicleSeat") then
-            local veh = v:FindFirstAncestorOfClass("Model")
-            if veh then
-                for _, p in pairs(veh:GetDescendants()) do
-                    if p:IsA("BasePart") then
-                        pcall(function()
-                            p.AssemblyLinearVelocity = Vector3.zero
-                            p.AssemblyAngularVelocity = Vector3.zero
-                            p.Velocity = Vector3.zero
-                        end)
+    StopAllBtn.Text = "STOPPING..."
+    task.spawn(function()
+        local myHRP = Player.Character and Player.Character:FindFirstChild("HumanoidRootPart")
+        local myPos = myHRP and myHRP.Position
+        for attempt = 1, 4 do
+            local count = 0
+            for _, v in pairs(Workspace:GetDescendants()) do
+                if v:IsA("VehicleSeat") then
+                    local veh = v:FindFirstAncestorOfClass("Model")
+                    if veh and veh.PrimaryPart then
+                        local primary = veh.PrimaryPart
+                        local dist = myPos and (myPos - primary.Position).Magnitude or math.huge
+                        if dist <= 600 then
+                            local interaction = ReplicatedStorage:FindFirstChild("Interaction")
+                            if interaction then
+                                local req = interaction:FindFirstChild("ClientRequestOwnership")
+                                if req then pcall(function() req:FireServer(primary) end) end
+                            end
+                            pcall(function() primary:SetNetworkOwner(Player) end)
+                            for _, p in pairs(veh:GetDescendants()) do
+                                if p:IsA("BasePart") then
+                                    pcall(function()
+                                        p.AssemblyLinearVelocity = Vector3.zero
+                                        p.AssemblyAngularVelocity = Vector3.zero
+                                    end)
+                                end
+                            end
+                            count = count + 1
+                        end
                     end
                 end
-                count = count + 1
             end
+            print("[VORTEEZX] Stop attempt " .. attempt .. ": " .. count .. " cars")
+            task.wait(0.15)
         end
-    end
-    print("[VORTEEZX] Stopped " .. count .. " cars")
+        StopAllBtn.Text = "INSTANT STOP ALL CARS"
+    end)
 end)
 
 -- CAR FLY
@@ -594,6 +659,8 @@ CreateToggle(TrollPage, "Enable Car Fly", 195, false, function(state)
     CarFlyEnabled = state
     UpBtn.Visible = state or FlyEnabled
     DownBtn.Visible = state or FlyEnabled
+    ForwardBtn.Visible = state
+    BackwardBtn.Visible = state
     if not state then
         for _, v in pairs(Workspace:GetDescendants()) do
             if v.Name == "VortexCarFly" then v:Destroy() end
@@ -827,6 +894,11 @@ FreezeCarBtn.MouseButton1Click:Connect(function()
     end
     local veh = seat:FindFirstAncestorOfClass("Model")
     if not veh then return end
+    local interaction = ReplicatedStorage:FindFirstChild("Interaction")
+    if interaction then
+        local req = interaction:FindFirstChild("ClientRequestOwnership")
+        if req and veh.PrimaryPart then pcall(function() req:FireServer(veh.PrimaryPart) end) end
+    end
     for _, p in pairs(veh:GetDescendants()) do
         if p:IsA("BasePart") then
             pcall(function() p:SetNetworkOwner(Player) end)
@@ -882,7 +954,7 @@ RunService.RenderStepped:Connect(function(dt)
             local bv = HRP:FindFirstChild("VortexFlyBV"); if bv then bv:Destroy() end
         end
 
-        -- CAR FLY
+        -- CAR FLY (camera-based + tombol MAJU/MUNDUR)
         if CarFlyEnabled then
             local seat = Humanoid.SeatPart
             if seat and seat:IsA("VehicleSeat") then
@@ -899,7 +971,19 @@ RunService.RenderStepped:Connect(function(dt)
                             bv.P = 12500
                             bv.Parent = primary
                         end
-                        local dir = Humanoid.MoveDirection * CarFlySpeed
+                        local dir = Vector3.zero
+                        local cam = Workspace.CurrentCamera
+                        if cam then
+                            local camLook = Vector3.new(cam.CFrame.LookVector.X, 0, cam.CFrame.LookVector.Z)
+                            if camLook.Magnitude > 0.01 then
+                                camLook = camLook.Unit
+                                if holdingForward then dir = dir + camLook * CarFlySpeed end
+                                if holdingBackward then dir = dir - camLook * CarFlySpeed end
+                            end
+                        end
+                        if Humanoid.MoveDirection.Magnitude > 0.01 then
+                            dir = dir + Humanoid.MoveDirection * CarFlySpeed
+                        end
                         if holdingUp then dir = dir + Vector3.new(0, CarFlySpeed, 0) end
                         if holdingDown then dir = dir - Vector3.new(0, CarFlySpeed, 0) end
                         bv.Velocity = dir
@@ -940,19 +1024,21 @@ RunService.RenderStepped:Connect(function(dt)
         end
     end
 
-    -- CAR MAGNET
+    -- CAR MAGNET (fix: request ownership dulu, skip mobil sendiri)
     if CarMagnetEnabled then
         local myHRP = Player.Character and Player.Character:FindFirstChild("HumanoidRootPart")
         if myHRP then
             local myPos = myHRP.Position
+            local mySeat = Player.Character:FindFirstChildOfClass("Humanoid") and Player.Character.Humanoid.SeatPart
+            local myCar = mySeat and mySeat:FindFirstAncestorOfClass("Model")
             for _, v in pairs(Workspace:GetDescendants()) do
                 if v:IsA("VehicleSeat") then
                     local veh = v:FindFirstAncestorOfClass("Model")
-                    if veh and veh.PrimaryPart and veh ~= Player.Character then
+                    if veh and veh.PrimaryPart and veh ~= Player.Character and veh ~= myCar then
                         local primary = veh.PrimaryPart
                         local dist = (myPos - primary.Position).Magnitude
                         if dist <= MagnetRadius and dist > 3 then
-                            pcall(function() primary:SetNetworkOwner(Player) end)
+                            RequestCarOwnership(veh, primary)
                             local pullDir = (myPos - primary.Position).Unit
                             local bv = primary:FindFirstChild("VortexMagnetBV")
                             if not bv then
@@ -1000,4 +1086,4 @@ RunService.RenderStepped:Connect(function(dt)
     end
 end)
 
-print("[VORTEEZX] TROLL V9.1 Loaded - Magnet/Stop/Freeze/Fly Active!")
+print("[VORTEEZX] TROLL V9.2 Loaded - Magnet+Stop+Freeze+CarFly FIXED!")
