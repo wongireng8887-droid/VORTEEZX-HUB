@@ -608,38 +608,61 @@ RunService.RenderStepped:Connect(function(dt)
             local bv = HRP:FindFirstChild("VortexFlyBV"); if bv then bv:Destroy() end
         end
 
-        -- CAR SPEED LOGIC (FIX STEERING)
-        if CarSpeedEnabled then
-            local seat = Humanoid.SeatPart
-            if seat and (seat:IsA("VehicleSeat") or seat:IsA("Seat")) then
-                local vehicle = seat:FindFirstAncestorOfClass("Model")
-                if vehicle then
-                    local mainPart = vehicle.PrimaryPart or vehicle:FindFirstChild("HumanoidRootPart") or seat
-                    local carVel = mainPart:FindFirstChild("VortexSpeed")
-                    
-                    if not carVel then
-                        carVel = Instance.new("BodyVelocity")
-                        carVel.Name = "VortexSpeed"
-                        carVel.Parent = mainPart
-                    end
-                    -- Trik: Cuma dorong ke depan (LookVector). 
-                    -- MaxForce di-set 0 buat sumbu Y biar mobil gak terbang/mental.
-                    -- MaxForce X & Z tetep gede biar ngebut.
-                    carVel.MaxForce = Vector3.new(1e5, 0, 1e5) 
-                    carVel.Velocity = seat.CFrame.LookVector * CarSpeed
-                end
+        -- CAR SPEED LOGIC (STABILIZER & DOWNFORCE)
+if CarSpeedEnabled then
+    local seat = Humanoid.SeatPart
+    if seat and (seat:IsA("VehicleSeat") or seat:IsA("Seat")) then
+        
+        if seat:IsA("VehicleSeat") then
+            pcall(function()
+                seat.MaxSpeed = CarSpeed
+                seat.Torque = CarSpeed * 5
+                seat.TurnSpeed = 10
+            end)
+        end
+
+        local vehicle = seat:FindFirstAncestorOfClass("Model")
+        if vehicle then
+            local mainPart = vehicle.PrimaryPart or vehicle:FindFirstChild("HumanoidRootPart") or seat
+            
+            local downForce = mainPart:FindFirstChild("VortexDownForce")
+            if not downForce then
+                downForce = Instance.new("BodyForce")
+                downForce.Name = "VortexDownForce"
+                downForce.Parent = mainPart
             end
-        else
-            if Humanoid.SeatPart then
-                local vehicle = Humanoid.SeatPart:FindFirstAncestorOfClass("Model")
-                if vehicle then
-                    local mainPart = vehicle.PrimaryPart or vehicle:FindFirstChild("HumanoidRootPart") or Humanoid.SeatPart
-                    local carVel = mainPart:FindFirstChild("VortexSpeed")
-                    if carVel then carVel:Destroy() end
-                end
+            downForce.Force = Vector3.new(0, -mainPart:GetMass() * Workspace.Gravity * 3, 0)
+
+            local carVel = mainPart:FindFirstChild("VortexSpeed")
+            if not carVel then
+                carVel = Instance.new("BodyVelocity")
+                carVel.Name = "VortexSpeed"
+                carVel.Parent = mainPart
             end
+            
+            carVel.MaxForce = Vector3.new(50000, 0, 50000)
+            carVel.Velocity = seat.CFrame.LookVector * CarSpeed
         end
     end
+else
+    if Humanoid.SeatPart then
+        local seat = Humanoid.SeatPart
+        if seat:IsA("VehicleSeat") then
+            pcall(function()
+                seat.MaxSpeed = 20 
+                seat.Torque = 10
+            end)
+        end
+        local vehicle = seat:FindFirstAncestorOfClass("Model")
+        if vehicle then
+            local mainPart = vehicle.PrimaryPart or vehicle:FindFirstChild("HumanoidRootPart") or seat
+            local carVel = mainPart:FindFirstChild("VortexSpeed")
+            if carVel then carVel:Destroy() end
+            local downForce = mainPart:FindFirstChild("VortexDownForce")
+            if downForce then downForce:Destroy() end
+        end
+    end
+end
 
     -- ESP LOGIC (FIX REDRAW)
     if ESPEnabled then
