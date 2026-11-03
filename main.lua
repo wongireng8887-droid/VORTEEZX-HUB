@@ -142,45 +142,55 @@ local function CreateExhaustAt(primary, localCFrame)
     table.insert(ExhaustEmitters, pe2)
 end
 
--- FIX POSISI: Y_OFF dinaikin biar ga dari kolong
+-- FIX TOTAL: Pake Bounding Box biar posisi asap presisi di luar body
 local function ApplyExhaust(car, seat)
     ClearExhaust()
     local primary = car.PrimaryPart or car:FindFirstChildWhichIsA("BasePart")
     if not primary or not seat then return end
     ExhaustLastCar = car
 
-    local F_OFF = 6.5    -- Jarak mundur/maju
-    local S_OFF = 3.5    -- Jarak samping kiri/kanan
-    local Y_OFF = 2.5    -- Ketinggian asap dari jok (bumper)
+    -- Ngambil ukuran asli mobil (panjang, lebar, tinggi)
+    local bboxCF, bboxSize = car:GetBoundingBox()
+    local centerPos = bboxCF.Position
+    local length = bboxSize.Z
+    local width = bboxSize.X
+    local height = bboxSize.Y
 
-    local seatCF = seat.CFrame
+    -- Arah mobil ngikutin body (BUKAN jok)
+    local backDir = -bboxCF.LookVector
+    local rightDir = bboxCF.RightVector
+
+    -- Offset otomatis (setengah panjang/lebar + 1 stud biar keluar body)
+    local F_OFF = (length / 2) + 1
+    local S_OFF = (width / 2) + 1
+    local Y_OFF = -(height / 2) + 1.2 -- 1.2 stud dari bawah body (bumper)
+
     local primaryCF = primary.CFrame
-    local backDir = -seatCF.LookVector
-    local rightDir = seatCF.RightVector
 
     local function addExhaust(targetWorldPos, lookDir)
+        -- lookDir itu arah nembak asapnya
         local targetCF = CFrame.lookAt(targetWorldPos, targetWorldPos - lookDir)
         local localCF = primaryCF:ToObjectSpace(targetCF)
         CreateExhaustAt(primary, localCF)
     end
 
     if ExhaustPosition == "back" then
-        local pos = seatCF.Position + backDir * F_OFF + Vector3.new(0, Y_OFF, 0)
+        local pos = centerPos + backDir * F_OFF + Vector3.new(0, Y_OFF, 0)
         addExhaust(pos, backDir)
     elseif ExhaustPosition == "front" then
-        local pos = seatCF.Position - backDir * F_OFF + Vector3.new(0, Y_OFF, 0)
+        local pos = centerPos - backDir * F_OFF + Vector3.new(0, Y_OFF, 0)
         addExhaust(pos, -backDir)
     elseif ExhaustPosition == "left" then
-        local pos = seatCF.Position - rightDir * S_OFF + Vector3.new(0, Y_OFF, 0)
+        local pos = centerPos - rightDir * S_OFF + Vector3.new(0, Y_OFF, 0)
         addExhaust(pos, -rightDir)
     elseif ExhaustPosition == "right" then
-        local pos = seatCF.Position + rightDir * S_OFF + Vector3.new(0, Y_OFF, 0)
+        local pos = centerPos + rightDir * S_OFF + Vector3.new(0, Y_OFF, 0)
         addExhaust(pos, rightDir)
     elseif ExhaustPosition == "dual" then
-        local leftPos = seatCF.Position - rightDir * S_OFF + Vector3.new(0, Y_OFF, 0)
-        addExhaust(leftPos, -rightDir)
-        local rightPos = seatCF.Position + rightDir * S_OFF + Vector3.new(0, Y_OFF, 0)
-        addExhaust(rightPos, rightDir)
+        local pos1 = centerPos - rightDir * S_OFF + Vector3.new(0, Y_OFF, 0)
+        addExhaust(pos1, -rightDir)
+        local pos2 = centerPos + rightDir * S_OFF + Vector3.new(0, Y_OFF, 0)
+        addExhaust(pos2, rightDir)
     end
 end
 
