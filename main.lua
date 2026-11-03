@@ -1,6 +1,6 @@
 --[[
-    VORTEEZX HUB - TROLL EDITION V10.5
-    Features: Fly, Car Fly, Exhaust Smoke (Fixed Height), ESP, TP, Freeze
+    VORTEEZX HUB - TROLL EDITION V10.6
+    Features: Fly, Car Fly, Wheelie, Slammed (Ceper), FPS Boost, Exhaust, ESP, TP
 --]]
 
 local Player = game.Players.LocalPlayer
@@ -10,6 +10,7 @@ local TweenService = game:GetService("TweenService")
 local Workspace = game:GetService("Workspace")
 local Debris = game:GetService("Debris")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Lighting = game:GetService("Lighting")
 
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "VORTEEZX_HUB_TROLL"
@@ -38,7 +39,13 @@ local ESPFolder = Instance.new("Folder", game.CoreGui)
 ESPFolder.Name = "VortexPlayerESP"
 local CarFlyEnabled = false
 
--- ============ EXHAUST SYSTEM STATE ============
+-- STATE BARU
+local WheelieEnabled = false
+local SlammedEnabled = false
+local SlamAmount = 5
+local FPSBoostEnabled = false
+
+-- EXHAUST STATE
 local ExhaustEnabled = false
 local ExhaustPosition = "back"
 local ExhaustRate = 100
@@ -142,33 +149,29 @@ local function CreateExhaustAt(primary, localCFrame)
     table.insert(ExhaustEmitters, pe2)
 end
 
--- FIX TOTAL: Pake Bounding Box biar posisi asap presisi di luar body
+-- Bounding Box Exhaust Fix
 local function ApplyExhaust(car, seat)
     ClearExhaust()
     local primary = car.PrimaryPart or car:FindFirstChildWhichIsA("BasePart")
     if not primary or not seat then return end
     ExhaustLastCar = car
 
-    -- Ngambil ukuran asli mobil (panjang, lebar, tinggi)
     local bboxCF, bboxSize = car:GetBoundingBox()
     local centerPos = bboxCF.Position
     local length = bboxSize.Z
     local width = bboxSize.X
     local height = bboxSize.Y
 
-    -- Arah mobil ngikutin body (BUKAN jok)
     local backDir = -bboxCF.LookVector
     local rightDir = bboxCF.RightVector
 
-    -- Offset otomatis (setengah panjang/lebar + 1 stud biar keluar body)
     local F_OFF = (length / 2) + 1
     local S_OFF = (width / 2) + 1
-    local Y_OFF = -(height / 2) + 1.2 -- 1.2 stud dari bawah body (bumper)
+    local Y_OFF = -(height / 2) + 1.2 
 
     local primaryCF = primary.CFrame
 
     local function addExhaust(targetWorldPos, lookDir)
-        -- lookDir itu arah nembak asapnya
         local targetCF = CFrame.lookAt(targetWorldPos, targetWorldPos - lookDir)
         local localCF = primaryCF:ToObjectSpace(targetCF)
         CreateExhaustAt(primary, localCF)
@@ -232,7 +235,7 @@ Title.BackgroundTransparency = 1
 Title.Position = UDim2.new(0, 10, 0, 0)
 Title.Size = UDim2.new(1, -50, 1, 0)
 Title.Font = Enum.Font.GothamBlack
-Title.Text = "VORTEEZX TROLL V10.5"
+Title.Text = "VORTEEZX TROLL V10.6"
 Title.TextColor3 = THEME.ACCENT
 Title.TextSize = 14
 Title.TextXAlignment = Enum.TextXAlignment.Left
@@ -625,11 +628,15 @@ CarBar.InputBegan:Connect(function(input) if input.UserInputType == Enum.UserInp
 UserInputService.InputChanged:Connect(function(input) if draggingCarSlider and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then updateCarSpeed(input) end end)
 UserInputService.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then draggingCarSlider = false end end)
 
-local TrollPage = Instance.new("Frame")
+local TrollPage = Instance.new("ScrollingFrame")
 TrollPage.Parent = ContentArea
 TrollPage.BackgroundTransparency = 1
 TrollPage.Size = UDim2.new(1, 0, 1, 0)
 TrollPage.Visible = false
+TrollPage.CanvasSize = UDim2.new(0, 0, 0, 400)
+TrollPage.ScrollBarThickness = 3
+TrollPage.ScrollBarImageColor3 = THEME.ACCENT
+TrollPage.BorderSizePixel = 0
 
 local TrollTitle = Instance.new("TextLabel")
 TrollTitle.Parent = TrollPage
@@ -637,7 +644,7 @@ TrollTitle.BackgroundTransparency = 1
 TrollTitle.Position = UDim2.new(0, 10, 0, 10)
 TrollTitle.Size = UDim2.new(1, 0, 0, 20)
 TrollTitle.Font = Enum.Font.GothamBold
-TrollTitle.Text = "CAR CONTROL (FLY / SIZE)"
+TrollTitle.Text = "CAR CONTROL"
 TrollTitle.TextColor3 = THEME.ACCENT
 TrollTitle.TextSize = 12
 TrollTitle.TextXAlignment = Enum.TextXAlignment.Left
@@ -655,10 +662,78 @@ CreateToggle(TrollPage, "Enable Car Fly", 40, false, function(state)
     end
 end)
 
+CreateToggle(TrollPage, "Enable Wheelie Mode", 85, false, function(state)
+    WheelieEnabled = state
+    if not state then
+        for _, v in pairs(Workspace:GetDescendants()) do
+            if v.Name == "VortexWheelie" then v:Destroy() end
+        end
+    end
+end)
+
+CreateToggle(TrollPage, "Enable Slammed (Ceper)", 130, false, function(state)
+    SlammedEnabled = state
+    if not state then
+        for _, v in pairs(Workspace:GetDescendants()) do
+            if v.Name == "VortexSlam" then v:Destroy() end
+        end
+    end
+end)
+
+-- SLIDER CEPER
+local SlamFrame = Instance.new("Frame")
+SlamFrame.Parent = TrollPage
+SlamFrame.BackgroundColor3 = THEME.ITEM_BG
+SlamFrame.Position = UDim2.new(0, 10, 0, 175)
+SlamFrame.Size = UDim2.new(1, -20, 0, 45)
+SlamFrame.BorderSizePixel = 0
+Instance.new("UICorner", SlamFrame).CornerRadius = UDim.new(0, 6)
+
+local SlamLabel = Instance.new("TextLabel")
+SlamLabel.Parent = SlamFrame
+SlamLabel.BackgroundTransparency = 1
+SlamLabel.Position = UDim2.new(0, 10, 0, 3)
+SlamLabel.Size = UDim2.new(1, 0, 0, 15)
+SlamLabel.Font = Enum.Font.GothamMedium
+SlamLabel.Text = "Ceper Level: 5"
+SlamLabel.TextColor3 = THEME.TEXT
+SlamLabel.TextSize = 10
+SlamLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+local SlamBar = Instance.new("TextButton")
+SlamBar.Parent = SlamFrame
+SlamBar.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+SlamBar.Position = UDim2.new(0, 10, 0, 22)
+SlamBar.Size = UDim2.new(1, -20, 0, 6)
+SlamBar.AutoButtonColor = false
+SlamBar.Text = ""
+Instance.new("UICorner", SlamBar).CornerRadius = UDim.new(1, 0)
+
+local SlamFill = Instance.new("Frame")
+SlamFill.Parent = SlamBar
+SlamFill.BackgroundColor3 = THEME.ACCENT
+SlamFill.Size = UDim2.new(0.3, 0, 1, 0)
+SlamFill.BorderSizePixel = 0
+Instance.new("UICorner", SlamFill).CornerRadius = UDim.new(1, 0)
+
+local draggingSlam = false
+local function updateSlam(input)
+    local w = SlamBar.AbsoluteSize.X
+    if w <= 0 then return end
+    local rel = math.clamp((input.Position.X - SlamBar.AbsolutePosition.X) / w, 0, 1)
+    SlamAmount = math.floor(1 + rel * 19)
+    SlamLabel.Text = "Ceper Level: " .. SlamAmount
+    SlamFill.Size = UDim2.new(rel, 0, 1, 0)
+end
+SlamBar.InputBegan:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then draggingSlam = true; updateSlam(i) end end)
+UserInputService.InputChanged:Connect(function(i) if draggingSlam and (i.UserInputType == Enum.UserInputType.MouseMovement or i.UserInputType == Enum.UserInputType.Touch) then updateSlam(i) end end)
+UserInputService.InputEnded:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then draggingSlam = false end end)
+
+-- SLIDER CAR FLY
 local CFlyFrame = Instance.new("Frame")
 CFlyFrame.Parent = TrollPage
 CFlyFrame.BackgroundColor3 = THEME.ITEM_BG
-CFlyFrame.Position = UDim2.new(0, 10, 0, 80)
+CFlyFrame.Position = UDim2.new(0, 10, 0, 230)
 CFlyFrame.Size = UDim2.new(1, -20, 0, 45)
 CFlyFrame.BorderSizePixel = 0
 Instance.new("UICorner", CFlyFrame).CornerRadius = UDim.new(0, 6)
@@ -707,7 +782,7 @@ UserInputService.InputEnded:Connect(function(i) if i.UserInputType == Enum.UserI
 local SizeFrame = Instance.new("Frame")
 SizeFrame.Parent = TrollPage
 SizeFrame.BackgroundColor3 = THEME.ITEM_BG
-SizeFrame.Position = UDim2.new(0, 10, 0, 130)
+SizeFrame.Position = UDim2.new(0, 10, 0, 285)
 SizeFrame.Size = UDim2.new(1, -20, 0, 55)
 SizeFrame.BorderSizePixel = 0
 Instance.new("UICorner", SizeFrame).CornerRadius = UDim.new(0, 6)
@@ -751,7 +826,7 @@ VisualPage.Parent = ContentArea
 VisualPage.BackgroundTransparency = 1
 VisualPage.Size = UDim2.new(1, 0, 1, 0)
 VisualPage.Visible = false
-VisualPage.CanvasSize = UDim2.new(0, 0, 0, 430) 
+VisualPage.CanvasSize = UDim2.new(0, 0, 0, 480) 
 VisualPage.ScrollBarThickness = 3
 VisualPage.ScrollBarImageColor3 = THEME.ACCENT
 VisualPage.BorderSizePixel = 0
@@ -781,10 +856,37 @@ CreateToggle(VisualPage, "Enable Exhaust Smoke", 85, false, function(state)
     end
 end)
 
+CreateToggle(VisualPage, "Enable FPS Boost", 130, false, function(state)
+    FPSBoostEnabled = state
+    if state then
+        for _, v in pairs(Workspace:GetDescendants()) do
+            if v:IsA("ParticleEmitter") or v:IsA("Smoke") or v:IsA("Fire") or v:IsA("Sparkles") then
+                if v.Name ~= "VortexExhaustPE" and v.Name ~= "VortexExhaustPE2" then
+                    v.Enabled = false
+                end
+            end
+        end
+        Lighting.GlobalShadows = false
+        Lighting.FogEnd = 100000
+        Lighting.EnvironmentDiffuseScale = 0
+        Lighting.EnvironmentSpecularScale = 0
+    else
+        Lighting.GlobalShadows = true
+        Lighting.FogEnd = 1000
+        Lighting.EnvironmentDiffuseScale = 0.5
+        Lighting.EnvironmentSpecularScale = 0.5
+        for _, v in pairs(Workspace:GetDescendants()) do
+            if v:IsA("ParticleEmitter") or v:IsA("Smoke") or v:IsA("Fire") or v:IsA("Sparkles") then
+                v.Enabled = true
+            end
+        end
+    end
+end)
+
 local PosFrame = Instance.new("Frame")
 PosFrame.Parent = VisualPage
 PosFrame.BackgroundColor3 = THEME.ITEM_BG
-PosFrame.Position = UDim2.new(0, 10, 0, 130)
+PosFrame.Position = UDim2.new(0, 10, 0, 175)
 PosFrame.Size = UDim2.new(1, -20, 0, 65)
 PosFrame.BorderSizePixel = 0
 Instance.new("UICorner", PosFrame).CornerRadius = UDim.new(0, 6)
@@ -836,7 +938,7 @@ end
 local RateFrame = Instance.new("Frame")
 RateFrame.Parent = VisualPage
 RateFrame.BackgroundColor3 = THEME.ITEM_BG
-RateFrame.Position = UDim2.new(0, 10, 0, 205)
+RateFrame.Position = UDim2.new(0, 10, 0, 250)
 RateFrame.Size = UDim2.new(1, -20, 0, 45)
 RateFrame.BorderSizePixel = 0
 Instance.new("UICorner", RateFrame).CornerRadius = UDim.new(0, 6)
@@ -885,7 +987,7 @@ UserInputService.InputEnded:Connect(function(i) if i.UserInputType == Enum.UserI
 local SizeSldFrame = Instance.new("Frame")
 SizeSldFrame.Parent = VisualPage
 SizeSldFrame.BackgroundColor3 = THEME.ITEM_BG
-SizeSldFrame.Position = UDim2.new(0, 10, 0, 255)
+SizeSldFrame.Position = UDim2.new(0, 10, 0, 300)
 SizeSldFrame.Size = UDim2.new(1, -20, 0, 45)
 SizeSldFrame.BorderSizePixel = 0
 Instance.new("UICorner", SizeSldFrame).CornerRadius = UDim.new(0, 6)
@@ -934,7 +1036,7 @@ UserInputService.InputEnded:Connect(function(i) if i.UserInputType == Enum.UserI
 local LifeFrame = Instance.new("Frame")
 LifeFrame.Parent = VisualPage
 LifeFrame.BackgroundColor3 = THEME.ITEM_BG
-LifeFrame.Position = UDim2.new(0, 10, 0, 305)
+LifeFrame.Position = UDim2.new(0, 10, 0, 350)
 LifeFrame.Size = UDim2.new(1, -20, 0, 45)
 LifeFrame.BorderSizePixel = 0
 Instance.new("UICorner", LifeFrame).CornerRadius = UDim.new(0, 6)
@@ -983,7 +1085,7 @@ UserInputService.InputEnded:Connect(function(i) if i.UserInputType == Enum.UserI
 local ColorFrame = Instance.new("Frame")
 ColorFrame.Parent = VisualPage
 ColorFrame.BackgroundColor3 = THEME.ITEM_BG
-ColorFrame.Position = UDim2.new(0, 10, 0, 355)
+ColorFrame.Position = UDim2.new(0, 10, 0, 400)
 ColorFrame.Size = UDim2.new(1, -20, 0, 55)
 ColorFrame.BorderSizePixel = 0
 Instance.new("UICorner", ColorFrame).CornerRadius = UDim.new(0, 6)
@@ -1266,7 +1368,73 @@ RunService.RenderStepped:Connect(function(dt)
             end
         end
 
-        -- EXHAUST SMOKE (SEAT-BASED)
+        -- WHEELIE MODE
+        if WheelieEnabled then
+            local seat = Humanoid.SeatPart
+            if seat and seat:IsA("VehicleSeat") then
+                local veh = seat:FindFirstAncestorOfClass("Model")
+                if veh then
+                    local primary = veh.PrimaryPart or veh:FindFirstChildWhichIsA("BasePart")
+                    if primary then
+                        pcall(function() primary:SetNetworkOwner(Player) end)
+                        local bav = primary:FindFirstChild("VortexWheelie")
+                        if not bav then
+                            bav = Instance.new("BodyAngularVelocity")
+                            bav.Name = "VortexWheelie"
+                            bav.Parent = primary
+                        end
+                        local rightDir = seat.CFrame.RightVector
+                        bav.MaxTorque = rightDir * 1e7
+                        bav.AngularVelocity = rightDir * math.rad(45)
+                    end
+                end
+            end
+        else
+            if Humanoid.SeatPart then
+                local veh = Humanoid.SeatPart:FindFirstAncestorOfClass("Model")
+                if veh then
+                    local primary = veh.PrimaryPart or veh:FindFirstChildWhichIsA("BasePart")
+                    if primary then
+                        local bav = primary:FindFirstChild("VortexWheelie")
+                        if bav then bav:Destroy() end
+                    end
+                end
+            end
+        end
+
+        -- SLAMMED MODE (CEPER)
+        if SlammedEnabled then
+            local seat = Humanoid.SeatPart
+            if seat and seat:IsA("VehicleSeat") then
+                local veh = seat:FindFirstAncestorOfClass("Model")
+                if veh then
+                    local primary = veh.PrimaryPart or veh:FindFirstChildWhichIsA("BasePart")
+                    if primary then
+                        pcall(function() primary:SetNetworkOwner(Player) end)
+                        local bf = primary:FindFirstChild("VortexSlam")
+                        if not bf then
+                            bf = Instance.new("BodyForce")
+                            bf.Name = "VortexSlam"
+                            bf.Parent = primary
+                        end
+                        bf.Force = Vector3.new(0, -(primary:GetMass() * Workspace.Gravity) * SlamAmount, 0)
+                    end
+                end
+            end
+        else
+            if Humanoid.SeatPart then
+                local veh = Humanoid.SeatPart:FindFirstAncestorOfClass("Model")
+                if veh then
+                    local primary = veh.PrimaryPart or veh:FindFirstChildWhichIsA("BasePart")
+                    if primary then
+                        local bf = primary:FindFirstChild("VortexSlam")
+                        if bf then bf:Destroy() end
+                    end
+                end
+            end
+        end
+
+        -- EXHAUST SMOKE
         if ExhaustEnabled then
             local seat = Humanoid.SeatPart
             local car = seat and seat:FindFirstAncestorOfClass("Model")
@@ -1332,4 +1500,4 @@ RunService.RenderStepped:Connect(function(dt)
     end
 end)
 
-print("[VORTEEZX] TROLL V10.5 Loaded - Exhaust Height & Dual Fix!")
+print("[VORTEEZX] TROLL V10.6 Loaded - Wheelie, Slammed, FPS Boost!")
