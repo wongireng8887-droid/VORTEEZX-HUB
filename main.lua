@@ -1,5 +1,5 @@
 --[[
-    VORTEEZX HUB - TROLL EDITION V11.0 (Neon, Drift, Size, Ramp)
+    VORTEEZX HUB - TROLL EDITION V11.1 (Stick Target & R6 Size Fix)
 --]]
 
 local Player = game.Players.LocalPlayer
@@ -54,7 +54,7 @@ ESPFolder.Name = "VortexPlayerESP"
 local CarFlyEnabled = false
 local WheelieEnabled = false
 local NeonEnabled = false
-local DriftEnabled = false
+local StickToTargetEnabled = false
 local CharSizeEnabled = false
 local FPSBoostEnabled = false
 local OwnedCars = {}
@@ -248,7 +248,7 @@ Title.BackgroundTransparency = 1
 Title.Position = UDim2.new(0, 10, 0, 0)
 Title.Size = UDim2.new(1, -50, 1, 0)
 Title.Font = Enum.Font.GothamBlack
-Title.Text = "VORTEEZX TROLL V11.0"
+Title.Text = "VORTEEZX TROLL V11.1"
 Title.TextColor3 = THEME.ACCENT
 Title.TextSize = 14
 Title.TextXAlignment = Enum.TextXAlignment.Left
@@ -674,11 +674,7 @@ CreateToggle(TrollPage, "Enable Wheelie Mode", 85, false, function(state)
     WheelieEnabled = state
 end)
 
-CreateToggle(TrollPage, "Enable Drift Mode", 130, false, function(state)
-    DriftEnabled = state
-end)
-
-CreateToggle(TrollPage, "Enable Neon Under-Glow", 175, false, function(state)
+CreateToggle(TrollPage, "Enable Neon Under-Glow", 130, false, function(state)
     NeonEnabled = state
     local seat = Player.Character and Player.Character:FindFirstChildOfClass("Humanoid") and Player.Character.Humanoid.SeatPart
     local car = seat and seat:FindFirstAncestorOfClass("Model")
@@ -689,23 +685,39 @@ CreateToggle(TrollPage, "Enable Neon Under-Glow", 175, false, function(state)
     end
 end)
 
-CreateToggle(TrollPage, "Giant Character Size", 220, false, function(state)
+CreateToggle(TrollPage, "Giant Character Size", 175, false, function(state)
     CharSizeEnabled = state
     local char = Player.Character
     if char and char:FindFirstChildOfClass("Humanoid") then
         local hum = char.Humanoid
         local scale = state and 2.5 or 1
-        hum.BodyDepthScale.Value = scale
-        hum.BodyWidthScale.Value = scale
-        hum.BodyHeightScale.Value = scale
-        hum.HeadScale.Value = scale
+        
+        if hum.RigType == Enum.HumanoidRigType.R15 then
+            hum.BodyDepthScale.Value = scale
+            hum.BodyWidthScale.Value = scale
+            hum.BodyHeightScale.Value = scale
+            hum.HeadScale.Value = scale
+        else
+            for _, part in pairs(char:GetChildren()) do
+                if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
+                    local origSize = part:FindFirstChild("VortexOrigSize")
+                    if not origSize then
+                        origSize = Instance.new("Vector3Value")
+                        origSize.Name = "VortexOrigSize"
+                        origSize.Value = part.Size
+                        origSize.Parent = part
+                    end
+                    part.Size = origSize.Value * scale
+                end
+            end
+        end
     end
 end)
 
 local SpawnRampBtn = Instance.new("TextButton")
 SpawnRampBtn.Parent = TrollPage
 SpawnRampBtn.BackgroundColor3 = THEME.ACCENT
-SpawnRampBtn.Position = UDim2.new(0, 10, 0, 265)
+SpawnRampBtn.Position = UDim2.new(0, 10, 0, 220)
 SpawnRampBtn.Size = UDim2.new(1, -20, 0, 35)
 SpawnRampBtn.Font = Enum.Font.GothamBold
 SpawnRampBtn.Text = "SPAWN RAMP DI DEPAN"
@@ -726,14 +738,14 @@ SpawnRampBtn.MouseButton1Click:Connect(function()
     ramp.Color = THEME.ACCENT
     ramp.CFrame = hrp.CFrame * CFrame.new(0, -2, -20) * CFrame.Angles(math.rad(25), 0, 0)
     ramp.Parent = Workspace
-    Debris:AddItem(ramp, 10) -- Hilang setelah 10 detik
+    Debris:AddItem(ramp, 10)
 end)
 
 -- SLIDER CAR FLY
 local CFlyFrame = Instance.new("Frame")
 CFlyFrame.Parent = TrollPage
 CFlyFrame.BackgroundColor3 = THEME.ITEM_BG
-CFlyFrame.Position = UDim2.new(0, 10, 0, 315)
+CFlyFrame.Position = UDim2.new(0, 10, 0, 270)
 CFlyFrame.Size = UDim2.new(1, -20, 0, 45)
 CFlyFrame.BorderSizePixel = 0
 Instance.new("UICorner", CFlyFrame).CornerRadius = UDim.new(0, 6)
@@ -783,7 +795,7 @@ UserInputService.InputEnded:Connect(function(i) if i.UserInputType == Enum.UserI
 local SizeFrame = Instance.new("Frame")
 SizeFrame.Parent = TrollPage
 SizeFrame.BackgroundColor3 = THEME.ITEM_BG
-SizeFrame.Position = UDim2.new(0, 10, 0, 370)
+SizeFrame.Position = UDim2.new(0, 10, 0, 325)
 SizeFrame.Size = UDim2.new(1, -20, 0, 55)
 SizeFrame.BorderSizePixel = 0
 Instance.new("UICorner", SizeFrame).CornerRadius = UDim.new(0, 6)
@@ -1137,7 +1149,7 @@ TPTitle.BackgroundTransparency = 1
 TPTitle.Position = UDim2.new(0, 10, 0, 10)
 TPTitle.Size = UDim2.new(1, 0, 0, 20)
 TPTitle.Font = Enum.Font.GothamBold
-TPTitle.Text = "TELEPORT & FREEZE TARGET"
+TPTitle.Text = "TELEPORT & STICK TARGET"
 TPTitle.TextColor3 = THEME.ACCENT
 TPTitle.TextSize = 12
 TPTitle.TextXAlignment = Enum.TextXAlignment.Left
@@ -1146,7 +1158,7 @@ local PlayerList = Instance.new("ScrollingFrame")
 PlayerList.Parent = TPPage
 PlayerList.BackgroundColor3 = THEME.ITEM_BG
 PlayerList.Position = UDim2.new(0, 10, 0, 40)
-PlayerList.Size = UDim2.new(1, -20, 1, -130)
+PlayerList.Size = UDim2.new(1, -20, 1, -170) -- Diperpendek buat nambah tombol
 PlayerList.BorderSizePixel = 0
 PlayerList.ScrollBarThickness = 3
 PlayerList.ScrollBarImageColor3 = THEME.ACCENT
@@ -1158,13 +1170,36 @@ PLLayout.Padding = UDim.new(0, 2)
 local TPExecBtn = Instance.new("TextButton")
 TPExecBtn.Parent = TPPage
 TPExecBtn.BackgroundColor3 = THEME.ACCENT
-TPExecBtn.Position = UDim2.new(0, 10, 1, -85)
+TPExecBtn.Position = UDim2.new(0, 10, 1, -125)
 TPExecBtn.Size = UDim2.new(1, -20, 0, 30)
 TPExecBtn.Font = Enum.Font.GothamBold
 TPExecBtn.Text = "TELEPORT"
 TPExecBtn.TextColor3 = THEME.TEXT
 TPExecBtn.TextSize = 12
 Instance.new("UICorner", TPExecBtn).CornerRadius = UDim.new(0, 6)
+
+-- TOMBOL STICK TO TARGET
+local StickBtn = Instance.new("TextButton")
+StickBtn.Parent = TPPage
+StickBtn.BackgroundColor3 = Color3.fromRGB(200, 100, 0) -- Orange
+StickBtn.Position = UDim2.new(0, 10, 1, -85)
+StickBtn.Size = UDim2.new(1, -20, 0, 30)
+StickBtn.Font = Enum.Font.GothamBold
+StickBtn.Text = "STICK CAR TO TARGET (OFF)"
+StickBtn.TextColor3 = THEME.TEXT
+StickBtn.TextSize = 12
+Instance.new("UICorner", StickBtn).CornerRadius = UDim.new(0, 6)
+
+StickBtn.MouseButton1Click:Connect(function()
+    StickToTargetEnabled = not StickToTargetEnabled
+    if StickToTargetEnabled then
+        StickBtn.Text = "STICK CAR TO TARGET (ON)"
+        StickBtn.BackgroundColor3 = Color3.fromRGB(0, 200, 0) -- Green
+    else
+        StickBtn.Text = "STICK CAR TO TARGET (OFF)"
+        StickBtn.BackgroundColor3 = Color3.fromRGB(200, 100, 0)
+    end
+end)
 
 local FreezeCarBtn = Instance.new("TextButton")
 FreezeCarBtn.Parent = TPPage
@@ -1349,22 +1384,41 @@ RunService:BindToRenderStep("VorteezMain", Enum.RenderPriority.Character.Value +
             local gyro = primary:FindFirstChild("VortexWheelie"); if gyro then gyro:Destroy() end
         end
 
-        -- DRIFT MODE
-        if DriftEnabled then
-            -- Ngurangin gesekan roda biar licin
-            for _, v in pairs(car:GetDescendants()) do
-                if v:IsA("BasePart") and (v.Name:lower():find("wheel") or v.Name:lower():find("tire")) then
-                    pcall(function()
-                        v.CustomPhysicalProperties = PhysicalProperties.new(0.1, 0.3, 0.5) -- Bounciness tinggi, Friction rendah
-                    end)
-                end
+        -- STICK CAR TO TARGET (FIXED)
+        if StickToTargetEnabled and SelectedTarget and SelectedTarget.Character and SelectedTarget.Character:FindFirstChild("HumanoidRootPart") then
+            local targetHRP = SelectedTarget.Character.HumanoidRootPart
+            local targetPos = targetHRP.Position - (targetHRP.CFrame.LookVector * 10) + Vector3.new(0, 3, 0)
+            
+            local dir = targetPos - primary.Position
+            
+            local bv = primary:FindFirstChild("VortexStickBV")
+            if not bv then
+                bv = Instance.new("BodyVelocity")
+                bv.Name = "VortexStickBV"
+                bv.MaxForce = Vector3.new(1e6, 1e6, 1e6)
+                bv.P = 20000
+                bv.Parent = primary
             end
+            
+            if dir.Magnitude > 5 then
+                bv.Velocity = dir.Unit * math.min(dir.Magnitude * 2, 200)
+            else
+                bv.Velocity = Vector3.zero
+            end
+            
+            local gyro = primary:FindFirstChild("VortexStickGyro")
+            if not gyro then
+                gyro = Instance.new("BodyGyro")
+                gyro.Name = "VortexStickGyro"
+                gyro.MaxTorque = Vector3.new(1e6, 1e6, 1e6)
+                gyro.P = 10000
+                gyro.D = 1000
+                gyro.Parent = primary
+            end
+            gyro.CFrame = CFrame.lookAt(primary.Position, primary.Position + targetHRP.CFrame.LookVector)
         else
-            for _, v in pairs(car:GetDescendants()) do
-                if v:IsA("BasePart") and (v.Name:lower():find("wheel") or v.Name:lower():find("tire")) then
-                    pcall(function() v.CustomPhysicalProperties = nil end) -- Balikin normal
-                end
-            end
+            local bv = primary:FindFirstChild("VortexStickBV"); if bv then bv:Destroy() end
+            local gyro = primary:FindFirstChild("VortexStickGyro"); if gyro then gyro:Destroy() end
         end
 
         -- NEON UNDER-GLOW
@@ -1372,12 +1426,12 @@ RunService:BindToRenderStep("VorteezMain", Enum.RenderPriority.Character.Value +
             if not primary:FindFirstChild("VortexNeon") then
                 local att = Instance.new("Attachment")
                 att.Name = "VortexNeonAtt"
-                att.Position = Vector3.new(0, -1.5, 0) -- Posisi di bawah mobil
+                att.Position = Vector3.new(0, -1.5, 0)
                 att.Parent = primary
                 
                 local light = Instance.new("PointLight")
                 light.Name = "VortexNeon"
-                light.Color = Color3.fromRGB(0, 255, 255) -- Cyan neon
+                light.Color = Color3.fromRGB(0, 255, 255)
                 light.Range = 12
                 light.Brightness = 3
                 light.Parent = att
@@ -1391,7 +1445,7 @@ RunService:BindToRenderStep("VorteezMain", Enum.RenderPriority.Character.Value +
         if HRP:FindFirstChild("VortexFlyBV") and not FlyEnabled then HRP.VortexFlyBV:Destroy() end
     end
 
-    -- CAR SPEED (Kalo ga butuh visual)
+    -- CAR SPEED
     if CarSpeedEnabled and seat and seat:IsA("VehicleSeat") and car then
         local mainPart = car.PrimaryPart or car:FindFirstChild("HumanoidRootPart") or seat
         local downForce = mainPart:FindFirstChild("VortexDownForce")
@@ -1469,4 +1523,4 @@ RunService:BindToRenderStep("VorteezMain", Enum.RenderPriority.Character.Value +
     end
 end)
 
-print("[VORTEEZX] TROLL V11.0 Loaded - Neon, Drift, Size, Ramp!")
+print("[VORTEEZX] TROLL V11.1 Loaded - Stick Target & R6 Size Fixed!")
