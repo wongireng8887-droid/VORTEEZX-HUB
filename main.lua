@@ -1,5 +1,5 @@
 --[[
-    VORTEEZX HUB - TROLL EDITION V10.9 (Anti-Lag & Fixed Slammed)
+    VORTEEZX HUB - TROLL EDITION V11.0 (Neon, Drift, Size, Ramp)
 --]]
 
 local Player = game.Players.LocalPlayer
@@ -11,7 +11,6 @@ local Debris = game:GetService("Debris")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Lighting = game:GetService("Lighting")
 
--- ============ AUTO CLEANUP OLD SCRIPT ============
 pcall(function()
     for _, gui in pairs(game:GetService("CoreGui"):GetChildren()) do
         if gui.Name == "VORTEEZX_HUB_TROLL" then gui:Destroy() end
@@ -25,7 +24,6 @@ pcall(function()
     local oldESP = game:GetService("CoreGui"):FindFirstChild("VortexPlayerESP")
     if oldESP then oldESP:Destroy() end
 end)
--- =================================================
 
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "VORTEEZX_HUB_TROLL"
@@ -55,8 +53,9 @@ ESPFolder.Name = "VortexPlayerESP"
 
 local CarFlyEnabled = false
 local WheelieEnabled = false
-local SlammedEnabled = false
-local SlamAmount = 2
+local NeonEnabled = false
+local DriftEnabled = false
+local CharSizeEnabled = false
 local FPSBoostEnabled = false
 local OwnedCars = {}
 
@@ -249,7 +248,7 @@ Title.BackgroundTransparency = 1
 Title.Position = UDim2.new(0, 10, 0, 0)
 Title.Size = UDim2.new(1, -50, 1, 0)
 Title.Font = Enum.Font.GothamBlack
-Title.Text = "VORTEEZX TROLL V10.9"
+Title.Text = "VORTEEZX TROLL V11.0"
 Title.TextColor3 = THEME.ACCENT
 Title.TextSize = 14
 Title.TextXAlignment = Enum.TextXAlignment.Left
@@ -647,7 +646,7 @@ TrollPage.Parent = ContentArea
 TrollPage.BackgroundTransparency = 1
 TrollPage.Size = UDim2.new(1, 0, 1, 0)
 TrollPage.Visible = false
-TrollPage.CanvasSize = UDim2.new(0, 0, 0, 400)
+TrollPage.CanvasSize = UDim2.new(0, 0, 0, 450)
 TrollPage.ScrollBarThickness = 3
 TrollPage.ScrollBarImageColor3 = THEME.ACCENT
 TrollPage.BorderSizePixel = 0
@@ -675,64 +674,66 @@ CreateToggle(TrollPage, "Enable Wheelie Mode", 85, false, function(state)
     WheelieEnabled = state
 end)
 
-CreateToggle(TrollPage, "Enable Slammed (Ceper)", 130, false, function(state)
-    SlammedEnabled = state
+CreateToggle(TrollPage, "Enable Drift Mode", 130, false, function(state)
+    DriftEnabled = state
 end)
 
--- SLIDER CEPER
-local SlamFrame = Instance.new("Frame")
-SlamFrame.Parent = TrollPage
-SlamFrame.BackgroundColor3 = THEME.ITEM_BG
-SlamFrame.Position = UDim2.new(0, 10, 0, 175)
-SlamFrame.Size = UDim2.new(1, -20, 0, 45)
-SlamFrame.BorderSizePixel = 0
-Instance.new("UICorner", SlamFrame).CornerRadius = UDim.new(0, 6)
+CreateToggle(TrollPage, "Enable Neon Under-Glow", 175, false, function(state)
+    NeonEnabled = state
+    local seat = Player.Character and Player.Character:FindFirstChildOfClass("Humanoid") and Player.Character.Humanoid.SeatPart
+    local car = seat and seat:FindFirstAncestorOfClass("Model")
+    if not state and car then
+        for _, v in pairs(car:GetDescendants()) do
+            if v.Name == "VortexNeon" then v:Destroy() end
+        end
+    end
+end)
 
-local SlamLabel = Instance.new("TextLabel")
-SlamLabel.Parent = SlamFrame
-SlamLabel.BackgroundTransparency = 1
-SlamLabel.Position = UDim2.new(0, 10, 0, 3)
-SlamLabel.Size = UDim2.new(1, 0, 0, 15)
-SlamLabel.Font = Enum.Font.GothamMedium
-SlamLabel.Text = "Ceper Level: 2"
-SlamLabel.TextColor3 = THEME.TEXT
-SlamLabel.TextSize = 10
-SlamLabel.TextXAlignment = Enum.TextXAlignment.Left
+CreateToggle(TrollPage, "Giant Character Size", 220, false, function(state)
+    CharSizeEnabled = state
+    local char = Player.Character
+    if char and char:FindFirstChildOfClass("Humanoid") then
+        local hum = char.Humanoid
+        local scale = state and 2.5 or 1
+        hum.BodyDepthScale.Value = scale
+        hum.BodyWidthScale.Value = scale
+        hum.BodyHeightScale.Value = scale
+        hum.HeadScale.Value = scale
+    end
+end)
 
-local SlamBar = Instance.new("TextButton")
-SlamBar.Parent = SlamFrame
-SlamBar.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-SlamBar.Position = UDim2.new(0, 10, 0, 22)
-SlamBar.Size = UDim2.new(1, -20, 0, 6)
-SlamBar.AutoButtonColor = false
-SlamBar.Text = ""
-Instance.new("UICorner", SlamBar).CornerRadius = UDim.new(1, 0)
+local SpawnRampBtn = Instance.new("TextButton")
+SpawnRampBtn.Parent = TrollPage
+SpawnRampBtn.BackgroundColor3 = THEME.ACCENT
+SpawnRampBtn.Position = UDim2.new(0, 10, 0, 265)
+SpawnRampBtn.Size = UDim2.new(1, -20, 0, 35)
+SpawnRampBtn.Font = Enum.Font.GothamBold
+SpawnRampBtn.Text = "SPAWN RAMP DI DEPAN"
+SpawnRampBtn.TextColor3 = THEME.TEXT
+SpawnRampBtn.TextSize = 12
+Instance.new("UICorner", SpawnRampBtn).CornerRadius = UDim.new(0, 6)
 
-local SlamFill = Instance.new("Frame")
-SlamFill.Parent = SlamBar
-SlamFill.BackgroundColor3 = THEME.ACCENT
-SlamFill.Size = UDim2.new(0.1, 0, 1, 0)
-SlamFill.BorderSizePixel = 0
-Instance.new("UICorner", SlamFill).CornerRadius = UDim.new(1, 0)
-
-local draggingSlam = false
-local function updateSlam(input)
-    local w = SlamBar.AbsoluteSize.X
-    if w <= 0 then return end
-    local rel = math.clamp((input.Position.X - SlamBar.AbsolutePosition.X) / w, 0, 1)
-    SlamAmount = math.floor(1 + rel * 9)
-    SlamLabel.Text = "Ceper Level: " .. SlamAmount
-    SlamFill.Size = UDim2.new(rel, 0, 1, 0)
-end
-SlamBar.InputBegan:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then draggingSlam = true; updateSlam(i) end end)
-UserInputService.InputChanged:Connect(function(i) if draggingSlam and (i.UserInputType == Enum.UserInputType.MouseMovement or i.UserInputType == Enum.UserInputType.Touch) then updateSlam(i) end end)
-UserInputService.InputEnded:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then draggingSlam = false end end)
+SpawnRampBtn.MouseButton1Click:Connect(function()
+    local char = Player.Character
+    if not char or not char:FindFirstChild("HumanoidRootPart") then return end
+    local hrp = char.HumanoidRootPart
+    
+    local ramp = Instance.new("Part")
+    ramp.Name = "VortexRamp"
+    ramp.Size = Vector3.new(20, 1, 30)
+    ramp.Anchored = true
+    ramp.Material = Enum.Material.Neon
+    ramp.Color = THEME.ACCENT
+    ramp.CFrame = hrp.CFrame * CFrame.new(0, -2, -20) * CFrame.Angles(math.rad(25), 0, 0)
+    ramp.Parent = Workspace
+    Debris:AddItem(ramp, 10) -- Hilang setelah 10 detik
+end)
 
 -- SLIDER CAR FLY
 local CFlyFrame = Instance.new("Frame")
 CFlyFrame.Parent = TrollPage
 CFlyFrame.BackgroundColor3 = THEME.ITEM_BG
-CFlyFrame.Position = UDim2.new(0, 10, 0, 230)
+CFlyFrame.Position = UDim2.new(0, 10, 0, 315)
 CFlyFrame.Size = UDim2.new(1, -20, 0, 45)
 CFlyFrame.BorderSizePixel = 0
 Instance.new("UICorner", CFlyFrame).CornerRadius = UDim.new(0, 6)
@@ -778,10 +779,11 @@ CFlyBar.InputBegan:Connect(function(i) if i.UserInputType == Enum.UserInputType.
 UserInputService.InputChanged:Connect(function(i) if draggingCFly and (i.UserInputType == Enum.UserInputType.MouseMovement or i.UserInputType == Enum.UserInputType.Touch) then updateCarFlySpeed(i) end end)
 UserInputService.InputEnded:Connect(function(i) if i.UserInputType == Enum.UserInputType.MouseButton1 or i.UserInputType == Enum.UserInputType.Touch then draggingCFly = false end end)
 
+-- CAR SIZE CHANGER
 local SizeFrame = Instance.new("Frame")
 SizeFrame.Parent = TrollPage
 SizeFrame.BackgroundColor3 = THEME.ITEM_BG
-SizeFrame.Position = UDim2.new(0, 10, 0, 285)
+SizeFrame.Position = UDim2.new(0, 10, 0, 370)
 SizeFrame.Size = UDim2.new(1, -20, 0, 55)
 SizeFrame.BorderSizePixel = 0
 Instance.new("UICorner", SizeFrame).CornerRadius = UDim.new(0, 6)
@@ -1295,44 +1297,102 @@ RunService:BindToRenderStep("VorteezMain", Enum.RenderPriority.Character.Value +
     local car = seat and seat:FindFirstAncestorOfClass("Model")
     local primary = car and (car.PrimaryPart or car:FindFirstChildWhichIsA("BasePart"))
 
-    -- CAR FLY
-    if CarFlyEnabled and seat and seat:IsA("VehicleSeat") and primary then
+    -- CAR FEATURES (Butuh Ownership)
+    if seat and seat:IsA("VehicleSeat") and primary then
         if not OwnedCars[primary] then
             pcall(function() primary:SetNetworkOwner(Player) end)
             OwnedCars[primary] = true
         end
-        local bv = primary:FindFirstChild("VortexCarFly")
-        if not bv then
-            bv = Instance.new("BodyVelocity")
-            bv.Name = "VortexCarFly"
-            bv.MaxForce = Vector3.new(1e6, 1e6, 1e6)
-            bv.P = 12500
-            bv.Parent = primary
+
+        -- CAR FLY
+        if CarFlyEnabled then
+            local bv = primary:FindFirstChild("VortexCarFly")
+            if not bv then
+                bv = Instance.new("BodyVelocity")
+                bv.Name = "VortexCarFly"
+                bv.MaxForce = Vector3.new(1e6, 1e6, 1e6)
+                bv.P = 12500
+                bv.Parent = primary
+            end
+            local dir = Vector3.zero
+            local cam = Workspace.CurrentCamera
+            if cam then
+                local camLook = Vector3.new(cam.CFrame.LookVector.X, 0, cam.CFrame.LookVector.Z)
+                if camLook.Magnitude > 0.01 then
+                    camLook = camLook.Unit
+                    if holdingForward then dir = dir + camLook * CarFlySpeed end
+                    if holdingBackward then dir = dir - camLook * CarFlySpeed end
+                end
+            end
+            if Humanoid.MoveDirection.Magnitude > 0.01 then dir = dir + Humanoid.MoveDirection * CarFlySpeed end
+            if holdingUp then dir = dir + Vector3.new(0, CarFlySpeed, 0) end
+            if holdingDown then dir = dir - Vector3.new(0, CarFlySpeed, 0) end
+            bv.Velocity = dir
+        else
+            local bv = primary:FindFirstChild("VortexCarFly"); if bv then bv:Destroy() end
         end
-        local dir = Vector3.zero
-        local cam = Workspace.CurrentCamera
-        if cam then
-            local camLook = Vector3.new(cam.CFrame.LookVector.X, 0, cam.CFrame.LookVector.Z)
-            if camLook.Magnitude > 0.01 then
-                camLook = camLook.Unit
-                if holdingForward then dir = dir + camLook * CarFlySpeed end
-                if holdingBackward then dir = dir - camLook * CarFlySpeed end
+
+        -- WHEELIE
+        if WheelieEnabled then
+            local gyro = primary:FindFirstChild("VortexWheelie")
+            if not gyro then
+                gyro = Instance.new("BodyGyro")
+                gyro.Name = "VortexWheelie"
+                gyro.MaxTorque = Vector3.new(1e7, 1e7, 1e7)
+                gyro.P = 10000
+                gyro.D = 1000
+                gyro.Parent = primary
+            end
+            local look = seat.CFrame.LookVector
+            gyro.CFrame = CFrame.lookAt(primary.Position, primary.Position + look) * CFrame.Angles(math.rad(-25), 0, 0)
+        else
+            local gyro = primary:FindFirstChild("VortexWheelie"); if gyro then gyro:Destroy() end
+        end
+
+        -- DRIFT MODE
+        if DriftEnabled then
+            -- Ngurangin gesekan roda biar licin
+            for _, v in pairs(car:GetDescendants()) do
+                if v:IsA("BasePart") and (v.Name:lower():find("wheel") or v.Name:lower():find("tire")) then
+                    pcall(function()
+                        v.CustomPhysicalProperties = PhysicalProperties.new(0.1, 0.3, 0.5) -- Bounciness tinggi, Friction rendah
+                    end)
+                end
+            end
+        else
+            for _, v in pairs(car:GetDescendants()) do
+                if v:IsA("BasePart") and (v.Name:lower():find("wheel") or v.Name:lower():find("tire")) then
+                    pcall(function() v.CustomPhysicalProperties = nil end) -- Balikin normal
+                end
             end
         end
-        if Humanoid.MoveDirection.Magnitude > 0.01 then dir = dir + Humanoid.MoveDirection * CarFlySpeed end
-        if holdingUp then dir = dir + Vector3.new(0, CarFlySpeed, 0) end
-        if holdingDown then dir = dir - Vector3.new(0, CarFlySpeed, 0) end
-        bv.Velocity = dir
-    elseif primary then
-        local bv = primary:FindFirstChild("VortexCarFly"); if bv then bv:Destroy() end
+
+        -- NEON UNDER-GLOW
+        if NeonEnabled then
+            if not primary:FindFirstChild("VortexNeon") then
+                local att = Instance.new("Attachment")
+                att.Name = "VortexNeonAtt"
+                att.Position = Vector3.new(0, -1.5, 0) -- Posisi di bawah mobil
+                att.Parent = primary
+                
+                local light = Instance.new("PointLight")
+                light.Name = "VortexNeon"
+                light.Color = Color3.fromRGB(0, 255, 255) -- Cyan neon
+                light.Range = 12
+                light.Brightness = 3
+                light.Parent = att
+            end
+        else
+            local att = primary:FindFirstChild("VortexNeonAtt"); if att then att:Destroy() end
+        end
+
+    else
+        -- Kalo ga di mobil, hapus efek
+        if HRP:FindFirstChild("VortexFlyBV") and not FlyEnabled then HRP.VortexFlyBV:Destroy() end
     end
 
-    -- CAR SPEED
+    -- CAR SPEED (Kalo ga butuh visual)
     if CarSpeedEnabled and seat and seat:IsA("VehicleSeat") and car then
-        if not OwnedCars[primary] then
-            pcall(function() primary:SetNetworkOwner(Player) end)
-            OwnedCars[primary] = true
-        end
         local mainPart = car.PrimaryPart or car:FindFirstChild("HumanoidRootPart") or seat
         local downForce = mainPart:FindFirstChild("VortexDownForce")
         if not downForce then downForce = Instance.new("BodyForce"); downForce.Name = "VortexDownForce"; downForce.Parent = mainPart end
@@ -1349,46 +1409,6 @@ RunService:BindToRenderStep("VorteezMain", Enum.RenderPriority.Character.Value +
         local carVel = mainPart:FindFirstChild("VortexSpeed"); if carVel then carVel:Destroy() end
         local downForce = mainPart:FindFirstChild("VortexDownForce"); if downForce then downForce:Destroy() end
         local gyro = mainPart:FindFirstChild("VortexGyro"); if gyro then gyro:Destroy() end
-    end
-
-    -- WHEELIE
-    if WheelieEnabled and seat and seat:IsA("VehicleSeat") and primary then
-        if not OwnedCars[primary] then
-            pcall(function() primary:SetNetworkOwner(Player) end)
-            OwnedCars[primary] = true
-        end
-        local gyro = primary:FindFirstChild("VortexWheelie")
-        if not gyro then
-            gyro = Instance.new("BodyGyro")
-            gyro.Name = "VortexWheelie"
-            gyro.MaxTorque = Vector3.new(1e7, 1e7, 1e7)
-            gyro.P = 10000
-            gyro.D = 1000
-            gyro.Parent = primary
-        end
-        local look = seat.CFrame.LookVector
-        gyro.CFrame = CFrame.lookAt(primary.Position, primary.Position + look) * CFrame.Angles(math.rad(-25), 0, 0)
-    elseif primary then
-        local gyro = primary:FindFirstChild("VortexWheelie"); if gyro then gyro:Destroy() end
-    end
-
-    -- SLAMMED (CEPER) - PAKE BODYFORCE
-    if SlammedEnabled and seat and seat:IsA("VehicleSeat") and primary then
-        if not OwnedCars[primary] then
-            pcall(function() primary:SetNetworkOwner(Player) end)
-            OwnedCars[primary] = true
-        end
-        local bf = primary:FindFirstChild("VortexSlam")
-        if not bf then
-            bf = Instance.new("BodyForce")
-            bf.Name = "VortexSlam"
-            bf.Parent = primary
-        end
-        -- SlamAmount 1-10, kali 0.5 = 0.5x sampai 5x berat mobil
-        local extraForce = primary:GetMass() * Workspace.Gravity * (SlamAmount * 0.5)
-        bf.Force = Vector3.new(0, -extraForce, 0)
-    elseif primary then
-        local bf = primary:FindFirstChild("VortexSlam"); if bf then bf:Destroy() end
     end
 
     -- EXHAUST
@@ -1449,4 +1469,4 @@ RunService:BindToRenderStep("VorteezMain", Enum.RenderPriority.Character.Value +
     end
 end)
 
-print("[VORTEEZX] TROLL V10.9 Loaded - Anti-Lag & Slammed Fixed!")
+print("[VORTEEZX] TROLL V11.0 Loaded - Neon, Drift, Size, Ramp!")
