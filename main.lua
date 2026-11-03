@@ -1,6 +1,5 @@
 --[[
-    VORTEEZX HUB - TROLL EDITION V10.7
-    Features: Fly, Car Fly, Wheelie (Fixed), Slammed (Fixed), FPS Boost, Exhaust, ESP, TP
+    VORTEEZX HUB - TROLL EDITION V10.9 (Anti-Lag & Fixed Slammed)
 --]]
 
 local Player = game.Players.LocalPlayer
@@ -11,6 +10,22 @@ local Workspace = game:GetService("Workspace")
 local Debris = game:GetService("Debris")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Lighting = game:GetService("Lighting")
+
+-- ============ AUTO CLEANUP OLD SCRIPT ============
+pcall(function()
+    for _, gui in pairs(game:GetService("CoreGui"):GetChildren()) do
+        if gui.Name == "VORTEEZX_HUB_TROLL" then gui:Destroy() end
+    end
+    if Player:FindFirstChild("PlayerGui") then
+        for _, gui in pairs(Player.PlayerGui:GetChildren()) do
+            if gui.Name == "VORTEEZX_HUB_TROLL" then gui:Destroy() end
+        end
+    end
+    RunService:UnbindFromRenderStep("VorteezMain")
+    local oldESP = game:GetService("CoreGui"):FindFirstChild("VortexPlayerESP")
+    if oldESP then oldESP:Destroy() end
+end)
+-- =================================================
 
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "VORTEEZX_HUB_TROLL"
@@ -37,13 +52,13 @@ local THEME = {
 
 local ESPFolder = Instance.new("Folder", game.CoreGui)
 ESPFolder.Name = "VortexPlayerESP"
-local CarFlyEnabled = false
 
--- STATE BARU
+local CarFlyEnabled = false
 local WheelieEnabled = false
 local SlammedEnabled = false
-local SlamAmount = 5
+local SlamAmount = 2
 local FPSBoostEnabled = false
+local OwnedCars = {}
 
 -- EXHAUST STATE
 local ExhaustEnabled = false
@@ -234,7 +249,7 @@ Title.BackgroundTransparency = 1
 Title.Position = UDim2.new(0, 10, 0, 0)
 Title.Size = UDim2.new(1, -50, 1, 0)
 Title.Font = Enum.Font.GothamBlack
-Title.Text = "VORTEEZX TROLL V10.7"
+Title.Text = "VORTEEZX TROLL V10.9"
 Title.TextColor3 = THEME.ACCENT
 Title.TextSize = 14
 Title.TextXAlignment = Enum.TextXAlignment.Left
@@ -654,29 +669,14 @@ CreateToggle(TrollPage, "Enable Car Fly", 40, false, function(state)
     DownBtn.Visible = state or FlyEnabled
     ForwardBtn.Visible = state
     BackwardBtn.Visible = state
-    if not state then
-        for _, v in pairs(Workspace:GetDescendants()) do
-            if v.Name == "VortexCarFly" then v:Destroy() end
-        end
-    end
 end)
 
 CreateToggle(TrollPage, "Enable Wheelie Mode", 85, false, function(state)
     WheelieEnabled = state
-    if not state then
-        for _, v in pairs(Workspace:GetDescendants()) do
-            if v.Name == "VortexWheelie" then v:Destroy() end
-        end
-    end
 end)
 
 CreateToggle(TrollPage, "Enable Slammed (Ceper)", 130, false, function(state)
     SlammedEnabled = state
-    if not state then
-        for _, v in pairs(Workspace:GetDescendants()) do
-            if v.Name == "VortexSlam" then v:Destroy() end
-        end
-    end
 end)
 
 -- SLIDER CEPER
@@ -694,7 +694,7 @@ SlamLabel.BackgroundTransparency = 1
 SlamLabel.Position = UDim2.new(0, 10, 0, 3)
 SlamLabel.Size = UDim2.new(1, 0, 0, 15)
 SlamLabel.Font = Enum.Font.GothamMedium
-SlamLabel.Text = "Ceper Level: 5"
+SlamLabel.Text = "Ceper Level: 2"
 SlamLabel.TextColor3 = THEME.TEXT
 SlamLabel.TextSize = 10
 SlamLabel.TextXAlignment = Enum.TextXAlignment.Left
@@ -711,7 +711,7 @@ Instance.new("UICorner", SlamBar).CornerRadius = UDim.new(1, 0)
 local SlamFill = Instance.new("Frame")
 SlamFill.Parent = SlamBar
 SlamFill.BackgroundColor3 = THEME.ACCENT
-SlamFill.Size = UDim2.new(0.3, 0, 1, 0)
+SlamFill.Size = UDim2.new(0.1, 0, 1, 0)
 SlamFill.BorderSizePixel = 0
 Instance.new("UICorner", SlamFill).CornerRadius = UDim.new(1, 0)
 
@@ -720,7 +720,7 @@ local function updateSlam(input)
     local w = SlamBar.AbsoluteSize.X
     if w <= 0 then return end
     local rel = math.clamp((input.Position.X - SlamBar.AbsolutePosition.X) / w, 0, 1)
-    SlamAmount = math.floor(1 + rel * 19)
+    SlamAmount = math.floor(1 + rel * 9)
     SlamLabel.Text = "Ceper Level: " .. SlamAmount
     SlamFill.Size = UDim2.new(rel, 0, 1, 0)
 end
@@ -1228,27 +1228,14 @@ TPExecBtn.MouseButton1Click:Connect(function()
 end)
 
 FreezeCarBtn.MouseButton1Click:Connect(function()
-    if not SelectedTarget or not SelectedTarget.Character then
-        print("[VORTEEZX] No target selected")
-        return
-    end
+    if not SelectedTarget or not SelectedTarget.Character then return end
     local hum = SelectedTarget.Character:FindFirstChildOfClass("Humanoid")
     local seat = hum and hum.SeatPart
-    if not (seat and seat:IsA("VehicleSeat")) then
-        print("[VORTEEZX] Target not in vehicle")
-        return
-    end
+    if not (seat and seat:IsA("VehicleSeat")) then return end
     local veh = seat:FindFirstAncestorOfClass("Model")
     if not veh then return end
-    local interaction = ReplicatedStorage:FindFirstChild("Interaction")
-    if interaction then
-        local req = interaction:FindFirstChild("ClientRequestOwnership")
-        if req and veh.PrimaryPart then pcall(function() req:FireServer(veh.PrimaryPart) end) end
-    end
     for _, p in pairs(veh:GetDescendants()) do
-        if p:IsA("BasePart") then
-            pcall(function() p:SetNetworkOwner(Player) end)
-        end
+        if p:IsA("BasePart") then pcall(function() p:SetNetworkOwner(Player) end) end
     end
     local endTime = tick() + 5
     task.spawn(function()
@@ -1264,203 +1251,175 @@ FreezeCarBtn.MouseButton1Click:Connect(function()
             task.wait(0.05)
         end
     end)
-    print("[VORTEEZX] Freezing car: " .. veh.Name)
 end)
 
-RunService.RenderStepped:Connect(function(dt)
-    if Player.Character and Player.Character:FindFirstChild("HumanoidRootPart") then
-        local HRP = Player.Character.HumanoidRootPart
-        local Humanoid = Player.Character:FindFirstChildOfClass("Humanoid")
+-- ============ MAIN LOOP (ANTI LAG) ============
+RunService:BindToRenderStep("VorteezMain", Enum.RenderPriority.Character.Value + 1, function(dt)
+    if not Player.Character or not Player.Character:FindFirstChild("HumanoidRootPart") then return end
+    local HRP = Player.Character.HumanoidRootPart
+    local Humanoid = Player.Character:FindFirstChildOfClass("Humanoid")
+    if not Humanoid then return end
 
-        if RunEnabled and not FlyEnabled then Humanoid.WalkSpeed = RunSpeed
-        elseif not RunEnabled and not FlyEnabled then Humanoid.WalkSpeed = 16 end
+    -- RUN SPEED
+    if RunEnabled and not FlyEnabled then Humanoid.WalkSpeed = RunSpeed
+    elseif not RunEnabled and not FlyEnabled then Humanoid.WalkSpeed = 16 end
 
-        if WaterEnabled then
-            if Humanoid.FloorMaterial == Enum.Material.Water or Humanoid:GetState() == Enum.HumanoidStateType.Swimming then
-                local bf = HRP:FindFirstChild("WaterForce")
-                if not bf then bf = Instance.new("BodyForce"); bf.Name = "WaterForce"; bf.Parent = HRP end
-                bf.Force = Vector3.new(0, HRP:GetMass() * Workspace.Gravity * 1.1, 0)
-                if Humanoid:GetState() == Enum.HumanoidStateType.Swimming then Humanoid:ChangeState(Enum.HumanoidStateType.Running) end
-            else
-                local bf = HRP:FindFirstChild("WaterForce"); if bf then bf:Destroy() end
-            end
+    -- WATER
+    if WaterEnabled then
+        if Humanoid.FloorMaterial == Enum.Material.Water or Humanoid:GetState() == Enum.HumanoidStateType.Swimming then
+            local bf = HRP:FindFirstChild("WaterForce")
+            if not bf then bf = Instance.new("BodyForce"); bf.Name = "WaterForce"; bf.Parent = HRP end
+            bf.Force = Vector3.new(0, HRP:GetMass() * Workspace.Gravity * 1.1, 0)
+            if Humanoid:GetState() == Enum.HumanoidStateType.Swimming then Humanoid:ChangeState(Enum.HumanoidStateType.Running) end
         else
             local bf = HRP:FindFirstChild("WaterForce"); if bf then bf:Destroy() end
         end
+    else
+        local bf = HRP:FindFirstChild("WaterForce"); if bf then bf:Destroy() end
+    end
 
-        if FlyEnabled then
-            Humanoid.PlatformStand = true
-            local bv = HRP:FindFirstChild("VortexFlyBV")
-            if not bv then bv = Instance.new("BodyVelocity"); bv.Name = "VortexFlyBV"; bv.MaxForce = Vector3.new(1e5, 1e5, 1e5); bv.Parent = HRP end
-            local velocity = Humanoid.MoveDirection * FlySpeed
-            if holdingUp then velocity = velocity + Vector3.new(0, FlySpeed, 0)
-            elseif holdingDown then velocity = velocity - Vector3.new(0, FlySpeed, 0) end
-            bv.Velocity = velocity
-        else
-            local bv = HRP:FindFirstChild("VortexFlyBV"); if bv then bv:Destroy() end
+    -- PLAYER FLY
+    if FlyEnabled then
+        Humanoid.PlatformStand = true
+        local bv = HRP:FindFirstChild("VortexFlyBV")
+        if not bv then bv = Instance.new("BodyVelocity"); bv.Name = "VortexFlyBV"; bv.MaxForce = Vector3.new(1e5, 1e5, 1e5); bv.Parent = HRP end
+        local velocity = Humanoid.MoveDirection * FlySpeed
+        if holdingUp then velocity = velocity + Vector3.new(0, FlySpeed, 0)
+        elseif holdingDown then velocity = velocity - Vector3.new(0, FlySpeed, 0) end
+        bv.Velocity = velocity
+    else
+        local bv = HRP:FindFirstChild("VortexFlyBV"); if bv then bv:Destroy() end
+    end
+
+    local seat = Humanoid.SeatPart
+    local car = seat and seat:FindFirstAncestorOfClass("Model")
+    local primary = car and (car.PrimaryPart or car:FindFirstChildWhichIsA("BasePart"))
+
+    -- CAR FLY
+    if CarFlyEnabled and seat and seat:IsA("VehicleSeat") and primary then
+        if not OwnedCars[primary] then
+            pcall(function() primary:SetNetworkOwner(Player) end)
+            OwnedCars[primary] = true
         end
-
-        if CarFlyEnabled then
-            local seat = Humanoid.SeatPart
-            if seat and seat:IsA("VehicleSeat") then
-                local veh = seat:FindFirstAncestorOfClass("Model")
-                if veh then
-                    local primary = veh.PrimaryPart or veh:FindFirstChildWhichIsA("BasePart")
-                    if primary then
-                        pcall(function() primary:SetNetworkOwner(Player) end)
-                        local bv = primary:FindFirstChild("VortexCarFly")
-                        if not bv then
-                            bv = Instance.new("BodyVelocity")
-                            bv.Name = "VortexCarFly"
-                            bv.MaxForce = Vector3.new(1e6, 1e6, 1e6)
-                            bv.P = 12500
-                            bv.Parent = primary
-                        end
-                        local dir = Vector3.zero
-                        local cam = Workspace.CurrentCamera
-                        if cam then
-                            local camLook = Vector3.new(cam.CFrame.LookVector.X, 0, cam.CFrame.LookVector.Z)
-                            if camLook.Magnitude > 0.01 then
-                                camLook = camLook.Unit
-                                if holdingForward then dir = dir + camLook * CarFlySpeed end
-                                if holdingBackward then dir = dir - camLook * CarFlySpeed end
-                            end
-                        end
-                        if Humanoid.MoveDirection.Magnitude > 0.01 then
-                            dir = dir + Humanoid.MoveDirection * CarFlySpeed
-                        end
-                        if holdingUp then dir = dir + Vector3.new(0, CarFlySpeed, 0) end
-                        if holdingDown then dir = dir - Vector3.new(0, CarFlySpeed, 0) end
-                        bv.Velocity = dir
-                    end
-                end
+        local bv = primary:FindFirstChild("VortexCarFly")
+        if not bv then
+            bv = Instance.new("BodyVelocity")
+            bv.Name = "VortexCarFly"
+            bv.MaxForce = Vector3.new(1e6, 1e6, 1e6)
+            bv.P = 12500
+            bv.Parent = primary
+        end
+        local dir = Vector3.zero
+        local cam = Workspace.CurrentCamera
+        if cam then
+            local camLook = Vector3.new(cam.CFrame.LookVector.X, 0, cam.CFrame.LookVector.Z)
+            if camLook.Magnitude > 0.01 then
+                camLook = camLook.Unit
+                if holdingForward then dir = dir + camLook * CarFlySpeed end
+                if holdingBackward then dir = dir - camLook * CarFlySpeed end
             end
         end
+        if Humanoid.MoveDirection.Magnitude > 0.01 then dir = dir + Humanoid.MoveDirection * CarFlySpeed end
+        if holdingUp then dir = dir + Vector3.new(0, CarFlySpeed, 0) end
+        if holdingDown then dir = dir - Vector3.new(0, CarFlySpeed, 0) end
+        bv.Velocity = dir
+    elseif primary then
+        local bv = primary:FindFirstChild("VortexCarFly"); if bv then bv:Destroy() end
+    end
 
-        if CarSpeedEnabled then
-            local seat = Humanoid.SeatPart
-            if seat and seat:IsA("VehicleSeat") then
-                local vehicle = seat:FindFirstAncestorOfClass("Model")
-                if vehicle then
-                    local mainPart = vehicle.PrimaryPart or vehicle:FindFirstChild("HumanoidRootPart") or seat
-                    local downForce = mainPart:FindFirstChild("VortexDownForce")
-                    if not downForce then downForce = Instance.new("BodyForce"); downForce.Name = "VortexDownForce"; downForce.Parent = mainPart end
-                    downForce.Force = Vector3.new(0, -mainPart:GetMass() * Workspace.Gravity * 5, 0)
-                    local gyro = mainPart:FindFirstChild("VortexGyro")
-                    if not gyro then gyro = Instance.new("BodyGyro"); gyro.Name = "VortexGyro"; gyro.P = 10000; gyro.D = 1000; gyro.MaxTorque = Vector3.new(1e5, 0, 1e5); gyro.Parent = mainPart end
-                    gyro.CFrame = CFrame.new(mainPart.Position, mainPart.Position + seat.CFrame.LookVector)
-                    local carVel = mainPart:FindFirstChild("VortexSpeed")
-                    if not carVel then carVel = Instance.new("BodyVelocity"); carVel.Name = "VortexSpeed"; carVel.Parent = mainPart end
-                    carVel.MaxForce = Vector3.new(25000, 0, 25000)
-                    carVel.Velocity = seat.CFrame.LookVector * CarSpeed
-                end
-            end
-        else
-            if Humanoid.SeatPart then
-                local vehicle = Humanoid.SeatPart:FindFirstAncestorOfClass("Model")
-                if vehicle then
-                    local mainPart = vehicle.PrimaryPart or vehicle:FindFirstChild("HumanoidRootPart") or Humanoid.SeatPart
-                    local carVel = mainPart:FindFirstChild("VortexSpeed"); if carVel then carVel:Destroy() end
-                    local downForce = mainPart:FindFirstChild("VortexDownForce"); if downForce then downForce:Destroy() end
-                    local gyro = mainPart:FindFirstChild("VortexGyro"); if gyro then gyro:Destroy() end
-                end
-            end
+    -- CAR SPEED
+    if CarSpeedEnabled and seat and seat:IsA("VehicleSeat") and car then
+        if not OwnedCars[primary] then
+            pcall(function() primary:SetNetworkOwner(Player) end)
+            OwnedCars[primary] = true
         end
+        local mainPart = car.PrimaryPart or car:FindFirstChild("HumanoidRootPart") or seat
+        local downForce = mainPart:FindFirstChild("VortexDownForce")
+        if not downForce then downForce = Instance.new("BodyForce"); downForce.Name = "VortexDownForce"; downForce.Parent = mainPart end
+        downForce.Force = Vector3.new(0, -mainPart:GetMass() * Workspace.Gravity * 5, 0)
+        local gyro = mainPart:FindFirstChild("VortexGyro")
+        if not gyro then gyro = Instance.new("BodyGyro"); gyro.Name = "VortexGyro"; gyro.P = 10000; gyro.D = 1000; gyro.MaxTorque = Vector3.new(1e5, 0, 1e5); gyro.Parent = mainPart end
+        gyro.CFrame = CFrame.new(mainPart.Position, mainPart.Position + seat.CFrame.LookVector)
+        local carVel = mainPart:FindFirstChild("VortexSpeed")
+        if not carVel then carVel = Instance.new("BodyVelocity"); carVel.Name = "VortexSpeed"; carVel.Parent = mainPart end
+        carVel.MaxForce = Vector3.new(25000, 0, 25000)
+        carVel.Velocity = seat.CFrame.LookVector * CarSpeed
+    elseif seat and seat:IsA("VehicleSeat") and car then
+        local mainPart = car.PrimaryPart or car:FindFirstChild("HumanoidRootPart") or seat
+        local carVel = mainPart:FindFirstChild("VortexSpeed"); if carVel then carVel:Destroy() end
+        local downForce = mainPart:FindFirstChild("VortexDownForce"); if downForce then downForce:Destroy() end
+        local gyro = mainPart:FindFirstChild("VortexGyro"); if gyro then gyro:Destroy() end
+    end
 
-        -- WHEELIE MODE (FIXED)
-        if WheelieEnabled then
-            local seat = Humanoid.SeatPart
-            if seat and seat:IsA("VehicleSeat") then
-                local veh = seat:FindFirstAncestorOfClass("Model")
-                if veh then
-                    local primary = veh.PrimaryPart or veh:FindFirstChildWhichIsA("BasePart")
-                    if primary then
-                        pcall(function() primary:SetNetworkOwner(Player) end)
-                        local gyro = primary:FindFirstChild("VortexWheelie")
-                        if not gyro then
-                            gyro = Instance.new("BodyGyro")
-                            gyro.Name = "VortexWheelie"
-                            gyro.MaxTorque = Vector3.new(1e7, 1e7, 1e7)
-                            gyro.P = 10000
-                            gyro.D = 1000
-                            gyro.Parent = primary
+    -- WHEELIE
+    if WheelieEnabled and seat and seat:IsA("VehicleSeat") and primary then
+        if not OwnedCars[primary] then
+            pcall(function() primary:SetNetworkOwner(Player) end)
+            OwnedCars[primary] = true
+        end
+        local gyro = primary:FindFirstChild("VortexWheelie")
+        if not gyro then
+            gyro = Instance.new("BodyGyro")
+            gyro.Name = "VortexWheelie"
+            gyro.MaxTorque = Vector3.new(1e7, 1e7, 1e7)
+            gyro.P = 10000
+            gyro.D = 1000
+            gyro.Parent = primary
+        end
+        local look = seat.CFrame.LookVector
+        gyro.CFrame = CFrame.lookAt(primary.Position, primary.Position + look) * CFrame.Angles(math.rad(-25), 0, 0)
+    elseif primary then
+        local gyro = primary:FindFirstChild("VortexWheelie"); if gyro then gyro:Destroy() end
+    end
+
+    -- SLAMMED (CEPER) - PAKE BODYFORCE
+    if SlammedEnabled and seat and seat:IsA("VehicleSeat") and primary then
+        if not OwnedCars[primary] then
+            pcall(function() primary:SetNetworkOwner(Player) end)
+            OwnedCars[primary] = true
+        end
+        local bf = primary:FindFirstChild("VortexSlam")
+        if not bf then
+            bf = Instance.new("BodyForce")
+            bf.Name = "VortexSlam"
+            bf.Parent = primary
+        end
+        -- SlamAmount 1-10, kali 0.5 = 0.5x sampai 5x berat mobil
+        local extraForce = primary:GetMass() * Workspace.Gravity * (SlamAmount * 0.5)
+        bf.Force = Vector3.new(0, -extraForce, 0)
+    elseif primary then
+        local bf = primary:FindFirstChild("VortexSlam"); if bf then bf:Destroy() end
+    end
+
+    -- EXHAUST
+    if ExhaustEnabled then
+        if car and car ~= ExhaustLastCar then
+            ApplyExhaust(car, seat)
+        elseif not car and ExhaustLastCar then
+            ClearExhaust()
+        end
+        if car and #ExhaustEmitters > 0 then
+            local throttle = (seat and seat:IsA("VehicleSeat")) and seat.Throttle or 0
+            local speedPart = car.PrimaryPart or car:FindFirstChildWhichIsA("BasePart")
+            local speedVal = speedPart and speedPart.AssemblyLinearVelocity.Magnitude or 0
+            local targetRate = 0
+            if throttle ~= 0 then targetRate = ExhaustRate
+            elseif speedVal > 5 then targetRate = math.floor(ExhaustRate * 0.5) end
+            for _, pe in pairs(ExhaustEmitters) do
+                if pe and pe.Parent then
+                    pcall(function()
+                        if pe.Name == "VortexExhaustPE2" then
+                            pe.Rate = math.floor(targetRate * 0.6)
+                        else
+                            pe.Rate = targetRate
                         end
-                        local look = seat.CFrame.LookVector
-                        -- Mengangkat hidung mobil 25 derajat
-                        local targetCF = CFrame.lookAt(primary.Position, primary.Position + look) * CFrame.Angles(math.rad(-25), 0, 0)
-                        gyro.CFrame = targetCF
-                    end
-                end
-            end
-        else
-            for _, v in pairs(Workspace:GetDescendants()) do
-                if v.Name == "VortexWheelie" then v:Destroy() end
-            end
-        end
-
-        -- SLAMMED MODE (FIXED)
-        if SlammedEnabled then
-            local seat = Humanoid.SeatPart
-            if seat and seat:IsA("VehicleSeat") then
-                local veh = seat:FindFirstAncestorOfClass("Model")
-                if veh then
-                    local primary = veh.PrimaryPart or veh:FindFirstChildWhichIsA("BasePart")
-                    if primary then
-                        pcall(function() primary:SetNetworkOwner(Player) end)
-                        local bf = primary:FindFirstChild("VortexSlam")
-                        if not bf then
-                            bf = Instance.new("BodyForce")
-                            bf.Name = "VortexSlam"
-                            bf.Parent = primary
-                        end
-                        -- Nekan mobil ke bawah
-                        bf.Force = Vector3.new(0, -(primary:GetMass() * Workspace.Gravity) * SlamAmount, 0)
-                    end
-                end
-            end
-        else
-            for _, v in pairs(Workspace:GetDescendants()) do
-                if v.Name == "VortexSlam" then v:Destroy() end
-            end
-        end
-
-        -- EXHAUST SMOKE
-        if ExhaustEnabled then
-            local seat = Humanoid.SeatPart
-            local car = seat and seat:FindFirstAncestorOfClass("Model")
-            if car and car ~= ExhaustLastCar then
-                ApplyExhaust(car, seat)
-            elseif not car and ExhaustLastCar then
-                ClearExhaust()
-            end
-
-            if car and #ExhaustEmitters > 0 then
-                local throttle = (seat and seat:IsA("VehicleSeat")) and seat.Throttle or 0
-                local speedPart = car.PrimaryPart or car:FindFirstChildWhichIsA("BasePart")
-                local speedVal = speedPart and speedPart.AssemblyLinearVelocity.Magnitude or 0
-
-                local targetRate = 0
-                if throttle ~= 0 then
-                    targetRate = ExhaustRate
-                elseif speedVal > 5 then
-                    targetRate = math.floor(ExhaustRate * 0.5)
-                end
-
-                for _, pe in pairs(ExhaustEmitters) do
-                    if pe and pe.Parent then
-                        pcall(function()
-                            if pe.Name == "VortexExhaustPE2" then
-                                pe.Rate = math.floor(targetRate * 0.6)
-                            else
-                                pe.Rate = targetRate
-                            end
-                        end)
-                    end
+                    end)
                 end
             end
         end
     end
 
+    -- ESP
     if ESPEnabled then
         for _, p in pairs(game.Players:GetPlayers()) do
             if p ~= Player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") and p.Character:FindFirstChild("Humanoid") then
@@ -1490,4 +1449,4 @@ RunService.RenderStepped:Connect(function(dt)
     end
 end)
 
-print("[VORTEEZX] TROLL V10.7 Loaded - Wheelie, Slammed, FPS Boost!")
+print("[VORTEEZX] TROLL V10.9 Loaded - Anti-Lag & Slammed Fixed!")
