@@ -1,6 +1,6 @@
 --[[
-    VORTEEZX HUB - TROLL EDITION V10.6
-    Features: Fly, Car Fly, Wheelie, Slammed (Ceper), FPS Boost, Exhaust, ESP, TP
+    VORTEEZX HUB - TROLL EDITION V10.7
+    Features: Fly, Car Fly, Wheelie (Fixed), Slammed (Fixed), FPS Boost, Exhaust, ESP, TP
 --]]
 
 local Player = game.Players.LocalPlayer
@@ -149,7 +149,6 @@ local function CreateExhaustAt(primary, localCFrame)
     table.insert(ExhaustEmitters, pe2)
 end
 
--- Bounding Box Exhaust Fix
 local function ApplyExhaust(car, seat)
     ClearExhaust()
     local primary = car.PrimaryPart or car:FindFirstChildWhichIsA("BasePart")
@@ -235,7 +234,7 @@ Title.BackgroundTransparency = 1
 Title.Position = UDim2.new(0, 10, 0, 0)
 Title.Size = UDim2.new(1, -50, 1, 0)
 Title.Font = Enum.Font.GothamBlack
-Title.Text = "VORTEEZX TROLL V10.6"
+Title.Text = "VORTEEZX TROLL V10.7"
 Title.TextColor3 = THEME.ACCENT
 Title.TextSize = 14
 Title.TextXAlignment = Enum.TextXAlignment.Left
@@ -1368,7 +1367,7 @@ RunService.RenderStepped:Connect(function(dt)
             end
         end
 
-        -- WHEELIE MODE
+        -- WHEELIE MODE (FIXED)
         if WheelieEnabled then
             local seat = Humanoid.SeatPart
             if seat and seat:IsA("VehicleSeat") then
@@ -1377,32 +1376,29 @@ RunService.RenderStepped:Connect(function(dt)
                     local primary = veh.PrimaryPart or veh:FindFirstChildWhichIsA("BasePart")
                     if primary then
                         pcall(function() primary:SetNetworkOwner(Player) end)
-                        local bav = primary:FindFirstChild("VortexWheelie")
-                        if not bav then
-                            bav = Instance.new("BodyAngularVelocity")
-                            bav.Name = "VortexWheelie"
-                            bav.Parent = primary
+                        local gyro = primary:FindFirstChild("VortexWheelie")
+                        if not gyro then
+                            gyro = Instance.new("BodyGyro")
+                            gyro.Name = "VortexWheelie"
+                            gyro.MaxTorque = Vector3.new(1e7, 1e7, 1e7)
+                            gyro.P = 10000
+                            gyro.D = 1000
+                            gyro.Parent = primary
                         end
-                        local rightDir = seat.CFrame.RightVector
-                        bav.MaxTorque = rightDir * 1e7
-                        bav.AngularVelocity = rightDir * math.rad(45)
+                        local look = seat.CFrame.LookVector
+                        -- Mengangkat hidung mobil 25 derajat
+                        local targetCF = CFrame.lookAt(primary.Position, primary.Position + look) * CFrame.Angles(math.rad(-25), 0, 0)
+                        gyro.CFrame = targetCF
                     end
                 end
             end
         else
-            if Humanoid.SeatPart then
-                local veh = Humanoid.SeatPart:FindFirstAncestorOfClass("Model")
-                if veh then
-                    local primary = veh.PrimaryPart or veh:FindFirstChildWhichIsA("BasePart")
-                    if primary then
-                        local bav = primary:FindFirstChild("VortexWheelie")
-                        if bav then bav:Destroy() end
-                    end
-                end
+            for _, v in pairs(Workspace:GetDescendants()) do
+                if v.Name == "VortexWheelie" then v:Destroy() end
             end
         end
 
-        -- SLAMMED MODE (CEPER)
+        -- SLAMMED MODE (FIXED)
         if SlammedEnabled then
             local seat = Humanoid.SeatPart
             if seat and seat:IsA("VehicleSeat") then
@@ -1417,20 +1413,14 @@ RunService.RenderStepped:Connect(function(dt)
                             bf.Name = "VortexSlam"
                             bf.Parent = primary
                         end
+                        -- Nekan mobil ke bawah
                         bf.Force = Vector3.new(0, -(primary:GetMass() * Workspace.Gravity) * SlamAmount, 0)
                     end
                 end
             end
         else
-            if Humanoid.SeatPart then
-                local veh = Humanoid.SeatPart:FindFirstAncestorOfClass("Model")
-                if veh then
-                    local primary = veh.PrimaryPart or veh:FindFirstChildWhichIsA("BasePart")
-                    if primary then
-                        local bf = primary:FindFirstChild("VortexSlam")
-                        if bf then bf:Destroy() end
-                    end
-                end
+            for _, v in pairs(Workspace:GetDescendants()) do
+                if v.Name == "VortexSlam" then v:Destroy() end
             end
         end
 
@@ -1500,4 +1490,4 @@ RunService.RenderStepped:Connect(function(dt)
     end
 end)
 
-print("[VORTEEZX] TROLL V10.6 Loaded - Wheelie, Slammed, FPS Boost!")
+print("[VORTEEZX] TROLL V10.7 Loaded - Wheelie, Slammed, FPS Boost!")
